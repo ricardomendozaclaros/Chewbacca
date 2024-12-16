@@ -1,0 +1,33 @@
+[
+  {
+    "name": "Dashboard",
+    "isSublist": false,
+    "to": "/dashboard",
+    "logo": "bi bi-grid"
+  },
+  {
+    "name": "Administración",
+    "isSublist": true,
+    "sublist": [
+      {
+        "name": "Usuarios",
+        "to": "/users"
+      },
+      {
+        "name": "Roles",
+        "to": "/roles"
+      }
+    ],
+    "logo": "bi bi-shield"
+  },
+  {
+    "Separado": "Sistemas",
+    "isSeperador": true
+  },
+  {
+    "name": "Configuración",
+    "isSublist": false,
+    "to": "/settings",
+    "logo": "bi bi-gear"
+  }
+]

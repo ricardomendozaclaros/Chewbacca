@@ -1,20 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import NavLink from "./NavLink";
-import { OptionsNav } from "../../utils/routes";
-
+import { useAuth } from "../../hooks/useAuth";
 
 export default function SideBar() {
-
   const [activeNav, setActiveNav] = useState("");
   const [activeSubNav, setActiveSubNav] = useState("");
+  const { menuItems, userRole } = useAuth();
+
+  useEffect(() => {
+    // Para debug
+    console.log('Current role:', userRole);
+    console.log('Menu items loaded:', menuItems);
+  }, [userRole, menuItems]);
 
   return (
-    <>
-      <aside id="sidebar" className="sidebar">
-        <ul className="sidebar-nav" id="sidebar-nav">
-          {OptionsNav.map((option) => (
+    <aside id="sidebar" className="sidebar">
+      <ul className="sidebar-nav" id="sidebar-nav">
+        {menuItems && menuItems.map((option) => (
+          !option.isSeperador ? (
             <NavLink
-            key={option.name}
+              key={option.name || option.to}
               name={option.name}
               isSublist={option.isSublist}
               to={option.to}
@@ -25,9 +30,13 @@ export default function SideBar() {
               activeSubNav={activeSubNav}
               setActiveSubNav={setActiveSubNav}
             />
-          ))}     
-        </ul>
-      </aside>
-    </>
+          ) : (
+            <div key={option.Separado} className="nav-heading">
+              {option.Separado}
+            </div>
+          )
+        ))}
+      </ul>
+    </aside>
   );
 }

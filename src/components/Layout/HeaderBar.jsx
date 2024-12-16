@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { useAuth0 } from "@auth0/auth0-react";
 
 export default function HeaderBar({ toggleSidebar }) {
-  const {  logout  } = useAuth0();
+  const { logout, user, isAuthenticated } = useAuth0();
   return (
     <>
       <header
@@ -11,8 +11,8 @@ export default function HeaderBar({ toggleSidebar }) {
       >
         <div className="d-flex align-items-center justify-content-between">
           <a href="index.html" className="logo d-flex align-items-center">
-            <img src="/src/assets/img/logo.png" alt="" />
-            <span className="d-none d-lg-block">NiceAdmin</span>
+            <img src="/src/resource/image/logo.jpeg" alt="" />
+            <span className="d-none d-lg-block">AutenTIC</span>
           </a>
           <i
             className="bi bi-list toggle-sidebar-btn"
@@ -21,7 +21,7 @@ export default function HeaderBar({ toggleSidebar }) {
           ></i>
         </div>
 
-        <div className="search-bar">
+        {/* <div className="search-bar">
           <form
             className="search-form d-flex align-items-center"
             method="POST"
@@ -37,11 +37,11 @@ export default function HeaderBar({ toggleSidebar }) {
               <i className="bi bi-search"></i>
             </button>
           </form>
-        </div>
+        </div> */}
 
         <nav className="header-nav ms-auto">
           <ul className="d-flex align-items-center">
-            <li className="nav-item d-block d-lg-none">
+            {/* <li className="nav-item d-block d-lg-none">
               <a className="nav-link nav-icon search-bar-toggle " href="#">
                 <i className="bi bi-search"></i>
               </a>
@@ -217,7 +217,7 @@ export default function HeaderBar({ toggleSidebar }) {
                   <a href="#">Show all messages</a>
                 </li>
               </ul>
-            </li>
+            </li> */}
 
             <li className="nav-item dropdown pe-3">
               <a
@@ -226,19 +226,18 @@ export default function HeaderBar({ toggleSidebar }) {
                 data-bs-toggle="dropdown"
               >
                 <img
-                  src="/src/assets/img/profile-img.jpg"
+                  src={isAuthenticated ? user.picture : "/src/assets/img/profile-img.jpg"}
                   alt="Profile"
                   className="rounded-circle"
                 />
                 <span className="d-none d-md-block dropdown-toggle ps-2">
-                  K. Anderson
+                  {isAuthenticated ? user.name : "Guest"}
                 </span>
               </a>
 
               <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                 <li className="dropdown-header">
-                  <h6>Kevin Anderson</h6>
-                  <span>Web Designer</span>
+                  <h6>{isAuthenticated ? user.nickname : "Guest"}</h6>
                 </li>
                 <li>
                   <hr className="dropdown-divider" />
@@ -252,8 +251,7 @@ export default function HeaderBar({ toggleSidebar }) {
                     <i className="bi bi-person"></i>
                     <span>My Profile</span>
                   </a>
-                </li>
-                <li>
+                
                   <hr className="dropdown-divider" />
                 </li>
 
