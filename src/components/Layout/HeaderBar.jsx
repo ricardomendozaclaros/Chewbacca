@@ -1,5 +1,8 @@
 import PropTypes from "prop-types";
+import { useAuth0 } from "@auth0/auth0-react";
+
 export default function HeaderBar({ toggleSidebar }) {
+  const {  logout  } = useAuth0();
   return (
     <>
       <header
@@ -281,13 +284,13 @@ export default function HeaderBar({ toggleSidebar }) {
                 </li>
 
                 <li>
-                  <a
+                  <button
                     className="dropdown-item d-flex align-items-center"
-                    href="#"
+                    onClick={logout}
                   >
                     <i className="bi bi-box-arrow-right"></i>
                     <span>Sign Out</span>
-                  </a>
+                  </button>
                 </li>
               </ul>
             </li>
