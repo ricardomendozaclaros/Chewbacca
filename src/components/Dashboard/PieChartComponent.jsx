@@ -2,7 +2,6 @@ import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 
 const PieChartComponent = ({ data }) => {
-
   const groupByRole = (data) => {
     return Object.entries(
       data.reduce((acc, item) => {
@@ -16,37 +15,44 @@ const PieChartComponent = ({ data }) => {
 
   const options = {
     chart: {
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
-        plotShadow: false,
-        type: 'pie'
+      plotBackgroundColor: null,
+      plotBorderWidth: null,
+      plotShadow: false,
+      type: "pie",
     },
     title: {
-        text: 'Distribución por rol'
+      text: null,
     },
     tooltip: {
-        pointFormat: '{point.y} registros'  
+      pointFormat: "{point.y} registros",
     },
     plotOptions: {
-        pie: {
-            allowPointSelect: true,
-            cursor: 'pointer',
-            dataLabels: {
-                enabled: false
-            },
-            showInLegend: true
-        }
+      pie: {
+        allowPointSelect: true,
+        cursor: "pointer",
+        dataLabels: {
+          enabled: false,
+        },
+        showInLegend: false,
+      },
     },
     series: [
-        {
-            name: 'Roles',
-            colorByPoint: true,
-            data: seriesData
-        }
-    ]
-}
+      {
+        name: "Roles",
+        colorByPoint: true,
+        data: seriesData,
+      },
+    ],
+  };
 
-  return <HighchartsReact highcharts={Highcharts} options={options} />;
+  return (
+    <>
+      <p className="card-title">Distribucion por Rol</p>
+      <div className="card h-25">
+        <HighchartsReact highcharts={Highcharts} options={options} />
+      </div>
+    </>
+  );
 };
 
 export default PieChartComponent;

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { v4 as uuidv4 } from "uuid"; // Importa uuid
 import DataTable from "react-data-table-component";
 
-
 export default function TransactionTable({ data }) {
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -11,13 +10,13 @@ export default function TransactionTable({ data }) {
       name: "",
       selector: (row) => row.uniqueId, // ID único generado
       sortable: true,
-      width: "50px",
+      width: "70px",
     },
     {
       name: "Tipo Firma",
       selector: (row) => row.description,
       sortable: true,
-      width: "150px",
+      width: "200px",
     },
     {
       name: "Unitario",
@@ -40,20 +39,25 @@ export default function TransactionTable({ data }) {
   }));
 
   return (
-    <div className="">
-      <DataTable
-        columns={columns}
-        data={dataWithUniqueIds}
-        keyField="uniqueId" // Configura el campo como clave única
-        pagination
-        paginationPerPage={10}
-        paginationRowsPerPageOptions={[10]}
-        paginationDefaultPage={currentPage}
-        onChangePage={(page) => setCurrentPage(page)}
-        highlightOnHover
-        striped
-        className=""
-      />
-    </div>
+    <>
+      <p className="card-title">
+        Transacciones y consumo de metodo por validacion
+      </p>
+      <div className="card">
+        <DataTable
+          columns={columns}
+          data={dataWithUniqueIds}
+          keyField="uniqueId" // Configura el campo como clave única
+          pagination
+          paginationPerPage={10}
+          paginationRowsPerPageOptions={[10]}
+          paginationDefaultPage={currentPage}
+          onChangePage={(page) => setCurrentPage(page)}
+          highlightOnHover
+          striped
+          className="rounded"
+        />
+      </div>
+    </>
   );
 }

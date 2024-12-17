@@ -2,7 +2,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Home from './pages/Home';
-import About from './pages/About';
+import Page1 from './pages/Page1';
 import Layout from './pages/Layout';
 import Error from './pages/Error';
 
@@ -27,7 +27,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
-        <Route path="about" element={<About />} />
+        <Route path="page1" element={<Page1 />} />
         <Route path="error" element={<Error />} />
         <Route path="callback" element={<div>Loading callback...</div>} />
       </Route>

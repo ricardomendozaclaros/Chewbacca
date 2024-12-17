@@ -10,15 +10,15 @@
       "isSublist": true,
       "sublist": [
         {
-          "name": "Operaciones",
+          "name": "Operaciones1",
           "to": "/Page1"
         },
         {
-            "name": "Operaciones",
+            "name": "Operaciones2",
             "to": "/Page2"
         },
         {
-            "name": "Operaciones",
+            "name": "Operaciones3",
             "to": "/Page3"
         }
       ],

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import TransactionTable from "../components/Dashboard/TransactionTable";
 import PieChartComponent from "../components/Dashboard/PieChartComponent";
 import { GetSignatureProcesses } from "../api/signatureProcess";
-import "../assets/css/custom_table_chart.css";
+import TotalsCardComponent from "../components/Dashboard/TotalsCardComponent";
 export default function About() {
   const [process, setProcess] = useState([]);
 
@@ -18,12 +18,20 @@ export default function About() {
   return (
     <>
       <h2>Transacciones</h2>
-      <div className="d-flex">
-        <div className="custom-table-container">
-          <TransactionTable data={process} />
+      <div className="d-flex row">
+        <div className="col-md-4 mb-3">
+          <div className="shadow-sm rounded">
+            <TransactionTable data={process} />
+          </div>
         </div>
-        <div className="mx-2 w-25 shadow-sm h-50 bg-body rounded">
-          <PieChartComponent data={process} />
+        <div className="col-md-2 mb-3">
+            <PieChartComponent data={process} />
+        </div>
+        <div className="col-md-2 mb-3">
+          <TotalsCardComponent/>
+        </div>
+        <div className="col-md-4 mb-3">
+         
         </div>
       </div>
     </>
