@@ -1,17 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import NavLink from "./NavLink";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function SideBar() {
   const [activeNav, setActiveNav] = useState("");
   const [activeSubNav, setActiveSubNav] = useState("");
-  const { menuItems, userRole } = useAuth();
-
-  useEffect(() => {
-    // Para debug
-    console.log('Current role:', userRole);
-    console.log('Menu items loaded:', menuItems);
-  }, [userRole, menuItems]);
+  const { menuItems } = useAuth();
+ 
 
   return (
     <aside id="sidebar" className="sidebar">

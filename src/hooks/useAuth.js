@@ -9,8 +9,7 @@ export const useAuth = () => {
   useEffect(() => {
     const loadUserRole = async () => {
       if (isAuthenticated && user) {
-        // Para debug
-        console.log('User object:', user);
+        
         
         // Obtener el rol desde los claims del usuario
         const namespace = 'https://dev-a76h4mqeinsaf6bn.us.auth0.com';
@@ -18,7 +17,7 @@ export const useAuth = () => {
                     user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 
                     ['Demo']; // Role por defecto
         
-        console.log('Role found:', role);
+        //console.log('Role found:', role);
         setUserRole(Array.isArray(role) ? role[0] : role);
       }
     };
@@ -26,7 +25,7 @@ export const useAuth = () => {
     const loadMenuItems = async () => {
       if (userRole) {
         try {
-          console.log('Loading menu for role:', userRole);
+          //console.log('Loading menu for role:', userRole);
           const menuData = await import(`../resource/TOCs/${userRole}.json`);
           setMenuItems(menuData.default);
         } catch (error) {
