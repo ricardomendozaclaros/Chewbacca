@@ -4,7 +4,7 @@ import process from 'process';
 import { config } from './config/default.js';
 import { redisService } from './lib/redis.js';
 import signatureRoutes from './routes/signatures.js';
-import userRoutes from './routes/users.js';
+import userRoutes from './routes/user.js';
 
 const app = express();
 const { port, host } = config.server;

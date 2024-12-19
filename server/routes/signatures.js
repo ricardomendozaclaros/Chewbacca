@@ -1,5 +1,5 @@
 import express from 'express';
-import { signatureController } from '../controllers/signatureController.js';
+import { signatureController } from '../controller/signatureController.js';
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 import {redisService} from '../lib/redis.js'
-import { apiService } from '../services/apiServices'
+import { apiService } from '../services/apiServices.js'
 
 class UserController{
     async getUserByDateRange(req,res){
