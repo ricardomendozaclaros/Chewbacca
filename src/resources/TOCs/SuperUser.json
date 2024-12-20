@@ -1,0 +1,297 @@
+[
+    {
+        "name": "ESS SI Ejecutiva",
+        "isSublist": false,
+        "to": "/Page1",
+        "logo": "bi bi-dash-circle"
+    },
+    {
+      "name": "ESS SI Ejecutiva 2",
+      "isSublist": false,
+      "to": "/Page1",
+      "logo": "bi bi-dash-circle"
+    },
+    {
+      "name": "Direcciones",
+      "isSublist": true,
+      "sublist": [
+        {
+          "name": "Tecnologia",
+          "to": "/Page1"
+        },
+        {
+          "name": "Operaciones",
+          "to": "/Page1"
+        },
+        {
+          "name": "Soporte",
+          "to": "/Page1"
+        },
+        {
+          "name": "Infraestructura",
+          "to": "/Page1"
+        },
+        {
+          "name": "Finanzas",
+          "to": "/Page2"
+        },
+        {
+          "name": "Recursos Humanos",
+          "to": "/Page3"
+        },
+        {
+          "name": "Contabilidad",
+          "to": "/Page3"
+        },
+        {
+          "name": "Marketing",
+          "to": "/Page3"
+        }
+      ],
+      "logo": "bi bi-info-circle"
+    },
+    {
+        "Separado": "Produccion",
+        "isSeperador" : true
+    },
+    {
+      "name": "Direcciones",
+      "isSublist": true,
+      "sublist": [
+        {
+          "name": "Tecnologia",
+          "to": "/Page1"
+        },
+        {
+          "name": "Operaciones",
+          "to": "/Page1"
+        },
+        {
+          "name": "Soporte",
+          "to": "/Page1"
+        },
+        {
+          "name": "Infraestructura",
+          "to": "/Page1"
+        },
+        {
+          "name": "Finanzas",
+          "to": "/Page2"
+        },
+        {
+          "name": "Recursos Humanos",
+          "to": "/Page3"
+        },
+        {
+          "name": "Contabilidad",
+          "to": "/Page3"
+        },
+        {
+          "name": "Marketing",
+          "to": "/Page3"
+        }
+      ],
+      "logo": "bi bi-info-circle"
+    },
+    ,
+    {
+      "name": "Direcciones",
+      "isSublist": true,
+      "sublist": [
+        {
+          "name": "Tecnologia",
+          "to": "/Page1"
+        },
+        {
+          "name": "Operaciones",
+          "to": "/Page1"
+        },
+        {
+          "name": "Soporte",
+          "to": "/Page1"
+        },
+        {
+          "name": "Infraestructura",
+          "to": "/Page1"
+        },
+        {
+          "name": "Finanzas",
+          "to": "/Page2"
+        },
+        {
+          "name": "Recursos Humanos",
+          "to": "/Page3"
+        },
+        {
+          "name": "Contabilidad",
+          "to": "/Page3"
+        },
+        {
+          "name": "Marketing",
+          "to": "/Page3"
+        }
+      ],
+      "logo": "bi bi-info-circle"
+    },
+    ,
+    {
+      "name": "Direcciones",
+      "isSublist": true,
+      "sublist": [
+        {
+          "name": "Tecnologia",
+          "to": "/Page1"
+        },
+        {
+          "name": "Operaciones",
+          "to": "/Page1"
+        },
+        {
+          "name": "Soporte",
+          "to": "/Page1"
+        },
+        {
+          "name": "Infraestructura",
+          "to": "/Page1"
+        },
+        {
+          "name": "Finanzas",
+          "to": "/Page2"
+        },
+        {
+          "name": "Recursos Humanos",
+          "to": "/Page3"
+        },
+        {
+          "name": "Contabilidad",
+          "to": "/Page3"
+        },
+        {
+          "name": "Marketing",
+          "to": "/Page3"
+        }
+      ],
+      "logo": "bi bi-info-circle"
+    },
+    {
+      "Separado": "Administracion",
+      "isSeperador" : true
+    },
+    {
+      "name": "Direcciones",
+      "isSublist": true,
+      "sublist": [
+        {
+          "name": "Tecnologia",
+          "to": "/Page1"
+        },
+        {
+          "name": "Operaciones",
+          "to": "/Page1"
+        },
+        {
+          "name": "Soporte",
+          "to": "/Page1"
+        },
+        {
+          "name": "Infraestructura",
+          "to": "/Page1"
+        },
+        {
+          "name": "Finanzas",
+          "to": "/Page2"
+        },
+        {
+          "name": "Recursos Humanos",
+          "to": "/Page3"
+        },
+        {
+          "name": "Contabilidad",
+          "to": "/Page3"
+        },
+        {
+          "name": "Marketing",
+          "to": "/Page3"
+        }
+      ],
+      "logo": "bi bi-info-circle"
+    },
+    {
+      "name": "Direcciones",
+      "isSublist": true,
+      "sublist": [
+        {
+          "name": "Tecnologia",
+          "to": "/Page1"
+        },
+        {
+          "name": "Operaciones",
+          "to": "/Page1"
+        },
+        {
+          "name": "Soporte",
+          "to": "/Page1"
+        },
+        {
+          "name": "Infraestructura",
+          "to": "/Page1"
+        },
+        {
+          "name": "Finanzas",
+          "to": "/Page2"
+        },
+        {
+          "name": "Recursos Humanos",
+          "to": "/Page3"
+        },
+        {
+          "name": "Contabilidad",
+          "to": "/Page3"
+        },
+        {
+          "name": "Marketing",
+          "to": "/Page3"
+        }
+      ],
+      "logo": "bi bi-info-circle"
+    },{
+      "name": "Direcciones",
+      "isSublist": true,
+      "sublist": [
+        {
+          "name": "Tecnologia",
+          "to": "/Page1"
+        },
+        {
+          "name": "Operaciones",
+          "to": "/Page1"
+        },
+        {
+          "name": "Soporte",
+          "to": "/Page1"
+        },
+        {
+          "name": "Infraestructura",
+          "to": "/Page1"
+        },
+        {
+          "name": "Finanzas",
+          "to": "/Page2"
+        },
+        {
+          "name": "Recursos Humanos",
+          "to": "/Page3"
+        },
+        {
+          "name": "Contabilidad",
+          "to": "/Page3"
+        },
+        {
+          "name": "Marketing",
+          "to": "/Page3"
+        }
+      ],
+      "logo": "bi bi-info-circle"
+    }
+  
+]
