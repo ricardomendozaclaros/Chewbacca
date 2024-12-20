@@ -18,6 +18,7 @@ export default function HeaderBar({ toggleSidebar }) {
             onClick={toggleSidebar}
             style={{ cursor: "pointer" }}
           ></i>
+          <div><b> Visión 360°</b> - Dashboard Integral de Gestión Empresarial</div>
         </div>
 
         {/* <div className="search-bar">
