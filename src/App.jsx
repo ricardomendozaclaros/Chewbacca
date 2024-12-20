@@ -10,22 +10,23 @@ import Error from './pages/Error';
 function App() {
   const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
-  const location = useLocation(); // Añadimos esto para obtener la ubicación actual
+  const location = useLocation();
 
   useEffect(() => {
     if (!isAuthenticated && !isLoading) {
-      // Guardamos la ruta actual antes de redireccionar al login
       sessionStorage.setItem('returnTo', location.pathname);
-      loginWithRedirect();
-    } else if (isAuthenticated && sessionStorage.getItem('returnTo')) {
-      // Si hay una ruta guardada, navegamos a ella y la limpiamos
-      const returnTo = sessionStorage.getItem('returnTo');
-      sessionStorage.removeItem('returnTo');
-      if (returnTo !== '/') {
-        navigate(returnTo);
-      }
+      loginWithRedirect({
+        appState: { returnTo: location.pathname }
+      });
     }
   }, [isAuthenticated, isLoading]);
+
+  // Redirigir inmediatamente si estamos autenticados
+  useEffect(() => {
+    if (isAuthenticated && location.pathname === '/callback') {
+      navigate('/');
+    }
+  }, [isAuthenticated, location]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -38,7 +39,6 @@ function App() {
         <Route path="page1" element={<Page1 />} />
         <Route path="page2" element={<Page2 />} />
         <Route path="error" element={<Error />} />
-        <Route path="callback" element={<div>Loading callback...</div>} />
       </Route>
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

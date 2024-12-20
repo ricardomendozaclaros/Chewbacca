@@ -26,11 +26,11 @@ export const useAuth = () => {
       if (userRole) {
         try {
           //console.log('Loading menu for role:', userRole);
-          const menuData = await import(`../resource/TOCs/${userRole}.json`);
+          const menuData = await import(`../resources/TOCs/${userRole}.json`);
           setMenuItems(menuData.default);
         } catch (error) {
           console.error('Error loading menu:', error);
-          const defaultMenu = await import('../resource/TOCs/Demo.json');
+          const defaultMenu = await import('../resources/TOCs/Demo.json');
           setMenuItems(defaultMenu.default);
         }
       }
