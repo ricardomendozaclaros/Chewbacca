@@ -9,15 +9,12 @@ export const useAuth = () => {
   useEffect(() => {
     const loadUserRole = async () => {
       if (isAuthenticated && user) {
-        
-        
-        // Obtener el rol desde los claims del usuario
-        const namespace = 'https://dev-a76h4mqeinsaf6bn.us.auth0.com';
+        // Obtener el rol desde los claims del usuario usando la variable de entorno
+        const namespace = import.meta.env.VITE_AUTH0_DOMAIN;
         const role = user[`${namespace}/roles`] || 
                     user['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 
                     ['Demo']; // Role por defecto
         
-        //console.log('Role found:', role);
         setUserRole(Array.isArray(role) ? role[0] : role);
       }
     };
@@ -25,12 +22,11 @@ export const useAuth = () => {
     const loadMenuItems = async () => {
       if (userRole) {
         try {
-          //console.log('Loading menu for role:', userRole);
-          const menuData = await import(`../resource/TOCs/${userRole}.json`);
+          const menuData = await import(`../resources/TOCs/${userRole}.json`);
           setMenuItems(menuData.default);
         } catch (error) {
           console.error('Error loading menu:', error);
-          const defaultMenu = await import('../resource/TOCs/Demo.json');
+          const defaultMenu = await import('../resources/TOCs/Demo.json');
           setMenuItems(defaultMenu.default);
         }
       }
