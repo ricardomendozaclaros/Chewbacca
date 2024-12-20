@@ -11,8 +11,7 @@ export default function HeaderBar({ toggleSidebar }) {
       >
         <div className="d-flex align-items-center justify-content-between">
           <a href="index.html" className="logo d-flex align-items-center">
-            <img src="/src/resource/image/logo.jpeg" alt="" />
-            <span className="d-none d-lg-block">AutenTIC</span>
+            <img src="/src/resources/image/logo.jpeg" alt="" width={250}/>
           </a>
           <i
             className="bi bi-list toggle-sidebar-btn"
