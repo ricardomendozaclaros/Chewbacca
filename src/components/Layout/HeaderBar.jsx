@@ -10,15 +10,13 @@ export default function HeaderBar({ toggleSidebar }) {
         className="header fixed-top d-flex align-items-center"
       >
         <div className="d-flex align-items-center justify-content-between">
-          <a href="index.html" className="logo d-flex align-items-center">
-            <img src="/src/resources/image/logo.jpeg" alt="" width={250}/>
-          </a>
+        <b> Visión 360°</b>
           <i
             className="bi bi-list toggle-sidebar-btn"
             onClick={toggleSidebar}
             style={{ cursor: "pointer" }}
           ></i>
-          <div><b> Visión 360°</b> - Dashboard Integral de Gestión Empresarial</div>
+          <div> - Dashboard Integral de Gestión Empresarial</div>
         </div>
 
         {/* <div className="search-bar">
