@@ -1,0 +1,10 @@
+[
+    {
+        "name": "data1",
+        "url": "localhost:3001/api/redis/key"
+    },
+    {
+        "name": "data2",
+        "url": "https://api.myjson.com/bins/1f5z1"
+    }
+]

@@ -5,12 +5,20 @@ import LineModal from "./OptionsModal/LineModal";
 const ChartConfigModal = ({ onClose, onConfirm, data }) => {
   const [selectedChartType, setSelectedChartType] = useState("pieChart");
   const [processedData, setProcessedData] = useState([]);
-  const [title, setTitle] = useState(""); // Estado para el título
-  const [subTitle, setSubTitle] = useState(""); // Estado para el subtítulo
-  const [description, setDescription] = useState(""); // Estado para la descripción
+  const [title, setTitle] = useState(""); 
+  const [subTitle, setSubTitle] = useState(""); 
+  const [description, setDescription] = useState(""); 
 
-  const handleDataProcessed = (newData) => {
+  // Nuevo: Guardar el tipo de proceso y campos seleccionados
+  const [processType, setProcessType] = useState("");
+  const [selectedField, setSelectedField] = useState("");
+  const [xAxisField, setXAxisField] = useState("");
+
+  const handleDataProcessed = (newData, process, yField, xField) => {
     setProcessedData(newData);
+    setProcessType(process);  // Guardar tipo de proceso
+    setSelectedField(yField);  // Guardar campo Y
+    setXAxisField(xField);  // Guardar campo X (solo para LineChart)
   };
 
   return (
@@ -80,7 +88,7 @@ const ChartConfigModal = ({ onClose, onConfirm, data }) => {
               ></textarea>
             </div>
 
-            {/* PieModal */}
+            {/* Modal de configuración (Pie o Line) */}
             {selectedChartType === "pieChart" && (
               <PieModal data={data} onDataProcessed={handleDataProcessed} />
             )}
@@ -102,7 +110,10 @@ const ChartConfigModal = ({ onClose, onConfirm, data }) => {
                   processedData,
                   title,
                   subTitle,
-                  description
+                  description,
+                  processType,  // Enviar el proceso
+                  selectedField,  // Enviar campo Y
+                  xAxisField  // Enviar campo X (LineChart)
                 )
               }
             >

@@ -1,57 +1,38 @@
 import { useState, useEffect } from "react";
-//Aqui filtraa
+import { processPieChartData } from "../../utils/chartProcessor";  // Importar la función de procesamiento
+
 const PieModal = ({ data, onDataProcessed }) => {
-  const [fields, setFields] = useState([]); // Lista de parámetros
-  const [selectedField, setSelectedField] = useState(""); // Parámetro seleccionado
-  const [previewData, setPreviewData] = useState([]); // Datos procesados para previsualización
+  const [fields, setFields] = useState([]);
+  const [selectedField, setSelectedField] = useState("");
+  const [processType, setProcessType] = useState("count");
+  const [previewData, setPreviewData] = useState([]);
 
   useEffect(() => {
-    // Extraer los campos (parámetros) de la data
     if (data.length > 0) {
       setFields(Object.keys(data[0]));
-      setSelectedField(Object.keys(data[0])[0]); // Selecciona el primer campo por defecto
+      setSelectedField(Object.keys(data[0])[0]);  // Seleccionar el primer campo por defecto
     }
   }, [data]);
 
   const handleOptionClick = (option) => {
-    if (!selectedField) return;
+    setProcessType(option);  // Guardar el tipo de proceso seleccionado
 
-    let processedData = [];
-    const fieldMap = {};
+    // Usar la función del chartProcessor para procesar la data
+    const processedData = processPieChartData(data, selectedField, option);
 
-    // Procesar la data según el campo seleccionado
-    data.forEach((item) => {
-      const key = item[selectedField];
-      fieldMap[key] =
-        (fieldMap[key] || 0) + (option === "sum" ? item.unitValue || 0 : 1);
-    });
+    // Actualizar la previsualización con la data procesada
+    setPreviewData(processedData);  // Cambiado: No es processedData.series, es el array directamente
 
-    // Generar el resultado
-    if (option === "percentage") {
-      const total = Object.values(fieldMap).reduce((acc, val) => acc + val, 0);
-      processedData = Object.entries(fieldMap).map(([name, value]) => ({
-        name,
-        value: ((value / total) * 100).toFixed(2) + " %", // Agrega el símbolo de porcentaje
-      }));
-    } else {
-      processedData = Object.entries(fieldMap).map(([name, value]) => ({
-        name,
-        value,
-      }));
-    }
+    console.log("Datos procesados (Pie):", processedData);
 
-    // Actualiza la previsualización
-    setPreviewData(processedData);
-
-    // Devolver los datos procesados al componente padre
-    onDataProcessed(processedData);
+    // Enviar data, proceso y campo al padre
+    onDataProcessed(processedData, option, selectedField);
   };
 
   return (
     <div>
       <h5 className="mb-3">Parámetros</h5>
       <div style={{ display: "flex", gap: "20px" }}>
-        {/* Lista de parámetros */}
         <div style={{ width: "30%" }}>
           {fields.map((field) => (
             <div key={field} className="form-check">
@@ -71,7 +52,6 @@ const PieModal = ({ data, onDataProcessed }) => {
           ))}
         </div>
 
-        {/* Botones de opciones */}
         <div style={{ width: "30%" }}>
           <button
             className="btn btn-primary w-100 mb-2"
@@ -93,15 +73,14 @@ const PieModal = ({ data, onDataProcessed }) => {
           </button>
         </div>
 
-        {/* Previsualización de los datos */}
         <div
           style={{
             width: "40%",
             border: "1px solid #ccc",
             padding: "10px",
             borderRadius: "5px",
-            maxHeight: "300px", // Altura máxima del contenedor
-            overflowY: "auto", // Agrega scroll vertical cuando el contenido exceda la altura
+            maxHeight: "300px",
+            overflowY: "auto",
           }}
         >
           <h6 className="text-center mb-2">Previsualización</h6>

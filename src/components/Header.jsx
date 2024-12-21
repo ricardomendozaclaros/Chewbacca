@@ -7,10 +7,11 @@ const HeaderComponent = ({ isDraggable, toggleDraggable, addComponent, data }) =
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  const handleConfirm = (selectedChartType, data, title, subTitle, descripción) => {
-    addComponent(selectedChartType, data, title, subTitle, descripción);
+  const handleConfirm = (selectedChartType, data, title, subTitle, description, processType, selectedField, xAxisField) => {
+    addComponent(selectedChartType, data, title, subTitle, description, processType, selectedField, xAxisField);
     setIsModalOpen(false);
   };
+  
 
   return (
     <div className="d-flex justify-content-between mb-3">

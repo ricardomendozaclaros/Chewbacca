@@ -1,79 +1,46 @@
 import { useState, useEffect } from "react";
+import { processLineChartData } from "../../utils/chartProcessor";  // Importar la función
 
 const LineModal = ({ data, onDataProcessed }) => {
   const [fields, setFields] = useState([]);
-  const [selectedField, setSelectedField] = useState("role");  // Campo para el eje Y (agrupado)
-  const [xAxisField, setXAxisField] = useState("date");  // Campo para el eje X (categoría)
-  const [previewData, setPreviewData] = useState([]);
+  const [selectedField, setSelectedField] = useState("role");  // Y-axis
+  const [xAxisField, setXAxisField] = useState("date");  // X-axis
+  const [processType, setProcessType] = useState("count");  // Tipo de proceso
+  const [previewData, setPreviewData] = useState([]);  // Estado para mostrar la previsualización
 
   useEffect(() => {
     if (data.length > 0) {
-      setFields(Object.keys(data[0]));  // Extraer campos de la BD
+      setFields(Object.keys(data[0]));
     }
   }, [data]);
 
-  const processData = () => {
-    if (!selectedField || !xAxisField) return;
+  const processData = (selectedOption) => {
+    setProcessType(selectedOption);  // Actualizar el tipo de proceso seleccionado
 
-    let groupedData = {};
-    let xaxis = [];
-    let seriesMap = {};
+    // Usar la función del chartProcessor para procesar la data
+    const processedData = processLineChartData(
+      data,
+      xAxisField,
+      selectedField,
+      selectedOption
+    );
 
-    // Agrupar por fecha y campo seleccionado (ejemplo: role)
-    data.forEach((item) => {
-      const xValue = item[xAxisField].split("T")[0];  // Formatear fecha
-      const yValue = item[selectedField];  // Ejemplo: 'admin', 'user'
-
-      // Inicializar estructura
-      if (!groupedData[xValue]) {
-        groupedData[xValue] = {};
-      }
-      if (!groupedData[xValue][yValue]) {
-        groupedData[xValue][yValue] = 0;
-      }
-
-      // Contar ocurrencias (se puede modificar para sumar valores si es necesario)
-      groupedData[xValue][yValue] += 1;
-    });
-
-    // Obtener categorías únicas (fechas) y preparar series
-    xaxis = Object.keys(groupedData).sort();  // Fechas ordenadas
-    xaxis.forEach((date) => {
-      Object.keys(groupedData[date]).forEach((role) => {
-        if (!seriesMap[role]) {
-          seriesMap[role] = [];
-        }
-      });
-    });
-
-    // Llenar con ceros los valores faltantes
-    Object.entries(seriesMap).forEach(([role, _]) => {
-      seriesMap[role] = xaxis.map((date) => groupedData[date][role] || 0);
-    });
-
-    // Formatear datos para ApexCharts
-    const formattedSeries = Object.entries(seriesMap).map(([role, values]) => ({
-      name: role,
-      data: values,
-    }));
-
-    // Previsualización de datos
-    setPreviewData(formattedSeries);
+    // Asegurar que series tenga datos antes de actualizar la previsualización
+    setPreviewData(processedData.series || []);
 
     console.log("Datos procesados:", {
-      series: formattedSeries,
-      categories: xaxis,
+      series: processedData.series,
+      categories: processedData.categories,
     });
 
-    // Enviar datos al componente padre
-    onDataProcessed({ series: formattedSeries, categories: xaxis });
+    // Enviar data, campos y proceso al padre
+    onDataProcessed(processedData, selectedOption, selectedField, xAxisField);
   };
 
   return (
     <div>
       <h5 className="mb-3">Parámetros</h5>
       <div style={{ display: "flex", gap: "20px" }}>
-        {/* Lista de parámetros */}
         <div style={{ width: "30%" }}>
           <strong>Parámetro Y (Agrupado):</strong>
           {fields.map((field) => (
@@ -92,7 +59,6 @@ const LineModal = ({ data, onDataProcessed }) => {
               </label>
             </div>
           ))}
-
           <strong className="mt-3">Parámetro X (Categoría/Eje X):</strong>
           <select
             className="form-select mt-2"
@@ -107,17 +73,27 @@ const LineModal = ({ data, onDataProcessed }) => {
           </select>
         </div>
 
-        {/* Botón para procesar */}
         <div style={{ width: "30%" }}>
           <button
             className="btn btn-primary w-100 mb-2"
-            onClick={processData}
+            onClick={() => processData("count")}
           >
-            Procesar Datos
+            Contar
+          </button>
+          <button
+            className="btn btn-secondary w-100 mb-2"
+            onClick={() => processData("sum")}
+          >
+            Sumar
+          </button>
+          <button
+            className="btn btn-info w-100"
+            onClick={() => processData("percentage")}
+          >
+            Porcentaje
           </button>
         </div>
 
-        {/* Previsualización de los datos */}
         <div
           style={{
             width: "40%",
