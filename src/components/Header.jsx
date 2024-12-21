@@ -1,12 +1,22 @@
-const HeaderComponent = ({
-    isDraggable,
-    toggleDraggable,
-    selectedComponent,
-    setSelectedComponent,
-    addComponent,
-  }) => (
+import React, { useState } from "react";
+import ChartConfigModal from "./ChartConfigModal";
+
+const HeaderComponent = ({ isDraggable, toggleDraggable, addComponent, data }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false); // Controla la apertura del modal
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const handleConfirm = (selectedChartType, data, title, subTitle, descripción) => {
+    addComponent(selectedChartType, data, title, subTitle, descripción);
+    setIsModalOpen(false);
+  };
+
+  return (
     <div className="d-flex justify-content-between mb-3">
       <h1>Transacciones</h1>
+
+      {/* Modo Vista/Editor */}
       <div className="form-switch d-flex align-items-center">
         <input
           className="form-check-input mx-2"
@@ -18,24 +28,16 @@ const HeaderComponent = ({
           {isDraggable ? "Edición" : "Vista"}
         </label>
       </div>
-  
-      <div className="d-flex align-items-center">
-        <select
-          className="form-select mx-2"
-          value={selectedComponent}
-          onChange={(e) => setSelectedComponent(e.target.value)}
-        >
-          <option value="pieChart">Pie Chart</option>
-          <option value="lineChart">Line Chart</option>
-          <option value="totalsCard">Totals Card</option>
-          <option value="transactionTable">Transaction Table</option>
-        </select>
-        <button className="btn btn-primary" onClick={addComponent}>
-          + Agregar Componente
-        </button>
-      </div>
+
+      {/* Botón para abrir el modal */}
+      <button className="btn btn-primary" onClick={openModal}>
+        + Agregar Componente
+      </button>
+
+      {/* Modal para seleccionar el gráfico */}
+      {isModalOpen && <ChartConfigModal onClose={closeModal} onConfirm={handleConfirm} data={data} />}
     </div>
   );
-  
-  export default HeaderComponent;
-  
+};
+
+export default HeaderComponent;

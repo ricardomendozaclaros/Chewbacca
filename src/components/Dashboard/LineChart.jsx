@@ -1,33 +1,25 @@
 import { useEffect } from "react";
 
-const LineChart = ({ width, height }) => {
+const LineChart = ({ data, title, subTitle, description }) => {
   useEffect(() => {
     // Verifica si ApexCharts está disponible globalmente
     if (window.ApexCharts) {
       const chartDom = document.getElementById("reportsChart");
+
+      // Destruir gráfico anterior si existe
+      if (chartDom && chartDom._chart) {
+        chartDom._chart.destroy();
+      }
+
       const reportsChart = new window.ApexCharts(chartDom, {
-        series: [
-          {
-            name: "Sales",
-            data: [31, 40, 28, 51, 42, 82, 56],
-          },
-          {
-            name: "Revenue",
-            data: [11, 32, 45, 32, 34, 52, 41],
-          },
-          {
-            name: "Customers",
-            data: [15, 11, 32, 18, 9, 24, 11],
-          },
-        ],
+        series: data.series,
         chart: {
-          width: width || "100%",
+          width: "100%",
           height: "80%",
           type: "area",
           toolbar: { show: false },
         },
         markers: { size: 4 },
-        colors: ["#4154f1", "#2eca6a", "#ff771d"],
         fill: {
           type: "gradient",
           gradient: {
@@ -43,16 +35,7 @@ const LineChart = ({ width, height }) => {
           width: 2,
         },
         xaxis: {
-          type: "datetime",
-          categories: [
-            "2018-09-19T00:00:00.000Z",
-            "2018-09-19T01:30:00.000Z",
-            "2018-09-19T02:30:00.000Z",
-            "2018-09-19T03:30:00.000Z",
-            "2018-09-19T04:30:00.000Z",
-            "2018-09-19T05:30:00.000Z",
-            "2018-09-19T06:30:00.000Z",
-          ],
+          categories: data.categories,
         },
         tooltip: {
           x: {
@@ -62,21 +45,25 @@ const LineChart = ({ width, height }) => {
       });
 
       reportsChart.render();
+      chartDom._chart = reportsChart;
 
-      // Limpieza al desmontar el componente
-      return () => reportsChart.destroy();
+      // Limpieza al desmontar o actualizar
+      return () => {
+        if (reportsChart) reportsChart.destroy();
+      };
     }
-  }, []);
+  }, [data]);  // Vuelve a renderizar si los datos cambian
 
   return (
-      <div className="card" style={{ width: "100%", height: "100%" }}>
-        <div className="card-body">
-          <h5 className="card-title">
-            Reports <span>/Today</span>
-          </h5>
-          <div id="reportsChart" className="w-100"></div>
-        </div>
+    <div className="card" style={{ width: "100%", height: "100%" }}>
+      <div className="card-body">
+        <h5 className="card-title">
+          {title} <span>| {subTitle}</span>
+        </h5>
+        <div id="reportsChart" className="w-100"></div>
+        {description && <p className="text-muted mt-2">{description}</p>}
       </div>
+    </div>
   );
 };
 
