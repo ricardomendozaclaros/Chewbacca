@@ -1,7 +1,7 @@
 {
   "layout": [
     {
-      "i": "pieChart-1734741265391",
+      "i": "pieChart-1734744233889",
       "x": 0,
       "y": 0,
       "w": 4,
@@ -9,47 +9,16 @@
       "type": "pieChart",
       "data": [
         {
-          "name": "Manager",
-          "value": 258
-        },
-        {
-          "name": "Employee",
-          "value": 221
-        },
-        {
-          "name": "Agent",
-          "value": 282
-        },
-        {
-          "name": "Supervisor",
-          "value": 239
-        }
-      ],
-      "title": "titulo 1",
-      "subTitle": "subtitulo ejemplo",
-      "description": "asdasdasdas asd as asd assssssssssssssssssssssssssssssdsdad",
-      "moved": false,
-      "static": false
-    },
-    {
-      "i": "pieChart-1734741275694",
-      "x": 0,
-      "y": 3,
-      "w": 4,
-      "h": 3,
-      "type": "pieChart",
-      "data": [
-        {
           "name": "Ms",
-          "value": 174
+          "value": 178
         },
         {
           "name": "Mr",
-          "value": 169
+          "value": 172
         },
         {
           "name": "Dr",
-          "value": 156
+          "value": 159
         },
         {
           "name": "Honorable",
@@ -64,8 +33,8 @@
           "value": 149
         }
       ],
-      "title": "sdasda",
-      "subTitle": "asdadasd",
+      "title": "Título no definido",
+      "subTitle": "",
       "description": "",
       "moved": false,
       "static": false

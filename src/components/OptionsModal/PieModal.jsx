@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+//Aqui filtraa
 const PieModal = ({ data, onDataProcessed }) => {
   const [fields, setFields] = useState([]); // Lista de parámetros
   const [selectedField, setSelectedField] = useState(""); // Parámetro seleccionado

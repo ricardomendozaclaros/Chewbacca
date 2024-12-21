@@ -6,6 +6,7 @@ import Page1 from './pages/Page1';
 import Page2 from './pages/Page2';
 import Layout from './pages/Layout';
 import Error from './pages/Error';
+import Filtros from './pages/Filters/Filters';
 
 function App() {
   const { isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
@@ -39,6 +40,7 @@ function App() {
         <Route path="page1" element={<Page1 />} />
         <Route path="page2" element={<Page2 />} />
         <Route path="error" element={<Error />} />
+        <Route path="filters" element={<Filtros />} />
       </Route>
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
