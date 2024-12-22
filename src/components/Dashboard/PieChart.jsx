@@ -80,7 +80,7 @@ const PieChart = ({data, title, subTitle, description}) => {
         resizeObserver.unobserve(chartRef.current);
       }
     };
-  }, []);
+  }, [data]);
 
   return (
     <div className="card" style={{ width: "100%", height: "100%" }}>

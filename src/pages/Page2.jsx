@@ -2,12 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import HeaderComponent from "../components/Header";
 import GridContainer from "../components/GridLayoutWrapper";
 import ContextMenuComponent from "../components/ContextMenu";
-import data from "../utils/exampledata";  // Data base completa sin filtrar
+import DateColumnFilter from "../components/Filters/DateColumnFilter";
+import { GetSignatureProcesses } from "../api/signatureProcess";
 import { loadConfig, saveConfig } from "../utils/configHandler";
-import {
-  processLineChartData,
-  processPieChartData
-} from "../utils/chartProcessor";  // Importar funciones de procesamiento
+import { processLineChartData, processPieChartData } from "../utils/chartProcessor";
 
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -18,16 +16,129 @@ const Page2 = () => {
   const [gridWidth, setGridWidth] = useState(window.innerWidth);
   const gridRef = useRef(null);
   const [contextMenu, setContextMenu] = useState(null);
-  const [filter, setFilter] = useState({ start: "", end: "" });  // Filtro de fechas
+  const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [dateRange, setDateRange] = useState([null, null]);
+  const [selectedColumn, setSelectedColumn] = useState(null);
+  const [selectedValues, setSelectedValues] = useState([]);
+  const [searchText, setSearchText] = useState('');
 
-  // Cargar configuración al iniciar la página (layout inicial)
+  // Cargar datos iniciales
+  useEffect(() => {
+    const loadData = async () => {
+      const result = await GetSignatureProcesses();
+      setData(result);
+      setFilteredData(result);
+    };
+    loadData();
+  }, []);
+
+  // Ajustar el ancho del grid
+  useEffect(() => {
+    const handleResize = () => setGridWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Cargar configuración inicial
   useEffect(() => {
     const fetchConfig = async () => {
       const savedLayout = await loadConfig("Page2");
-      setLayout(savedLayout);
+      if (savedLayout) {
+        const initializedLayout = savedLayout.map(item => ({
+          ...item,
+          data: processChartData(
+            item.type,
+            data,
+            item.xAxisField,
+            item.selectedField,
+            item.processType
+          )
+        }));
+        setLayout(initializedLayout);
+      }
     };
     fetchConfig();
-  }, []);
+  }, [data]);
+
+  // Aplicar filtros cuando cambian
+  useEffect(() => {
+    let filtered = [...data];
+    const [startDate, endDate] = dateRange;
+
+    // Aplicar filtro de fechas
+    if (startDate && endDate) {
+      const endOfDay = new Date(endDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      filtered = filtered.filter((item) => {
+        const itemDate = new Date(item.date);
+        return itemDate >= startDate && itemDate <= endOfDay;
+      });
+    }
+
+    // Aplicar filtro de columna (ahora con múltiples valores)
+    if (selectedColumn && selectedValues.length > 0) {
+      filtered = filtered.filter(item =>
+        selectedValues.some(selected => selected.value === item[selectedColumn.value])
+      );
+    }
+
+    // Aplicar filtro de texto
+    if (searchText.trim()) {
+      const searchLower = searchText.toLowerCase();
+      filtered = filtered.filter(item => {
+        return Object.values(item).some(value =>
+          String(value).toLowerCase().includes(searchLower)
+        );
+      });
+    }
+
+    setFilteredData(filtered);
+
+    // Actualizar gráficos
+    const newLayout = layout.map((item) => ({
+      ...item,
+      data: processChartData(
+        item.type,
+        filtered,
+        item.xAxisField,
+        item.selectedField,
+        item.processType
+      )
+    }));
+
+    setLayout(newLayout);
+  }, [dateRange, selectedValues, searchText,data]);
+
+  const processChartData = (chartType, sourceData, xAxisField, selectedField, processType) => {
+    if (!sourceData || sourceData.length === 0) {
+      return chartType === "lineChart" ? { categories: [], series: [] } : [];
+    }
+
+    return chartType === "lineChart"
+      ? processLineChartData(sourceData, xAxisField, selectedField, processType)
+      : processPieChartData(sourceData, selectedField, processType);
+  };
+
+  const addComponent = (chartType, processedData, title, subTitle, description, processType, selectedField, xAxisField) => {
+    const newItem = {
+      i: `${chartType}-${Date.now()}`,
+      x: 0,
+      y: 0,
+      w: 4,
+      h: 3,
+      type: chartType,
+      data: processedData,
+      title,
+      subTitle,
+      description,
+      processType,
+      selectedField,
+      xAxisField,
+    };
+    saveLayout([...layout, newItem]);
+  };
 
   const saveLayout = async (newLayout) => {
     const updatedLayout = newLayout.map((item) => ({
@@ -43,76 +154,6 @@ const Page2 = () => {
 
     setLayout(updatedLayout);
     await saveConfig("Page2", updatedLayout);
-    console.log("Configuración guardada en el backend.");
-  };
-
-  // Agregar un nuevo gráfico al layout
-  const addComponent = (chartType, data, title, subTitle, description, processType, selectedField, xAxisField) => {
-    const newItem = {
-      i: `${chartType}-${Date.now()}`,
-      x: 0,
-      y: Infinity,
-      w: 4,
-      h: 3,
-      type: chartType,
-      data,
-      title,
-      subTitle,
-      description,
-      processType,
-      selectedField,
-      xAxisField,
-    };
-    saveLayout([...layout, newItem]);
-  };
-
-  // Filtrar data y aplicar proceso a cada gráfico
-  const applyFilter = () => {
-    if (filter.start && filter.end) {
-      // 1. Filtrar la data base (exampledata.js) por el rango de fechas
-      const filtered = data.filter((item) => {
-        const itemDate = new Date(item.date);
-        return itemDate >= new Date(filter.start) && itemDate <= new Date(filter.end);
-      });
-
-
-      // 2. Re-procesar cada gráfico del layout con la data filtrada
-      const newLayout = layout.map((item) => {
-        const processed = processChartData(
-          item.type,
-          filtered,
-          item.xAxisField,
-          item.selectedField,
-          item.processType
-        );
-
-        return {
-          ...item,
-          data: processed,  // Actualizar solo la data procesada
-        };
-      });
-
-      setLayout(newLayout);  // Actualizar layout con data procesada
-    }
-  };
-
-  // Procesar data según el tipo de gráfico usando chartProcessor.js
-  const processChartData = (chartType, data, xAxisField, selectedField, processType) => {
-    if (data.length === 0) {
-      // Si no hay datos filtrados, devolver estructura vacía
-      return chartType === "lineChart"
-        ? { categories: [], series: [] }
-        : [];
-    }
-
-    // Aplicar el procesamiento adecuado dependiendo del tipo de gráfico
-    if (chartType === "lineChart") {
-      return processLineChartData(data, xAxisField, selectedField, processType);
-    } else if (chartType === "pieChart") {
-      return processPieChartData(data, selectedField, processType);
-    }
-
-    return { series: [], categories: [] };  // Retorno por defecto para evitar errores
   };
 
   const removeComponent = (id) => {
@@ -132,27 +173,22 @@ const Page2 = () => {
         isDraggable={isDraggable}
         toggleDraggable={() => setIsDraggable((prev) => !prev)}
         addComponent={addComponent}
-        data={data}
+        data={filteredData}
       />
 
-      {/* Filtro de fechas */}
-      <div className="d-flex mb-3">
-        <input
-          type="date"
-          className="form-control me-2"
-          value={filter.start}
-          onChange={(e) => setFilter({ ...filter, start: e.target.value })}
-        />
-        <input
-          type="date"
-          className="form-control me-2"
-          value={filter.end}
-          onChange={(e) => setFilter({ ...filter, end: e.target.value })}
-        />
-        <button className="btn btn-primary" onClick={applyFilter}>
-          Filtrar
-        </button>
-      </div>
+      <DateColumnFilter
+        data={data}
+        dateRange={dateRange}
+        onDateRangeChange={setDateRange}
+        selectedColumn={selectedColumn}
+        onColumnChange={setSelectedColumn}
+        selectedValues={selectedValues}
+        onValueChange={setSelectedValues}
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        filteredCount={filteredData.length}
+        totalCount={data.length}
+      />
 
       <div id="grid-container" ref={gridRef} style={{ width: "100%" }}>
         <GridContainer
