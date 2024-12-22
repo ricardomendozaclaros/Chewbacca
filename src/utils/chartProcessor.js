@@ -64,8 +64,8 @@ export const processChartData = (chartType, data, xAxisField, selectedField, pro
   // Procesamiento para PieChart (proporciones por categoría)
   export const processPieChartData = (data, selectedField, processType) => {
     let fieldMap = {};
-    console.log(data);
-    console.log(selectedField, processType)
+    //console.log(data);
+    //console.log(selectedField, processType)
     // Agrupar data por el campo seleccionado
     data.forEach((item) => {
       const key = item[selectedField];

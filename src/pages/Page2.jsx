@@ -1,3 +1,4 @@
+// src/pages/Page2.js
 import { useState, useEffect, useRef } from "react";
 import HeaderComponent from "../components/Header";
 import GridContainer from "../components/GridLayoutWrapper";
@@ -22,16 +23,23 @@ const Page2 = () => {
   const [selectedColumn, setSelectedColumn] = useState(null);
   const [selectedValues, setSelectedValues] = useState([]);
   const [searchText, setSearchText] = useState('');
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [allData, setAllData] = useState([]); // Almacena todos los datos del año
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales (un año completo)
   useEffect(() => {
     const loadData = async () => {
-      const result = await GetSignatureProcesses();
-      setData(result);
-      setFilteredData(result);
+      if (isInitialLoad) {
+        // En la carga inicial, obtener el año completo
+        const result = await GetSignatureProcesses();
+        setAllData(result);
+        setData(result);
+        setFilteredData(result);
+        setIsInitialLoad(false);
+      }
     };
     loadData();
-  }, []);
+  }, [isInitialLoad]);
 
   // Ajustar el ancho del grid
   useEffect(() => {
@@ -61,30 +69,30 @@ const Page2 = () => {
     fetchConfig();
   }, [data]);
 
-  // Aplicar filtros cuando cambian
+  // Efecto para manejar cambios en el rango de fechas
+  useEffect(() => {
+    if (!isInitialLoad && dateRange[0] && dateRange[1]) {
+      const [startDate, endDate] = dateRange;
+      // Filtrar los datos existentes según el rango de fechas
+      const filtered = allData.filter(item => {
+        const itemDate = new Date(item.date);
+        return itemDate >= startDate && itemDate <= endDate;
+      });
+      setData(filtered);
+      setFilteredData(filtered);
+    }
+  }, [dateRange, allData, isInitialLoad]);
+
+  // Aplicar otros filtros (columna, texto, etc.)
   useEffect(() => {
     let filtered = [...data];
-    const [startDate, endDate] = dateRange;
 
-    // Aplicar filtro de fechas
-    if (startDate && endDate) {
-      const endOfDay = new Date(endDate);
-      endOfDay.setHours(23, 59, 59, 999);
-
-      filtered = filtered.filter((item) => {
-        const itemDate = new Date(item.date);
-        return itemDate >= startDate && itemDate <= endOfDay;
-      });
-    }
-
-    // Aplicar filtro de columna (ahora con múltiples valores)
     if (selectedColumn && selectedValues.length > 0) {
       filtered = filtered.filter(item =>
         selectedValues.some(selected => selected.value === item[selectedColumn.value])
       );
     }
 
-    // Aplicar filtro de texto
     if (searchText.trim()) {
       const searchLower = searchText.toLowerCase();
       filtered = filtered.filter(item => {
@@ -109,7 +117,7 @@ const Page2 = () => {
     }));
 
     setLayout(newLayout);
-  }, [dateRange, selectedValues, searchText,data]);
+  }, [selectedValues, searchText, data]);
 
   const processChartData = (chartType, sourceData, xAxisField, selectedField, processType) => {
     if (!sourceData || sourceData.length === 0) {
@@ -179,7 +187,9 @@ const Page2 = () => {
       <DateColumnFilter
         data={data}
         dateRange={dateRange}
-        onDateRangeChange={setDateRange}
+        onDateRangeChange={(dates) => {
+          setDateRange(dates);
+        }}
         selectedColumn={selectedColumn}
         onColumnChange={setSelectedColumn}
         selectedValues={selectedValues}

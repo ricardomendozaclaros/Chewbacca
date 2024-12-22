@@ -1,0 +1,168 @@
+.filters-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .filters-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  /* Contenedor de búsqueda */
+  .search-box {
+    position: relative;
+    width: 250px;
+  }
+  
+  .search-box input {
+    width: 100%;
+    height: 38px;
+    padding: 8px 12px 8px 36px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+  }
+  
+  .search-box input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  }
+  
+  .search-box .bi {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+  }
+  
+  /* Contenedores de Select */
+  .select-container {
+    min-width: 250px;
+    max-width: 400px;
+    flex-grow: 1;
+  }
+  
+  /* Estilos para las opciones seleccionadas */
+  .select__multi-value {
+    background-color: #e5e7eb !important;
+    border-radius: 4px !important;
+    margin: 2px !important;
+  }
+  
+  .select__multi-value__label {
+    color: #374151 !important;
+    font-size: 12px !important;
+    padding: 2px 6px !important;
+  }
+  
+  .select__multi-value__remove {
+    padding: 0 4px !important;
+    color: #6b7280 !important;
+  }
+  
+  .select__multi-value__remove:hover {
+    background-color: #d1d5db !important;
+    color: #374151 !important;
+  }
+  
+  /* Contenedor del DatePicker */
+  .date-picker-container {
+    display: flex;
+    align-items: center;
+    width: 250px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 0 12px;
+    height: 38px;
+    transition: all 0.2s;
+    position: relative;
+  }
+  
+  .date-picker-container:hover {
+    border-color: #2563eb;
+  }
+  
+  .date-picker-container .bi-calendar3 {
+    color: #6b7280;
+    margin-right: 8px;
+    font-size: 14px;
+  }
+  
+  .date-picker-container input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 14px;
+    padding-right: 24px;
+  }
+  
+  /* Botón clear personalizado */
+  .date-clear-button {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #9ca3af;
+    transition: color 0.2s;
+  }
+  
+  .date-clear-button:hover {
+    color: #4b5563;
+  }
+  
+  .date-clear-button .bi-x {
+    font-size: 16px;
+  }
+  
+  /* Ocultar el botón clear por defecto del DatePicker */
+  .react-datepicker__close-icon {
+    display: none !important;
+  }
+  
+  /* Contador de registros */
+  .records-counter {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #6b7280;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+  
+  .records-counter .bi {
+    margin-right: 8px;
+    color: #6b7280;
+    font-size: 14px;
+  }
+  
+  /* Asegurar que los menús desplegables estén por encima */
+  .select__menu {
+    z-index: 999 !important;
+  }
+  
+  .react-datepicker-popper {
+    z-index: 999 !important;
+  }
+  
+  /* Estilo para la opción "Seleccionar todos" */
+  .select__option--is-focused[data-value="*"] {
+    background-color: #2563eb !important;
+    color: white !important;
+  }
