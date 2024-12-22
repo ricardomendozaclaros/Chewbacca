@@ -6,7 +6,9 @@ import ContextMenuComponent from "../components/ContextMenu";
 import DateColumnFilter from "../components/Filters/DateColumnFilter";
 import { GetSignatureProcesses } from "../api/signatureProcess";
 import { loadConfig, saveConfig } from "../utils/configHandler";
-import { processLineChartData, processPieChartData } from "../utils/chartProcessor";
+import {
+  processChartData
+} from "../utils/chartProcessor";  // Importar funciones de procesamiento
 
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
@@ -119,35 +121,6 @@ const Page2 = () => {
     setLayout(newLayout);
   }, [selectedValues, searchText, data]);
 
-  const processChartData = (chartType, sourceData, xAxisField, selectedField, processType) => {
-    if (!sourceData || sourceData.length === 0) {
-      return chartType === "lineChart" ? { categories: [], series: [] } : [];
-    }
-
-    return chartType === "lineChart"
-      ? processLineChartData(sourceData, xAxisField, selectedField, processType)
-      : processPieChartData(sourceData, selectedField, processType);
-  };
-
-  const addComponent = (chartType, processedData, title, subTitle, description, processType, selectedField, xAxisField) => {
-    const newItem = {
-      i: `${chartType}-${Date.now()}`,
-      x: 0,
-      y: 0,
-      w: 4,
-      h: 3,
-      type: chartType,
-      data: processedData,
-      title,
-      subTitle,
-      description,
-      processType,
-      selectedField,
-      xAxisField,
-    };
-    saveLayout([...layout, newItem]);
-  };
-
   const saveLayout = async (newLayout) => {
     const updatedLayout = newLayout.map((item) => ({
       ...item,
@@ -162,6 +135,80 @@ const Page2 = () => {
 
     setLayout(updatedLayout);
     await saveConfig("Page2", updatedLayout);
+    console.log("Configuración guardada en el backend.");
+  };
+
+  // Agregar un nuevo gráfico al layout
+  const addComponent = (chartType, data, title, subTitle, description, processType, selectedField, xAxisField) => {
+    const newItem = {
+      i: `${chartType}-${Date.now()}`,
+      x: 0,
+      y: Infinity,
+      w: 4,
+      h: 3,
+      type: chartType,
+      data,
+      title,
+      subTitle,
+      description,
+      processType,
+      selectedField,
+      xAxisField,
+    };
+    saveLayout([...layout, newItem]);
+  };
+
+  // Filtrar data y aplicar proceso a cada gráfico
+  const applyFilter = () => {
+    if (filter.start && filter.end) {
+      const filtered = data.filter((item) => {
+        const itemDate = new Date(item.date);
+        return itemDate >= new Date(filter.start) && itemDate <= new Date(filter.end);
+      });
+  
+      const newLayout = layout.map((item) => {
+        let processed;
+  
+        if (item.type === "transactionTable") {
+          processed = filtered.map((row) => {
+            const filteredRow = {};
+            item.selectedField.forEach((field) => {
+              filteredRow[field] = row[field];
+            });
+            return filteredRow;
+          });
+        } 
+        else if (item.type === "totalsCard") {
+          const selectedFieldObj = {
+            field: item.selectedField.field,
+            subfields: item.selectedField.subfields,
+          };
+          processed = processChartData(
+            item.type,
+            filtered,
+            null,
+            selectedFieldObj,
+            item.processType
+          );
+        } 
+        else {
+          processed = processChartData(
+            item.type,
+            filtered,
+            item.xAxisField,
+            item.selectedField,
+            item.processType
+          );
+        }
+        console.log(processed)
+        return {
+          ...item,
+          data: processed,
+        };
+      });
+  
+      setLayout(newLayout);
+    }
   };
 
   const removeComponent = (id) => {

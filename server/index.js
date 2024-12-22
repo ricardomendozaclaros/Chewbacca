@@ -8,6 +8,7 @@ import { config } from "./config/default.js";
 import { redisService } from "./lib/redis.js";
 import signatureRoutes from "./routes/signatures.js";
 import userRoutes from "./routes/user.js";
+import bodyParser from "body-parser";
 
 // Configurar __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -18,6 +19,8 @@ const { port, host } = config.server;
 
 const CONFIGS_DIR = path.join(__dirname, "configs");
 
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 // Middleware
 app.use(cors());
 app.use(express.json()); // Para manejar cuerpos JSON en las solicitudes
@@ -48,6 +51,7 @@ app.post("/api/config/:page", (req, res) => {
   console.log(`Archivo actualizado: ${filePath}`);
   return res.json({ message: "Configuración actualizada exitosamente." });
 });
+
 
 // Rutas existentes
 app.use("/api/apicerticamara", signatureRoutes);

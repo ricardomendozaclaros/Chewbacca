@@ -1,13 +1,15 @@
 import { useState } from "react";
 import PieModal from "./OptionsModal/PieModal";
 import LineModal from "./OptionsModal/LineModal";
+import TableModal from "./OptionsModal/TableModal";
+import TotalsCardModal from "./OptionsModal/TotalsCardModal";
 
 const ChartConfigModal = ({ onClose, onConfirm, data }) => {
   const [selectedChartType, setSelectedChartType] = useState("pieChart");
   const [processedData, setProcessedData] = useState([]);
-  const [title, setTitle] = useState(""); 
-  const [subTitle, setSubTitle] = useState(""); 
-  const [description, setDescription] = useState(""); 
+  const [title, setTitle] = useState("");
+  const [subTitle, setSubTitle] = useState("");
+  const [description, setDescription] = useState("");
 
   // Nuevo: Guardar el tipo de proceso y campos seleccionados
   const [processType, setProcessType] = useState("");
@@ -16,9 +18,9 @@ const ChartConfigModal = ({ onClose, onConfirm, data }) => {
 
   const handleDataProcessed = (newData, process, yField, xField) => {
     setProcessedData(newData);
-    setProcessType(process);  // Guardar tipo de proceso
-    setSelectedField(yField);  // Guardar campo Y
-    setXAxisField(xField);  // Guardar campo X (solo para LineChart)
+    setProcessType(process); // Guardar tipo de proceso
+    setSelectedField(yField); // Guardar campo Y
+    setXAxisField(xField); // Guardar campo X (solo para LineChart)
   };
 
   return (
@@ -96,6 +98,17 @@ const ChartConfigModal = ({ onClose, onConfirm, data }) => {
             {selectedChartType === "lineChart" && (
               <LineModal data={data} onDataProcessed={handleDataProcessed} />
             )}
+
+            {selectedChartType === "transactionTable" && (
+              <TableModal data={data} onDataProcessed={handleDataProcessed} />
+            )}
+
+            {selectedChartType === "totalsCard" && (
+              <TotalsCardModal
+                data={data}
+                onDataProcessed={handleDataProcessed}
+              />
+            )}
           </div>
 
           <div className="modal-footer">
@@ -111,9 +124,9 @@ const ChartConfigModal = ({ onClose, onConfirm, data }) => {
                   title,
                   subTitle,
                   description,
-                  processType,  // Enviar el proceso
-                  selectedField,  // Enviar campo Y
-                  xAxisField  // Enviar campo X (LineChart)
+                  processType, // Enviar el proceso
+                  selectedField, // Enviar campo Y
+                  xAxisField // Enviar campo X (LineChart)
                 )
               }
             >
