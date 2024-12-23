@@ -1,17 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const LineChart = ({ data, title, subTitle, description }) => {
-  useEffect(() => {
-    // Verifica si ApexCharts está disponible globalmente
-    if (window.ApexCharts) {
-      const chartDom = document.getElementById("reportsChart");
+  const chartRef = useRef(null); // Referencia para contenedor único del gráfico
 
+  useEffect(() => {
+    if (window.ApexCharts) {
       // Destruir gráfico anterior si existe
-      if (chartDom && chartDom._chart) {
-        chartDom._chart.destroy();
+      if (chartRef.current && chartRef.current._chart) {
+        chartRef.current._chart.destroy();
       }
 
-      const reportsChart = new window.ApexCharts(chartDom, {
+      // Crear nuevo gráfico con el contenedor único
+      const reportsChart = new window.ApexCharts(chartRef.current, {
         series: data.series,
         chart: {
           width: "100%",
@@ -45,7 +45,7 @@ const LineChart = ({ data, title, subTitle, description }) => {
       });
 
       reportsChart.render();
-      chartDom._chart = reportsChart;
+      chartRef.current._chart = reportsChart;
 
       // Limpieza al desmontar o actualizar
       return () => {
@@ -60,7 +60,8 @@ const LineChart = ({ data, title, subTitle, description }) => {
         <h5 className="card-title">
           {title} <span>| {subTitle}</span>
         </h5>
-        <div id="reportsChart" className="w-100"></div>
+        {/* Se cambia el ID estático por una referencia dinámica */}
+        <div ref={chartRef} className="w-100" style={{ height: "300px" }}></div>
         {description && <p className="text-muted mt-2">{description}</p>}
       </div>
     </div>
