@@ -11,11 +11,10 @@ const GridLayoutWrapper = ({
 <GridLayout
   className="layout"
   layout={layout}
-  cols={12}
-  rowHeight={100}
+  cols={24}  // Aumentamos el número de columnas
+  rowHeight={30}  // Reducimos la altura de cada fila para más flexibilidad
   width={gridWidth}
   onLayoutChange={(newLayout) => {
-    // Mezclar las nuevas posiciones con los datos originales
     const updatedLayout = newLayout.map((newItem) => {
       const existingItem = layout.find((item) => item.i === newItem.i);
       return { ...existingItem, ...newItem };
@@ -40,6 +39,7 @@ const GridLayoutWrapper = ({
     </div>
   ))}
 </GridLayout>
+
 
 
 );

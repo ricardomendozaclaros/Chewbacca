@@ -1,4 +1,4 @@
-// src/pages/Page2.js
+// src/pages/Page5.js
 import { useState, useEffect, useRef } from "react";
 import HeaderComponent from "../components/Header";
 import GridContainer from "../components/GridLayoutWrapper";
@@ -13,7 +13,7 @@ import {
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
-const Page2 = () => {
+const Page5 = () => {
   const [layout, setLayout] = useState([]);
   const [isDraggable, setIsDraggable] = useState(true);
   const [gridWidth, setGridWidth] = useState(window.innerWidth);
@@ -53,7 +53,7 @@ const Page2 = () => {
   // Cargar configuración inicial
   useEffect(() => {
     const fetchConfig = async () => {
-      const savedLayout = await loadConfig("Page2");
+      const savedLayout = await loadConfig("Page5");
       if (savedLayout) {
         const initializedLayout = savedLayout.map(item => ({
           ...item,
@@ -134,7 +134,7 @@ const Page2 = () => {
     }));
 
     setLayout(updatedLayout);
-    await saveConfig("Page2", updatedLayout);
+    await saveConfig("Page5", updatedLayout);
     console.log("Configuración guardada en el backend.");
   };
 
@@ -287,4 +287,4 @@ const Page2 = () => {
   );
 };
 
-export default Page2;
+export default Page5;

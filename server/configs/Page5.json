@@ -1,0 +1,31 @@
+{
+  "layout": [
+    {
+      "i": "totalsCard-1734910036240",
+      "x": 0,
+      "y": 0,
+      "w": 5,
+      "h": 4,
+      "type": "totalsCard",
+      "data": [],
+      "title": "Título no definido",
+      "subTitle": "",
+      "description": "",
+      "processType": "count",
+      "selectedField": {
+        "field": "role",
+        "subfields": [
+          "Administrator",
+          "SuperAdmin",
+          "Agent",
+          "Person",
+          "Manager",
+          "Coordinator"
+        ]
+      },
+      "xAxisField": "date",
+      "moved": false,
+      "static": false
+    }
+  ]
+}

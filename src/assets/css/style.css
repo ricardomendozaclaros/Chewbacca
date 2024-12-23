@@ -804,11 +804,11 @@ h6 {
 }
 
 /* Info Cards */
-.dashboard .info-card {
+.info-card {
   padding-bottom: 10px;
 }
 
-.dashboard .info-card h6 {
+.info-card h6 {
   font-size: 28px;
   color: #012970;
   font-weight: 700;
@@ -816,7 +816,7 @@ h6 {
   padding: 0;
 }
 
-.dashboard .card-icon {
+.card-icon {
   font-size: 32px;
   line-height: 0;
   width: 64px;
@@ -825,23 +825,23 @@ h6 {
   flex-grow: 0;
 }
 
-.dashboard .sales-card .card-icon {
+.sales-card .card-icon {
   color: #4154f1;
   background: #f6f6fe;
 }
 
-.dashboard .revenue-card .card-icon {
+.revenue-card .card-icon {
   color: #2eca6a;
   background: #e0f8e9;
 }
 
-.dashboard .customers-card .card-icon {
+.customers-card .card-icon {
   color: #ff771d;
   background: #ffecdf;
 }
 
 /* Activity */
-.dashboard .activity {
+.activity {
   font-size: 14px;
 }
 
