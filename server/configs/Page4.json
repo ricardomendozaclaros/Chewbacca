@@ -1,0 +1,21 @@
+{
+  "layout": [
+    {
+      "i": "pieChart-1734909999481",
+      "x": 0,
+      "y": 0,
+      "w": 4,
+      "h": 3,
+      "type": "pieChart",
+      "data": [],
+      "title": "Título no definido",
+      "subTitle": "",
+      "description": "",
+      "processType": "percentage",
+      "selectedField": "role",
+      "xAxisField": "date",
+      "moved": false,
+      "static": false
+    }
+  ]
+}

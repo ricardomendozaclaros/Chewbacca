@@ -1,0 +1,21 @@
+{
+  "layout": [
+    {
+      "i": "pieChart-1734909988305",
+      "x": 0,
+      "y": 0,
+      "w": 5,
+      "h": 5,
+      "type": "pieChart",
+      "data": [],
+      "title": "Título no definido",
+      "subTitle": "",
+      "description": "",
+      "processType": "sum",
+      "selectedField": "role",
+      "xAxisField": "date",
+      "moved": false,
+      "static": false
+    }
+  ]
+}

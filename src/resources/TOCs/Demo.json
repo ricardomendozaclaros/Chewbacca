@@ -2,13 +2,13 @@
   {
       "name": "ESS SI Ejecutiva",
       "isSublist": false,
-      "to": "/Page1",
+      "to": "/",
       "logo": "bi bi-dash-circle"
   },
   {
     "name": "ESS SI Ejecutiva 2",
     "isSublist": false,
-    "to": "/Page1",
+    "to": "/",
     "logo": "bi bi-dash-circle"
   },
   {
@@ -21,31 +21,31 @@
       },
       {
         "name": "Operaciones",
-        "to": "/Page1"
-      },
-      {
-        "name": "Soporte",
-        "to": "/Page1"
-      },
-      {
-        "name": "Infraestructura",
-        "to": "/Page1"
-      },
-      {
-        "name": "Finanzas",
         "to": "/Page2"
       },
       {
-        "name": "Recursos Humanos",
+        "name": "Soporte",
         "to": "/Page3"
+      },
+      {
+        "name": "Infraestructura",
+        "to": "/Page4"
+      },
+      {
+        "name": "Finanzas",
+        "to": "/Page5"
+      },
+      {
+        "name": "Recursos Humanos",
+        "to": "/Page6"
       },
       {
         "name": "Contabilidad",
-        "to": "/Page3"
+        "to": "/Page7"
       },
       {
         "name": "Marketing",
-        "to": "/Page3"
+        "to": "/Page8"
       }
     ],
     "logo": "bi bi-info-circle"
