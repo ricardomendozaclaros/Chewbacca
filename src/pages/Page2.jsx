@@ -248,6 +248,7 @@ const Page2 = () => {
         toggleDraggable={() => setIsDraggable((prev) => !prev)}
         addComponent={addComponent}
         data={filteredData}
+        title="Operaciones"
       />
 
       <DateColumnFilter

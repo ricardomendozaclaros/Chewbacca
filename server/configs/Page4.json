@@ -16,6 +16,26 @@
       "xAxisField": "date",
       "moved": false,
       "static": false
+    },
+    {
+      "i": "totalsCard-1734921833980",
+      "x": 4,
+      "y": 0,
+      "w": 4,
+      "h": 4,
+      "type": "totalsCard",
+      "data": [],
+      "title": "Título no definido",
+      "subTitle": "",
+      "description": "",
+      "processType": "count",
+      "selectedField": {
+        "field": "",
+        "subfields": []
+      },
+      "xAxisField": "date",
+      "moved": false,
+      "static": false
     }
   ]
 }

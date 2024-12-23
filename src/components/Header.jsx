@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ChartConfigModal from "./ChartConfigModal";
 
-const HeaderComponent = ({ isDraggable, toggleDraggable, addComponent, data }) => {
+const HeaderComponent = ({ isDraggable, toggleDraggable, addComponent, data, title }) => {
   const [isModalOpen, setIsModalOpen] = useState(false); // Controla la apertura del modal
 
   const openModal = () => setIsModalOpen(true);
@@ -15,7 +15,7 @@ const HeaderComponent = ({ isDraggable, toggleDraggable, addComponent, data }) =
 
   return (
     <div className="d-flex justify-content-between mb-3">
-      <h1>Transacciones</h1>
+      <h1>{title}</h1>
 
       {/* Modo Vista/Editor */}
       <div className="form-switch d-flex align-items-center">
