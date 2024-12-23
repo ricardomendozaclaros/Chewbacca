@@ -6,6 +6,8 @@ class ApiService {
     const { username, password } = config.api.credentials;
     this.credentials = Buffer.from(`${username}:${password}`).toString('base64');
     this.baseUrl = config.api.baseUrl;
+    this.timeout = 300000; // 5 minutos
+    this.maxRetries = 3;  // Número máximo de intentos
   }
 
   getHeaders() {
@@ -16,49 +18,109 @@ class ApiService {
     };
   }
 
+  // Método para hacer fetch con timeout y reintentos
+  async fetchWithRetries(url, options = {}) {
+    let lastError;
+    
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        console.log(`📡 Intento ${attempt} de ${this.maxRetries} - ${url}`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`❌ Error en intento ${attempt}:`, errorText);
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        console.log(`✅ Intento ${attempt} exitoso`);
+        return response;
+
+      } catch (error) {
+        console.error(`❌ Error en intento ${attempt}:`, error.message);
+        lastError = error;
+        
+        if (attempt < this.maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+          console.log(`⏳ Esperando ${delay}ms antes del siguiente intento...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    throw lastError;
+  }
+
   async fetchSignatureProcesses(startDate, endDate) {
     const headers = this.getHeaders();
-    console.log('Request URL:', `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}`);
-    console.log('Headers:', headers);
+    console.log('🔄 Request URL:', `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}`);
     
-    const response = await fetch(
+    const response = await this.fetchWithRetries(
       `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}`,
-      {
-        headers
-      }
+      { headers }
     );
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Response error:', errorText);
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
     
     return await response.json();
   }
-
-  //Aqui se iran agregando los diferentes EndPoints que vayamos a necesitar
 
   async fetchUsersByDateRange(startDate, endDate) {
     const headers = this.getHeaders();
-    console.log('Request URL:', `${this.baseUrl}/User/DateRange?startDate=${startDate}&endDate=${endDate}`);
-    console.log('Headers:', headers);
-
-    const response = await fetch(
-      `${this.baseUrl}/User/DateRange?startDate=${startDate}&endDate=${endDate}`, // Corregido DataRange a DateRange
-      {
-        headers: this.getHeaders()
-      }
+    console.log('🔄 Request URL:', `${this.baseUrl}/User/DateRange?startDate=${startDate}&endDate=${endDate}`);
+    
+    const response = await this.fetchWithRetries(
+      `${this.baseUrl}/User/DateRange?startDate=${startDate}&endDate=${endDate}`,
+      { headers }
     );
+    
+    return await response.json();
+  }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Response error:', errorText);
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
+  async fetchEnterprises() {
+    const headers = this.getHeaders();
+    console.log('🔄 Request URL:', `${this.baseUrl}/Enterprise/GetEnterprises`);
+    
+    const response = await this.fetchWithRetries(
+      `${this.baseUrl}/Enterprise/GetEnterprises`,
+      { headers }
+    );
 
     return await response.json();
   }
+
+  async fetchAccountingMovements(startDate, endDate, concept) {
+    const headers = this.getHeaders();
+    console.log('Request URL:', `${this.baseUrl}/AccountingMovement?startDate=${startDate}&endDate=${endDate}&concept=${encodeURIComponent(concept)}`);
+    console.log('Headers:', headers);
+
+    const response = await this.fetchWithRetries(
+      `${this.baseUrl}/AccountingMovement?startDate=${startDate}&endDate=${endDate}&concept=${encodeURIComponent(concept)}`,
+      { headers }
+    );
+
+    return await response.json();
+  }
+
+  async fetchCustomerAccounts(limit = 4000) {
+    const headers = this.getHeaders();
+    console.log('Request URL:', `${this.baseUrl}/CustomerAccount?limit=${limit}`);
+    console.log('Headers:', headers);
+   
+    const response = await this.fetchWithRetries(
+      `${this.baseUrl}/CustomerAccount?limit=${limit}`,
+      { headers }
+    );
+   
+    return await response.json();
+}
 }
 
 export const apiService = new ApiService();
