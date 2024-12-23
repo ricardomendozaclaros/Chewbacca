@@ -20,7 +20,7 @@ class SignatureController {
       const cachedData = await redisService.get(annualCacheKey);
 
       if (cachedData && !forceRefresh) {
-        console.log('✅ Usando datos del caché anual');
+        console.log('✅ Usando datos del caché trimestral');
         data = JSON.parse(cachedData);
       } else {
         // Si no hay caché o es forceRefresh, obtener datos de la API
@@ -33,7 +33,7 @@ class SignatureController {
         // Guardar en caché por 24 horas (86400 segundos)
         const dataString = JSON.stringify(data);
         await redisService.setEx(annualCacheKey, dataString);
-        console.log('💾 Datos anuales guardados en caché');
+        console.log('💾 Datos Trimestrales guardados en caché');
       }
 
       // Filtrar los datos para el rango solicitado

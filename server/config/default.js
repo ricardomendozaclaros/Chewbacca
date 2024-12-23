@@ -11,8 +11,8 @@ export const config = {
     api: {
       baseUrl: 'http://3.13.156.101',
       credentials: {
-        username: 'test@test.com',
-        password: '123456'
+        username: 'marketing@autentic.com.co',
+        password: 'Aut3ntic#2024'
       }
     }
   };

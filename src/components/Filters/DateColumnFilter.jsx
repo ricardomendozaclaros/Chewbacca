@@ -40,7 +40,8 @@ const DateColumnFilter = ({
   searchText,
   onSearchChange,
   filteredCount,
-  totalCount
+  totalCount,
+  isLoading
 }) => {
   const [startDate, endDate] = dateRange;
 
@@ -128,13 +129,6 @@ const DateColumnFilter = ({
     onValueChange(selected);
   };
 
-  const formatSelectedValues = (selected) => {
-    if (!selected || selected.length === 0) return '';
-    if (selected.length === valueOptions.length - 1) return 'Todos seleccionados';
-    if (selected.length > 3) return `${selected.length} seleccionados`;
-    return selected.map(v => v.label).join(', ');
-  };
-
   return (
     <div className="filters-container">
       <div className="filters-wrapper">
@@ -178,7 +172,6 @@ const DateColumnFilter = ({
             styles={selectStyles}
             closeMenuOnSelect={false}
             classNamePrefix="select"
-            formatGroupLabel={formatSelectedValues}
           />
         </div>
 
@@ -206,14 +199,22 @@ const DateColumnFilter = ({
           )}
         </div>
 
-        {/* Contador */}
+        {/* Contador con indicador de carga */}
         <div className="records-counter">
           <i className="bi bi-database"></i>
           <span>
-            {filteredCount.toLocaleString()}
-            {filteredCount !== totalCount && (
-              <> / {totalCount.toLocaleString()}</>
-            )} registros
+            {isLoading ? (
+              <span className="loading-indicator">
+                <i className="bi bi-arrow-repeat spinning"></i> Cargando...
+              </span>
+            ) : (
+              <>
+                {filteredCount.toLocaleString()}
+                {filteredCount !== totalCount && (
+                  <> / {totalCount.toLocaleString()}</>
+                )} registros
+              </>
+            )}
           </span>
         </div>
       </div>

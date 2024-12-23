@@ -54,8 +54,8 @@ app.post("/api/config/:page", (req, res) => {
 
 
 // Rutas existentes
-app.use("/api/apicerticamara", signatureRoutes);
-app.use("/api/apicerticamara", userRoutes);
+app.use("/api", signatureRoutes);
+app.use("/api", userRoutes);
 
 // Manejador para cerrar Redis al terminar
 process.on("SIGTERM", async () => {

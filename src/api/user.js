@@ -12,44 +12,44 @@ const getQuarterDates = (date) => {
   };
 };
 
-const GetSignatureProcesses = async (dateRange = null) => {
+const GetUser = async (dateRange = null) => {
   if (dateRange) {
     const { startDate, endDate } = dateRange;
     try {
-      console.log(`Consultando firmas desde ${startDate} hasta ${endDate}`);
+      console.log(`Consultando usuarios desde ${startDate} hasta ${endDate}`);
       const startTime = performance.now();
-      
+     
       const response = await fetch(
-        `/api/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}`
+        `/api/User/DateRange?startDate=${startDate}&endDate=${endDate}`
       );
-      
+     
       const endTime = performance.now();
-      
+     
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      
+     
       const result = await response.json();
       console.log(`Tiempo de respuesta: ${(endTime - startTime).toFixed(2)}ms`);
       return result;
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching user data:", error);
       return [];
     }
   }
-
   // Si no hay dateRange, obtener el trimestre actual
-  return await GetSignatureProcesses(getQuarterDates(new Date()));
+  return await GetUser(getQuarterDates(new Date()));
 };
 
-// Función para cargar datos por trimestre
-const fetchQuarterData = async (year, quarter) => {
+const fetchUserQuarterData = async (year, quarter) => {
   const startDate = new Date(year, quarter * 3, 1);
   const endDate = new Date(year, (quarter + 1) * 3, 0);
-  return GetSignatureProcesses({
+  return GetUser({
     startDate: formatDateToISOString(startDate),
     endDate: formatDateToISOString(endDate)
   });
 };
 
-export { GetSignatureProcesses, fetchQuarterData, formatDateToISOString };
+export { GetUser, fetchUserQuarterData, formatDateToISOString };

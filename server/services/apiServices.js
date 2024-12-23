@@ -10,20 +10,27 @@ class ApiService {
 
   getHeaders() {
     return {
-      Authorization: `Basic ${this.credentials}`,
-      "Content-Type": "application/json",
+      'Authorization': `Basic ${this.credentials}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     };
   }
 
   async fetchSignatureProcesses(startDate, endDate) {
+    const headers = this.getHeaders();
+    console.log('Request URL:', `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}`);
+    console.log('Headers:', headers);
+    
     const response = await fetch(
-      `${this.baseUrl}/apicerticamara/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}`,
+      `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}`,
       {
-        headers: this.getHeaders()
+        headers
       }
     );
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Response error:', errorText);
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
     
@@ -32,19 +39,25 @@ class ApiService {
 
   //Aqui se iran agregando los diferentes EndPoints que vayamos a necesitar
 
-  async fetchUsersByDateRange(startDate , endDate){
+  async fetchUsersByDateRange(startDate, endDate) {
+    const headers = this.getHeaders();
+    console.log('Request URL:', `${this.baseUrl}/User/DateRange?startDate=${startDate}&endDate=${endDate}`);
+    console.log('Headers:', headers);
+
     const response = await fetch(
-      `${this.baseUrl}/apicerticamara/User/DataRange?startDate=${startDate}&endDate=${endDate}`,{
-        headers:this.getHeaders()
+      `${this.baseUrl}/User/DateRange?startDate=${startDate}&endDate=${endDate}`, // Corregido DataRange a DateRange
+      {
+        headers: this.getHeaders()
       }
     );
 
-    if(!response.ok){
-      throw new Error(`HTTP error! Status: ${response.status}`)
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Response error:', errorText);
+      throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
     return await response.json();
-
   }
 }
 
