@@ -75,13 +75,22 @@ const Page5 = () => {
   useEffect(() => {
     if (!isInitialLoad && dateRange[0] && dateRange[1]) {
       const [startDate, endDate] = dateRange;
-      // Filtrar los datos existentes según el rango de fechas
-      const filtered = allData.filter(item => {
-        const itemDate = new Date(item.date);
-        return itemDate >= startDate && itemDate <= endDate;
-      });
-      setData(filtered);
-      setFilteredData(filtered);
+      // Verificar si los datos tienen el campo 'date'
+      const hasDateField = allData.length > 0 && allData[0].hasOwnProperty('date');
+      
+      if (hasDateField) {
+        // Filtrar los datos existentes según el rango de fechas
+        const filtered = allData.filter(item => {
+          const itemDate = new Date(item.date);
+          return itemDate >= startDate && itemDate <= endDate;
+        });
+        setData(filtered);
+        setFilteredData(filtered);
+      } else {
+        // Si no hay campo 'date', pasar todos los datos
+        setData(allData);
+        setFilteredData(allData);
+      }
     }
   }, [dateRange, allData, isInitialLoad]);
 
