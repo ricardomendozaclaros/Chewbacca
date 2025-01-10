@@ -1,15 +1,27 @@
-import { useState } from "react";
+// SideBar.jsx
+import { useState, useEffect } from "react";
 import NavLink from "./NavLink";
-import { useAuth } from "../../hooks/useAuth";
 
 export default function SideBar() {
   const [activeNav, setActiveNav] = useState("");
   const [activeSubNav, setActiveSubNav] = useState("");
-  const { menuItems } = useAuth();
- 
+  const [menuItems, setMenuItems] = useState([]);
+
+  useEffect(() => {
+    const loadMenuItems = async () => {
+      try {
+        // Cargar directamente el menú de SuperUser
+        const menuData = await import('../../resources/TOCs/demo.json');
+        setMenuItems(menuData.default);
+      } catch (error) {
+        console.error('Error loading menu:', error);
+      }
+    };
+
+    loadMenuItems();
+  }, []);
 
   return (
-    
     <aside id="sidebar" className="sidebar">
       <img src="/src/resources/image/logo.jpeg" alt="" width={250}/>
       <ul className="sidebar-nav" id="sidebar-nav">

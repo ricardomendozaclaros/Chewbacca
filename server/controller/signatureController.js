@@ -32,7 +32,7 @@ class SignatureController {
         
         // Guardar en caché por 24 horas (86400 segundos)
         const dataString = JSON.stringify(data);
-        await redisService.setEx(annualCacheKey, dataString);
+        await redisService.setEx(annualCacheKey,86400, dataString);
         console.log('💾 Datos Trimestrales guardados en caché');
       }
 

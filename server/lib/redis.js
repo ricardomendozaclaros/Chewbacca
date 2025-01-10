@@ -16,7 +16,7 @@ class RedisService {
     return await this.client.get(key);
   }
 
-  async setEx(key, value, ttl = 86400) {
+  async setEx(key, ttl = 86400, value) {
     // Redis expect setEx(key, ttl, value)
     return await this.client.setEx(key, ttl, value);
   }
