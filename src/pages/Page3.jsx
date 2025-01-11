@@ -4,7 +4,7 @@ import HeaderComponent from "../components/Header";
 import GridContainer from "../components/GridLayoutWrapper";
 import ContextMenuComponent from "../components/ContextMenu";
 import DateColumnFilter from "../components/Filters/DateColumnFilter";
-import { GetSignatureProcesses } from "../api/signatureProcess";
+import { GetUser } from "../api/user";
 import { loadConfig, saveConfig } from "../utils/configHandler";
 import {
   processChartData
@@ -33,7 +33,8 @@ const Page3 = () => {
     const loadData = async () => {
       if (isInitialLoad) {
         // En la carga inicial, obtener el año completo
-        const result = await GetSignatureProcesses();
+        const result = await GetUser();
+        //console.log(result)
         setAllData(result);
         setData(result);
         setFilteredData(result);

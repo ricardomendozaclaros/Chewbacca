@@ -14,7 +14,8 @@ class ApiService {
     return {
       'Authorization': `Basic ${this.credentials}`,
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache'
     };
   }
 
@@ -74,10 +75,10 @@ class ApiService {
 
   async fetchUsersByDateRange(startDate, endDate) {
     const headers = this.getHeaders();
-    console.log('🔄 Request URL:', `${this.baseUrl}/User/DateRange?startDate=${startDate}&endDate=${endDate}`);
+    console.log('🔄 Request URL:', `${this.baseUrl}/User/DataRange?startDate=${startDate}&endDate=${endDate}`);
     
     const response = await this.fetchWithRetries(
-      `${this.baseUrl}/User/DateRange?startDate=${startDate}&endDate=${endDate}`,
+      `${this.baseUrl}/User/DataRange?startDate=${startDate}&endDate=${endDate}`,
       { headers }
     );
     
