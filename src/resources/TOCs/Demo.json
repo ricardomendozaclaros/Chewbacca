@@ -5,47 +5,22 @@
       "to": "/",
       "logo": "bi bi-dash-circle"
   },
+  
   {
-    "name": "ESS SI Ejecutiva 2",
-    "isSublist": false,
-    "to": "/",
-    "logo": "bi bi-dash-circle"
-  },
-  {
-    "name": "Direcciones",
+    "name": "Operaciones",
     "isSublist": true,
     "sublist": [
       {
-        "name": "Tecnologia",
+        "name": "Transacciones",
         "to": "/Page1"
       },
       {
-        "name": "Operaciones",
+        "name": "Usuarios",
         "to": "/Page2"
       },
       {
-        "name": "Soporte",
+        "name": "Procesos",
         "to": "/Page3"
-      },
-      {
-        "name": "Infraestructura",
-        "to": "/Page4"
-      },
-      {
-        "name": "Finanzas",
-        "to": "/Page5"
-      },
-      {
-        "name": "Recursos Humanos",
-        "to": "/Page6"
-      },
-      {
-        "name": "Contabilidad",
-        "to": "/Page7"
-      },
-      {
-        "name": "Marketing",
-        "to": "/Page8"
       }
     ],
     "logo": "bi bi-info-circle"

@@ -4,10 +4,39 @@
       "i": "pieChart-1734909988305",
       "x": 0,
       "y": 0,
-      "w": 5,
-      "h": 5,
+      "w": 11,
+      "h": 12,
       "type": "pieChart",
-      "data": [],
+      "data": [
+        {
+          "name": "Person",
+          "value": 0
+        },
+        {
+          "name": "Administrator",
+          "value": 0
+        },
+        {
+          "name": "Coordinator",
+          "value": 0
+        },
+        {
+          "name": "Agent",
+          "value": 0
+        },
+        {
+          "name": "Consulting",
+          "value": 0
+        },
+        {
+          "name": "Manager",
+          "value": 0
+        },
+        {
+          "name": "SuperAdmin",
+          "value": 0
+        }
+      ],
       "title": "Título no definido",
       "subTitle": "",
       "description": "",
