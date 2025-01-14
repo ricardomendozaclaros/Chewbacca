@@ -62,8 +62,8 @@
         "to": "/Page3"
       },
       {
-        "name": "Marketing",
-        "to": "/Page3"
+        "name": "Filtros",
+        "to": "/filters"
       }
     ],
     "logo": "bi bi-info-circle"
