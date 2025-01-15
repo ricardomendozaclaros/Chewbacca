@@ -14,10 +14,10 @@ const Bar = ({ data }) => {
         barChart = window.echarts.init(chartRef.current);
 
         // Procesar datos para el gráfico
-        const enterprises = [...new Set(data.map(item => item.enterpriseName))];
-        const totalValues = enterprises.map(enterprise => {
+        const enterprises = [...new Set(data.map(item => item.description))];
+        const totalValues = enterprises.map(description => {
           return data
-            .filter(item => item.enterpriseName === enterprise)
+            .filter(item => item.description === description)
             .reduce((sum, item) => sum + item.totalValue, 0);
         });
         console.log(enterprises)

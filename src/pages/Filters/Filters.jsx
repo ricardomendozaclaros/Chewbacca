@@ -1,22 +1,44 @@
-import React, { useState, useMemo } from 'react';
-import Bar from '../../components/Filtros/Bar.jsx';
-import Donut from '../../components/Filtros/Donut.jsx';
-import Gauge from '../../components/Filtros/Gauge.jsx';
-import MapChart from '../../components/Filtros/MapChart.jsx';
-import data from "../../utils/exampledata.js";
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from 'date-fns/locale';
 import Select from 'react-select';
+import { GetSignatureProcesses } from '../../api/signatureProcess.js';
+import AreaChart from '../../components/Filtros/AreaChart.jsx';
+import { Search } from 'lucide-react';
 
 export default function Filters() {
+  const [allData, setAllData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Estados para filtros
   const [dateRange, setDateRange] = useState([null, null]);
-  const [startDate, endDate] = dateRange;
   const [selectedPlans, setSelectedPlans] = useState([]);
 
-  // Obtener todos los planes únicos
+  // Cargar datos iniciales
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const result = await GetSignatureProcesses();
+        setAllData(result);
+        setFilteredData(result);
+      } catch (error) {
+        console.error("Error cargando datos:", error);
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Opciones de planes
   const planOptions = useMemo(() => {
-    const uniquePlans = [...new Set(data.map(item => item.plan))];
+    const uniquePlans = [...new Set(allData.map(item => item.plan))];
     return [
       { value: 'all', label: 'Todos los planes' },
       ...uniquePlans.map(plan => ({
@@ -24,36 +46,35 @@ export default function Filters() {
         label: plan.charAt(0).toUpperCase() + plan.slice(1)
       }))
     ];
-  }, []);
+  }, [allData]);
 
-  // Función para filtrar datos según el rango de fechas y planes
-  const getFilteredData = () => {
-    let filteredData = [...data];
+  // Función memoizada para filtrar datos
+  const filterData = useCallback(() => {
+    let result = [...allData];
+    const [startDate, endDate] = dateRange;
     
-    // Filtro de fechas
     if (startDate) {
-      filteredData = filteredData.filter(item =>
+      result = result.filter(item => 
         new Date(item.date) >= startDate
       );
     }
     
     if (endDate) {
-      filteredData = filteredData.filter(item =>
+      result = result.filter(item => 
         new Date(item.date) <= endDate
       );
     }
 
-    // Filtro de planes
     if (selectedPlans.length > 0 && !selectedPlans.find(p => p.value === 'all')) {
-      filteredData = filteredData.filter(item =>
+      result = result.filter(item =>
         selectedPlans.some(plan => plan.value === item.plan)
       );
     }
-   // console.log(filteredData)
-    return filteredData;
-  };
 
-  const handlePlanChange = (selected) => {
+    setFilteredData(result);
+  }, [allData, dateRange, selectedPlans]);
+
+  const handlePlanChange = useCallback((selected) => {
     if (!selected) {
       setSelectedPlans([]);
       return;
@@ -64,7 +85,7 @@ export default function Filters() {
     } else {
       setSelectedPlans(selected.filter(option => option.value !== 'all'));
     }
-  };
+  }, []);
 
   return (
     <div className="p-4">
@@ -72,20 +93,32 @@ export default function Filters() {
       <div className="mb-6 bg-white p-4 rounded-lg shadow">
         <h2 className="text-lg font-semibold mb-4">Filtros</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium mb-2">Rango de Fechas</label>
-            <DatePicker
-              selectsRange={true}
-              startDate={startDate}
-              endDate={endDate}
-              onChange={(update) => {
-                setDateRange(update);
-              }}
-              locale={es}
-              isClearable={true}
-              placeholderText="Seleccionar rango de fechas"
-              className="border rounded p-2 w-full"
-            />
+            <div className="flex gap-2">
+              <DatePicker
+                selectsRange={true}
+                startDate={dateRange[0]}
+                endDate={dateRange[1]}
+                onChange={setDateRange}
+                locale={es}
+                isClearable={true}
+                placeholderText="Filtrar por rango de fechas"
+                className="border rounded p-2 w-full"
+                disabled={isLoading}
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+              />
+              <button
+                onClick={filterData}
+                disabled={isLoading}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 flex items-center gap-2"
+              >
+                <Search className="w-4 h-4" />
+                Filtrar
+              </button>
+            </div>
           </div>
           
           <div>
@@ -95,47 +128,42 @@ export default function Filters() {
               options={planOptions}
               value={selectedPlans}
               onChange={handlePlanChange}
-              placeholder="Seleccionar planes..."
+              placeholder="Filtrar por planes"
               className="w-full"
               classNamePrefix="select"
               isClearable={true}
+              isDisabled={isLoading}
             />
           </div>
         </div>
       </div>
 
-      {/* Contenedor de Gráficos */}
-      <div className="space-y-6">
-        {/* Primera fila: Barras y Donut */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Valores por Empresa</h3>
-            <Bar data={getFilteredData()} />
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Distribución por Plan</h3>
-            <Donut data={getFilteredData()} />
-          </div>
+      {/* Estados */}
+      {isLoading && (
+        <div className="text-center p-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Cargando datos...</p>
         </div>
+      )}
 
-        {/* Segunda fila: Gauges */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Eficiencia del Valor Unitario</h3>
-            <Gauge data={getFilteredData()} type="unitValue" />
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-4">Eficiencia de Cantidad</h3>
-            <Gauge data={getFilteredData()} type="quantity" />
-          </div>
+      {error && (
+        <div className="bg-red-50 p-4 rounded-lg mb-6">
+          <p className="text-red-600">Error: {error}</p>
         </div>
+      )}
 
-        {/* Tercera fila: Mapa */}
+      {/* Gráfico */}
+      {!isLoading && !error && filteredData.length > 0 && (
         <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-lg font-semibold mb-4">Distribución Geográfica</h3>
-          <MapChart data={getFilteredData()} />
+          <AreaChart
+            data={filteredData}
+            xAxis="date"
+            yAxis="quantity"
+            groupBy="description"
+            title="Firmas por mecanismo de validación"
+          />
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,48 +1,42 @@
-// server/controller/signatureController.js
+//server/controller/signatureController.js
 import { redisService } from '../lib/redis.js';
 import { apiService } from '../services/apiServices.js';
 
 class SignatureController {
   async getSignaturesByDateRange(req, res) {
-    const { startDate, endDate, forceRefresh } = req.query;
-    
     try {
-      // Generar la clave del caché anual
-      const yearStart = new Date(startDate);
-      yearStart.setFullYear(yearStart.getFullYear());
-      const yearEnd = new Date(yearStart);
-      yearEnd.setFullYear(yearStart.getFullYear() + 1);
+      let { startDate, endDate } = req.query;
       
-      const annualCacheKey = `signatures:${yearStart.toISOString().split('T')[0]}:${yearEnd.toISOString().split('T')[0]}`;
-
-      let data;
-      // Intentar obtener datos del caché anual
-      const cachedData = await redisService.get(annualCacheKey);
-
-      if (cachedData && !forceRefresh) {
-        console.log('✅ Usando datos del caché trimestral');
-        data = JSON.parse(cachedData);
-      } else {
-        // Si no hay caché o es forceRefresh, obtener datos de la API
-        console.log('🔄 Obteniendo datos frescos de la API');
-        data = await apiService.fetchSignatureProcesses(
-          yearStart.toISOString().split('T')[0], 
-          yearEnd.toISOString().split('T')[0]
-        );
+      // Si no hay fechas, usar últimas 2 semanas
+      if (!startDate || !endDate) {
+        const today = new Date();
+        const twoWeeksAgo = new Date(today);
+        twoWeeksAgo.setDate(today.getDate() - 14);
         
-        // Guardar en caché por 24 horas (86400 segundos)
-        const dataString = JSON.stringify(data);
-        await redisService.setEx(annualCacheKey,86400, dataString);
-        console.log('💾 Datos Trimestrales guardados en caché');
+        startDate = twoWeeksAgo.toISOString().split('T')[0];
+        endDate = today.toISOString().split('T')[0];
       }
 
-      // Filtrar los datos para el rango solicitado
-      const filteredData = data.filter(item => {
-        const itemDate = new Date(item.date);
-        return itemDate >= new Date(startDate) && itemDate <= new Date(endDate);
-      });
+      // Crear clave de caché usando el rango de fechas
+      const cacheKey = `signatures:${startDate}:${endDate}`;
+      
+      // Intentar obtener datos del caché
+      const cachedData = await redisService.get(cacheKey);
+      
+      if (cachedData) {
+        console.log('✅ Usando datos del caché');
+        return res.json(JSON.parse(cachedData));
+      }
 
-      res.json(filteredData);
+      // Si no hay caché, obtener datos de la API
+      console.log('🔄 Obteniendo datos frescos de la API');
+      const freshData = await apiService.fetchSignatureProcesses(startDate, endDate);
+      
+      // Guardar en caché por 12 horas (43200 segundos) ya que son datos más recientes
+      await redisService.setEx(cacheKey, 43200, JSON.stringify(freshData));
+      console.log('💾 Datos guardados en caché');
+
+      res.json(freshData);
     } catch (error) {
       console.error('Error:', error);
       res.status(500).json({ error: error.message });
@@ -53,14 +47,16 @@ class SignatureController {
   async cleanOldCaches() {
     try {
       const keys = await redisService.keys('signatures:*');
-      const currentDate = new Date();
-      
+      const today = new Date();
+      const twoWeeksAgo = new Date(today);
+      twoWeeksAgo.setDate(today.getDate() - 14);
+
       for (const key of keys) {
-        const [, startDate] = key.split(':');
-        const cacheDate = new Date(startDate);
+        const [, dateStr] = key.split(':');
+        const cacheDate = new Date(dateStr);
         
-        // Si el caché es de un año anterior, eliminarlo
-        if (cacheDate.getFullYear() < currentDate.getFullYear()) {
+        // Mantener solo cachés de las últimas 2 semanas
+        if (cacheDate < twoWeeksAgo) {
           await redisService.del(key);
           console.log(`🗑️ Caché antiguo eliminado: ${key}`);
         }
