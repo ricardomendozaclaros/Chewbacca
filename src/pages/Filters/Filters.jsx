@@ -5,6 +5,7 @@ import { es } from 'date-fns/locale';
 import Select from 'react-select';
 import { GetSignatureProcesses } from '../../api/signatureProcess.js';
 import AreaChart from '../../components/Filtros/AreaChart.jsx';
+import PieChart from '../../components/Filtros/PirChart.jsx';
 import { Search } from 'lucide-react';
 
 export default function Filters() {
@@ -52,15 +53,15 @@ export default function Filters() {
   const filterData = useCallback(() => {
     let result = [...allData];
     const [startDate, endDate] = dateRange;
-    
+
     if (startDate) {
-      result = result.filter(item => 
+      result = result.filter(item =>
         new Date(item.date) >= startDate
       );
     }
-    
+
     if (endDate) {
-      result = result.filter(item => 
+      result = result.filter(item =>
         new Date(item.date) <= endDate
       );
     }
@@ -79,7 +80,7 @@ export default function Filters() {
       setSelectedPlans([]);
       return;
     }
-    
+
     if (selected.find(option => option.value === 'all')) {
       setSelectedPlans([{ value: 'all', label: 'Todos los planes' }]);
     } else {
@@ -120,7 +121,7 @@ export default function Filters() {
               </button>
             </div>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium mb-2">Planes</label>
             <Select
@@ -153,17 +154,29 @@ export default function Filters() {
       )}
 
       {/* Gráfico */}
+      {/* Dentro de tu componente Filters, añade este nuevo gráfico */}
       {!isLoading && !error && filteredData.length > 0 && (
-        <div className="bg-white p-4 rounded-lg shadow">
-          <AreaChart
-            data={filteredData}
-            xAxis="date"
-            yAxis="quantity"
-            groupBy="description"
-            title="Firmas por mecanismo de validación"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <AreaChart
+              data={filteredData}
+              xAxis="date"
+              yAxis="quantity"
+              groupBy="description"
+              title="Firmas por mecanismo de validación"
+            />
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <PieChart
+              data={filteredData}
+              valueField="quantity"
+              nameField="role"
+              title="Distribución por Rol"
+            />
+          </div>
         </div>
       )}
+
     </div>
   );
 }
