@@ -3,10 +3,12 @@ import { useEffect, useRef } from 'react';
 
 const PieChart = ({
   data,
+  title, 
+  subTitle, 
+  description,
   valueField,    // campo para el valor (ej: 'quantity')
-  nameField,     // campo para el nombre de cada segmento (ej: 'role')
-  title = '',
-  height = '400px'
+  nameField, 
+  height = '200'
 }) => {
   const chartRef = useRef(null);
 
@@ -33,32 +35,20 @@ const PieChart = ({
       }));
 
       const option = {
-        title: {
-          text: title,
-          left: 'center'
-        },
         tooltip: {
           trigger: 'item',
           formatter: '{b}: {c} ({d}%)'
-        },
-        legend: {
-          orient: 'vertical',
-          left: 'left'
         },
         series: [
           {
             name: title,
             type: 'pie',
             radius: ['40%', '70%'], // Donut chart
-            avoidLabelOverlap: true,
+            avoidLabelOverlap: false,
             itemStyle: {
               borderRadius: 10,
               borderColor: '#fff',
               borderWidth: 2
-            },
-            label: {
-              show: true,
-              formatter: '{b}: {d}%'
             },
             emphasis: {
               label: {
@@ -103,13 +93,23 @@ const PieChart = ({
   }, [data, valueField, nameField, title]);
 
   return (
-    <div
+    
+    <div className="card">
+    <div className="px-2 pb-2">
+      <h5 className="card-title">
+        {title} <span>  {subTitle ? `| ${subTitle}` : ''} </span>
+      </h5>
+      <h6 className="card-subtitle text-muted">{subTitle}</h6>
+      <p className="card-text">{description}</p>
+      <div
       ref={chartRef}
       style={{
         width: '100%',
-        height
+        height: `${height}px`
       }}
     />
+    </div>
+  </div>
   );
 };
 

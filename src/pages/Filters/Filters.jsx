@@ -1,12 +1,13 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { es } from 'date-fns/locale';
-import Select from 'react-select';
-import { GetSignatureProcesses } from '../../api/signatureProcess.js';
-import AreaChart from '../../components/Filtros/AreaChart.jsx';
-import PieChart from '../../components/Filtros/PirChart.jsx';
-import { Search } from 'lucide-react';
+import { es } from "date-fns/locale";
+import Select from "react-select";
+import { GetSignatureProcesses } from "../../api/signatureProcess.js";
+import AreaChart from "../../components/Filtros/AreaChart.jsx";
+import PieChart from "../../components/Filtros/PirChart.jsx";
+import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
+import { Search } from "lucide-react";
 
 export default function Filters() {
   const [allData, setAllData] = useState([]);
@@ -39,13 +40,13 @@ export default function Filters() {
 
   // Opciones de planes
   const planOptions = useMemo(() => {
-    const uniquePlans = [...new Set(allData.map(item => item.plan))];
+    const uniquePlans = [...new Set(allData.map((item) => item.plan))];
     return [
-      { value: 'all', label: 'Todos los planes' },
-      ...uniquePlans.map(plan => ({
+      { value: "all", label: "Todos los planes" },
+      ...uniquePlans.map((plan) => ({
         value: plan,
-        label: plan.charAt(0).toUpperCase() + plan.slice(1)
-      }))
+        label: plan.charAt(0).toUpperCase() + plan.slice(1),
+      })),
     ];
   }, [allData]);
 
@@ -55,20 +56,19 @@ export default function Filters() {
     const [startDate, endDate] = dateRange;
 
     if (startDate) {
-      result = result.filter(item =>
-        new Date(item.date) >= startDate
-      );
+      result = result.filter((item) => new Date(item.date) >= startDate);
     }
 
     if (endDate) {
-      result = result.filter(item =>
-        new Date(item.date) <= endDate
-      );
+      result = result.filter((item) => new Date(item.date) <= endDate);
     }
 
-    if (selectedPlans.length > 0 && !selectedPlans.find(p => p.value === 'all')) {
-      result = result.filter(item =>
-        selectedPlans.some(plan => plan.value === item.plan)
+    if (
+      selectedPlans.length > 0 &&
+      !selectedPlans.find((p) => p.value === "all")
+    ) {
+      result = result.filter((item) =>
+        selectedPlans.some((plan) => plan.value === item.plan)
       );
     }
 
@@ -81,21 +81,23 @@ export default function Filters() {
       return;
     }
 
-    if (selected.find(option => option.value === 'all')) {
-      setSelectedPlans([{ value: 'all', label: 'Todos los planes' }]);
+    if (selected.find((option) => option.value === "all")) {
+      setSelectedPlans([{ value: "all", label: "Todos los planes" }]);
     } else {
-      setSelectedPlans(selected.filter(option => option.value !== 'all'));
+      setSelectedPlans(selected.filter((option) => option.value !== "all"));
     }
   }, []);
 
+  console.log(filteredData);
+
   return (
-    <div className="p-4">
+    <div className="p-1">
       {/* Filtros */}
-      <div className="mb-6 bg-white p-4 rounded-lg shadow">
-        <h2 className="text-lg font-semibold mb-4">Filtros</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="mb-6 bg-white p-2 rounded-lg shadow d-flex justify-content-between">
+        <h2 className="text-lg font-semibold mb-4">Transacciones</h2>
+        <div className="d-flex justify-content-end gap-4">
           <div className="relative">
-            <label className="block text-sm font-medium mb-2">Rango de Fechas</label>
+            <label className="block text-sm font-medium mb-2">Periodo</label>
             <div className="flex gap-2">
               <DatePicker
                 selectsRange={true}
@@ -117,7 +119,6 @@ export default function Filters() {
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 flex items-center gap-2"
               >
                 <Search className="w-4 h-4" />
-                Filtrar
               </button>
             </div>
           </div>
@@ -153,30 +154,91 @@ export default function Filters() {
         </div>
       )}
 
-      {/* Gráfico */}
-      {/* Dentro de tu componente Filters, añade este nuevo gráfico */}
+      {/* Gráficos */}
+
       {!isLoading && !error && filteredData.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="bg-white p-4 rounded-lg shadow">
-            <AreaChart
-              data={filteredData}
-              xAxis="date"
-              yAxis="quantity"
-              groupBy="description"
-              title="Firmas por mecanismo de validación"
-            />
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow">
-            <PieChart
-              data={filteredData}
-              valueField="quantity"
-              nameField="role"
-              title="Distribución por Rol"
-            />
+        <div className="card">
+        <div className="p-4">
+          <div className="row g-4">
+            {/* Primera columna */}
+            <div className="col-sm-3">
+              <TransactionTable
+                data={filteredData}
+                title="Trasacciones y consumo por método de validación"
+                subTitle=""
+                description=""
+                showTotal={true}
+                columns={[
+                  ["Tipo Firma", "description"],
+                  ["Unitario", "unitValue"],
+                  ["Transaccion", "totalValue"],
+                ]}
+                groupByOptions={[
+                  { field: "description", operation: "group" },
+                  { field: "unitValue", operation: "count" },
+                  { field: "totalValue", operation: "sum" },
+                ]}
+              />
+            </div>
+      
+            {/* Segunda columna */}
+            <div className="col-sm-3">
+              <PieChart
+                data={filteredData}
+                valueField="quantity"
+                nameField="role"
+                title="Distribución por Rol"
+                height={200}
+              />
+              <TransactionTable
+                data={filteredData}
+                title="Roles"
+                subTitle=""
+                description=""
+                showTotal={true}
+                height={200}
+                columns={[
+                  ["Rol", "role"],
+                  ["Cantidad", "quantity"],
+                ]}
+                groupByOptions={[
+                  { field: "role", operation: "group" },
+                  { field: "quantity", operation: "count" },
+                ]}
+              />
+              <TransactionTable
+                data={filteredData}
+                title="Firmas"
+                subTitle=""
+                description=""
+                showTotal={true}
+                height={300}
+                columns={[
+                  ["Tipo Firma", "description"],
+                  ["Transaccion", "totalValue"],
+                ]}
+                groupByOptions={[
+                  { field: "description", operation: "group" },
+                  { field: "totalValue", operation: "sum" },
+                ]}
+              />
+            </div>
+      
+            {/* Tercera columna */}
+            <div className="col-sm-6">
+              <AreaChart
+                data={filteredData}
+                xAxis="date"
+                yAxis="quantity"
+                groupBy="description"
+                title="Firmas por mecanismo de validación"
+              />
+            </div>
           </div>
         </div>
+      </div>
+      
       )}
-
     </div>
   );
 }
