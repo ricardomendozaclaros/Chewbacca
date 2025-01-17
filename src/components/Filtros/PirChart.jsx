@@ -109,7 +109,7 @@ const PieChart = ({
           ref={chartRef}
           style={{
             width: "100%",
-            height: `${height}px`,
+            height: `${height}%`,
           }}
         />
         <p className="card-text">{description}</p>

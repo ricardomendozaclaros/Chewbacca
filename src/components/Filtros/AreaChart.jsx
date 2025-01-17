@@ -9,6 +9,7 @@ const AreaChart = ({
   title,
   subTitle,
   description,
+  height = "400"
 }) => {
   const chartRef = useRef(null);
 
@@ -134,7 +135,7 @@ const AreaChart = ({
           ref={chartRef}
           style={{
             width: "100%",
-            height: "400px",
+            height: `${height}%`,
           }}
         />
         <p className="card-text">{description}</p>
