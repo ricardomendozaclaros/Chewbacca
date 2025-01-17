@@ -12,15 +12,15 @@
     "sublist": [
       {
         "name": "Transacciones",
-        "to": "/Page1"
+        "to": "/transactions"
       },
       {
         "name": "Usuarios",
-        "to": "/Page2"
+        "to": "/users"
       },
       {
         "name": "Procesos",
-        "to": "/Page3"
+        "to": "/process"
       }
     ],
     "logo": "bi bi-info-circle"

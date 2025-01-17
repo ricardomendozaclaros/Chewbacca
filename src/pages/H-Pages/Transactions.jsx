@@ -12,7 +12,7 @@ import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.
 
 import { Search } from "lucide-react";
 
-export default function Filters() {
+export default function Transactions() {
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);

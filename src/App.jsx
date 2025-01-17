@@ -11,6 +11,11 @@ import Layout from './pages/Layout';
 import Error from './pages/Error';
 import Filtros from './pages/Filters/Filters';
 
+// oficial pages hardcopde
+import Transactions from './pages/H-Pages/Transactions'
+import Users from './pages/H-Pages/Users'
+import Process from './pages/H-Pages/Process'
+
 function App() {
   
 
@@ -18,6 +23,11 @@ function App() {
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
+
+        <Route path="transactions" element={<Transactions />} />
+        <Route path="users" element={<Users />} />
+        <Route path="process" element={<Process />} />
+
         <Route path="page1" element={<Page1 />} />
         <Route path="page2" element={<Page2 />} />
         <Route path="page3" element={<Page3 />} />

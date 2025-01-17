@@ -27,6 +27,22 @@ export default function TransactionTable({
       name: header,
       selector: (row) => row[field],
       sortable: true,
+      grow: 1,
+      minWidth: '50px',
+      maxWidth: 'auto',
+      cell: row => (
+        <div 
+          title={row[field]} 
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            width: '100%',
+          }}
+        >
+          {row[field]}
+        </div>
+      ),
     }));
   }, [columns]);
 
@@ -113,6 +129,10 @@ export default function TransactionTable({
             fixedHeaderScrollHeight={`${height}px`}
             highlightOnHover
             striped
+            // Add responsive prop for better column handling
+            responsive
+            // Add dense prop for more compact rows
+            dense
             customStyles={{
               rows: {
                 style: {
@@ -120,6 +140,21 @@ export default function TransactionTable({
                     fontWeight: 'bold',
                     backgroundColor: '#f8f9fa'
                   }
+                }
+              },
+              headCells: {
+                style: {
+                  paddingLeft: '8px',
+                  paddingRight: '8px',
+                  whiteSpace: 'normal',
+                  wordWrap: 'break-word',
+                  fontWeight: 'bold',
+                }
+              },
+              cells: {
+                style: {
+                  paddingLeft: '8px',
+                  paddingRight: '8px'
                 }
               }
             }}

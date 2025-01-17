@@ -12,7 +12,7 @@ import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.
 
 import { Search } from "lucide-react";
 
-export default function Filters() {
+export default function Users() {
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,7 +99,7 @@ export default function Filters() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h2 className="font-weight-bold mx-2">Transacciones</h2>
+            <h2 className="font-weight-bold mx-2">Usuarios</h2>
           </div>
 
           <div className="col-sm-3">
