@@ -1,20 +1,20 @@
 // PieChart.jsx
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 const PieChart = ({
   data,
-  title, 
-  subTitle, 
+  title,
+  subTitle,
   description,
-  valueField,    // campo para el valor (ej: 'quantity')
-  nameField, 
-  height = '200'
+  valueField, // campo para el valor (ej: 'quantity')
+  nameField,
+  height = "200",
 }) => {
   const chartRef = useRef(null);
 
   useEffect(() => {
     let chart = null;
-    
+
     const renderChart = () => {
       if (!window.echarts || !chartRef.current || !data.length) return;
 
@@ -29,42 +29,49 @@ const PieChart = ({
       }, {});
 
       // Convertir a formato para el pie chart
-      const seriesData = Object.entries(aggregatedData).map(([name, value]) => ({
-        name,
-        value
-      }));
+      const seriesData = Object.entries(aggregatedData).map(
+        ([name, value]) => ({
+          name,
+          value,
+        })
+      );
 
       const option = {
         tooltip: {
-          trigger: 'item',
-          formatter: '{b}: {c} ({d}%)'
+          trigger: "item",
+          formatter: "{b}: {c} ({d}%)",
+        },
+        toolbox: {
+          feature: {
+            saveAsImage: {},
+          },
         },
         series: [
           {
             name: title,
-            type: 'pie',
-            radius: ['40%', '70%'], // Donut chart
+            type: "pie",
+            radius: ["40%", "70%"], // Donut chart
             avoidLabelOverlap: false,
             itemStyle: {
               borderRadius: 10,
-              borderColor: '#fff',
-              borderWidth: 2
+              borderColor: "#fff",
+              borderWidth: 2,
             },
             emphasis: {
               label: {
                 show: true,
                 fontSize: 14,
-                fontWeight: 'bold'
+                fontWeight: "bold",
               },
               itemStyle: {
                 shadowBlur: 10,
                 shadowOffsetX: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.5)'
-              }
+                shadowColor: "rgba(0, 0, 0, 0.5)",
+              },
             },
-            data: seriesData
-          }
-        ]
+            data: seriesData,
+          },
+        ],
       };
 
       chart.setOption(option);
@@ -93,23 +100,21 @@ const PieChart = ({
   }, [data, valueField, nameField, title]);
 
   return (
-    
     <div className="card">
-    <div className="px-2 pb-2">
-      <h5 className="card-title">
-        {title} <span>  {subTitle ? `| ${subTitle}` : ''} </span>
-      </h5>
-      <h6 className="card-subtitle text-muted">{subTitle}</h6>
-      <p className="card-text">{description}</p>
-      <div
-      ref={chartRef}
-      style={{
-        width: '100%',
-        height: `${height}px`
-      }}
-    />
+      <div className="px-2">
+        <h5 className="card-title">
+          {title} <span> {subTitle ? `| ${subTitle}` : ""} </span>
+        </h5>
+        <div
+          ref={chartRef}
+          style={{
+            width: "100%",
+            height: `${height}px`,
+          }}
+        />
+        <p className="card-text">{description}</p>
+      </div>
     </div>
-  </div>
   );
 };
 

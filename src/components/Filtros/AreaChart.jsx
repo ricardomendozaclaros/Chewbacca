@@ -1,40 +1,47 @@
 // AreaChart.jsx
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
-const AreaChart = ({ 
+const AreaChart = ({
   data,
   xAxis, // campo para el eje X (ej: 'date')
   yAxis, // campo para el valor (ej: 'quantity')
   groupBy, // campo para agrupar las series (ej: 'description')
-  title = 'Gráfico de Área'
+  title,
+  subTitle,
+  description,
 }) => {
   const chartRef = useRef(null);
 
   useEffect(() => {
     let chart = null;
-    
+
     const renderChart = () => {
       if (!window.echarts || !chartRef.current || !data.length) return;
 
       chart = window.echarts.init(chartRef.current);
 
       // Obtener fechas únicas para el eje X
-      const xAxisData = [...new Set(data.map(item => 
-        xAxis === 'date' 
-          ? new Date(item[xAxis]).toLocaleDateString()
-          : item[xAxis]
-      ))].sort();
+      const xAxisData = [
+        ...new Set(
+          data.map((item) =>
+            xAxis === "date"
+              ? new Date(item[xAxis]).toLocaleDateString()
+              : item[xAxis]
+          )
+        ),
+      ].sort();
 
       // Obtener valores únicos para agrupar (series)
-      const groupValues = [...new Set(data.map(item => item[groupBy]))];
+      const groupValues = [...new Set(data.map((item) => item[groupBy]))];
 
       // Crear series automáticamente
-      const series = groupValues.map(groupValue => {
-        const seriesData = xAxisData.map(xValue => {
-          const filteredData = data.filter(item => {
-            const itemDate = xAxis === 'date' 
-              ? new Date(item[xAxis]).toLocaleDateString()
-              : item[xAxis];
+      const series = groupValues.map((groupValue) => {
+        const seriesData = xAxisData.map((xValue) => {
+          const filteredData = data.filter((item) => {
+            const itemDate =
+              xAxis === "date"
+                ? new Date(item[xAxis]).toLocaleDateString()
+                : item[xAxis];
             return itemDate === xValue && item[groupBy] === groupValue;
           });
 
@@ -43,52 +50,53 @@ const AreaChart = ({
 
         return {
           name: groupValue,
-          type: 'line',
-          stack: 'Total',
+          type: "line",
+          stack: "Total",
           areaStyle: {},
           emphasis: {
-            focus: 'series'
+            focus: "series",
           },
-          data: seriesData
+          data: seriesData,
         };
       });
 
       const option = {
-        title: {
-          text: title
-        },
         tooltip: {
-          trigger: 'axis',
+          trigger: "axis",
           axisPointer: {
-            type: 'cross',
+            type: "cross",
             label: {
-              backgroundColor: '#6a7985'
-            }
-          }
+              backgroundColor: "#6a7985",
+            },
+          },
         },
         legend: {
-          data: groupValues
+          data: groupValues,
         },
         toolbox: {
           feature: {
-            saveAsImage: {}
-          }
+            saveAsImage: {},
+          },
         },
         grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true
+          left: "3%",
+          right: "4%",
+          bottom: "3%",
+          containLabel: true,
         },
-        xAxis: [{
-          type: 'category',
-          boundaryGap: false,
-          data: xAxisData
-        }],
-        yAxis: [{
-          type: 'value'
-        }],
-        series
+        xAxis: [
+          {
+            type: "category",
+            boundaryGap: false,
+            data: xAxisData,
+          },
+        ],
+        yAxis: [
+          {
+            type: "value",
+          },
+        ],
+        series,
       };
 
       chart.setOption(option);
@@ -117,13 +125,21 @@ const AreaChart = ({
   }, [data, xAxis, yAxis, groupBy, title]);
 
   return (
-    <div 
-      ref={chartRef} 
-      style={{
-        width: '100%',
-        height: '400px'
-      }}
-    />
+    <div className="card">
+      <div className="px-2">
+        <h5 className="card-title">
+          {title} <span> {subTitle ? `| ${subTitle}` : ""} </span>
+        </h5>
+        <div
+          ref={chartRef}
+          style={{
+            width: "100%",
+            height: "400px",
+          }}
+        />
+        <p className="card-text">{description}</p>
+      </div>
+    </div>
   );
 };
 

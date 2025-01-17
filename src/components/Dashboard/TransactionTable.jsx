@@ -93,13 +93,10 @@ export default function TransactionTable({
 
   return (
     <div className="card">
-      <div className="px-2 pb-2">
+      <div className="px-1">
         <h5 className="card-title">
           {title} <span>{subTitle ? `| ${subTitle}` : ''}  </span>
         </h5>
-        <h6 className="card-subtitle text-muted">{subTitle}</h6>
-        <p className="card-text">{description}</p>
-
         <div style={{ 
           height: height ? `${height}px` : 'auto',
           overflowY: height ? 'auto' : 'visible'
@@ -128,6 +125,7 @@ export default function TransactionTable({
             }}
           />
         </div>
+        <p className="card-text">{description}</p>
       </div>
     </div>
   );

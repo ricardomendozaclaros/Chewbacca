@@ -91,14 +91,17 @@ export default function Filters() {
   console.log(filteredData);
 
   return (
-    <div className="p-1">
+    <div>
       {/* Filtros */}
-      <div className="mb-6 bg-white p-2 rounded-lg shadow d-flex justify-content-between">
-        <h2 className="text-lg font-semibold mb-4">Transacciones</h2>
-        <div className="d-flex justify-content-end gap-4">
-          <div className="relative">
-            <label className="block text-sm font-medium mb-2">Periodo</label>
-            <div className="flex gap-2">
+      <div className="card p-2">
+        <div className="row">
+          <div className="col-sm-6 d-flex align-items-center">
+            <h2 className="font-weight-bold mx-2">Transacciones</h2>
+          </div>
+
+          <div className="col-sm-3">
+            <label className="block text-sm font-medium mb-1">Periodo</label>
+            <div className="d-flex align-items-center">
               <DatePicker
                 selectsRange={true}
                 startDate={dateRange[0]}
@@ -107,7 +110,7 @@ export default function Filters() {
                 locale={es}
                 isClearable={true}
                 placeholderText="Filtrar por rango de fechas"
-                className="border rounded p-2 w-full"
+                className="form-control rounded p-2"
                 disabled={isLoading}
                 showMonthDropdown
                 showYearDropdown
@@ -116,26 +119,28 @@ export default function Filters() {
               <button
                 onClick={filterData}
                 disabled={isLoading}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300 flex items-center gap-2"
+                className="btn bg-secondary p-2 border-0 mx-1"
               >
-                <Search className="w-4 h-4" />
+                <Search className="w-75" />
               </button>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2">Planes</label>
-            <Select
-              isMulti
-              options={planOptions}
-              value={selectedPlans}
-              onChange={handlePlanChange}
-              placeholder="Filtrar por planes"
-              className="w-full"
-              classNamePrefix="select"
-              isClearable={true}
-              isDisabled={isLoading}
-            />
+          <div className="col-sm-3">
+            <label className="block text-sm font-medium mb-1">Planes</label>
+            <div className="d-flex align-items-center">
+              <Select
+                isMulti
+                options={planOptions}
+                value={selectedPlans}
+                onChange={handlePlanChange}
+                placeholder="Filtrar por planes"
+                className="rounded"
+                classNamePrefix="select"
+                isClearable={true}
+                isDisabled={isLoading}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -158,86 +163,89 @@ export default function Filters() {
 
       {!isLoading && !error && filteredData.length > 0 && (
         <div className="card">
-        <div className="p-4">
-          <div className="row g-4">
-            {/* Primera columna */}
-            <div className="col-sm-3">
-              <TransactionTable
-                data={filteredData}
-                title="Trasacciones y consumo por método de validación"
-                subTitle=""
-                description=""
-                showTotal={true}
-                columns={[
-                  ["Tipo Firma", "description"],
-                  ["Unitario", "unitValue"],
-                  ["Transaccion", "totalValue"],
-                ]}
-                groupByOptions={[
-                  { field: "description", operation: "group" },
-                  { field: "unitValue", operation: "count" },
-                  { field: "totalValue", operation: "sum" },
-                ]}
-              />
-            </div>
-      
-            {/* Segunda columna */}
-            <div className="col-sm-3">
-              <PieChart
-                data={filteredData}
-                valueField="quantity"
-                nameField="role"
-                title="Distribución por Rol"
-                height={200}
-              />
-              <TransactionTable
-                data={filteredData}
-                title="Roles"
-                subTitle=""
-                description=""
-                showTotal={true}
-                height={200}
-                columns={[
-                  ["Rol", "role"],
-                  ["Cantidad", "quantity"],
-                ]}
-                groupByOptions={[
-                  { field: "role", operation: "group" },
-                  { field: "quantity", operation: "count" },
-                ]}
-              />
-              <TransactionTable
-                data={filteredData}
-                title="Firmas"
-                subTitle=""
-                description=""
-                showTotal={true}
-                height={300}
-                columns={[
-                  ["Tipo Firma", "description"],
-                  ["Transaccion", "totalValue"],
-                ]}
-                groupByOptions={[
-                  { field: "description", operation: "group" },
-                  { field: "totalValue", operation: "sum" },
-                ]}
-              />
-            </div>
-      
-            {/* Tercera columna */}
-            <div className="col-sm-6">
-              <AreaChart
-                data={filteredData}
-                xAxis="date"
-                yAxis="quantity"
-                groupBy="description"
-                title="Firmas por mecanismo de validación"
-              />
+          <div className="p-1">
+            <div className="row g-1">
+              {/* Primera columna */}
+              <div className="col-sm-3">
+                <TransactionTable
+                  data={filteredData}
+                  title="Trasacciones y consumo por método de validación"
+                  subTitle="example"
+                  description="example"
+                  showTotal={true}
+                  columns={[
+                    ["Tipo Firma", "description"],
+                    ["Unitario", "unitValue"],
+                    ["Transaccion", "totalValue"],
+                  ]}
+                  groupByOptions={[
+                    { field: "description", operation: "group" },
+                    { field: "unitValue", operation: "count" },
+                    { field: "totalValue", operation: "sum" },
+                  ]}
+                />
+              </div>
+
+              {/* Segunda columna */}
+              <div className="col-sm-3">
+                <PieChart
+                  data={filteredData}
+                  valueField="quantity"
+                  nameField="role"
+                  title="Distribución por Rol"
+                  subTitle="example"
+                  description="example"
+                  height={200}
+                />
+                <TransactionTable
+                  data={filteredData}
+                  title="Roles"
+                  subTitle="Son roles"
+                  description="esto es descripcion"
+                  showTotal={true}
+                  height={200}
+                  columns={[
+                    ["Rol", "role"],
+                    ["Cantidad", "quantity"],
+                  ]}
+                  groupByOptions={[
+                    { field: "role", operation: "group" },
+                    { field: "quantity", operation: "count" },
+                  ]}
+                />
+                <TransactionTable
+                  data={filteredData}
+                  title="Firmas"
+                  subTitle="example"
+                  description="example"
+                  showTotal={true}
+                  height={300}
+                  columns={[
+                    ["Tipo Firma", "description"],
+                    ["Transaccion", "totalValue"],
+                  ]}
+                  groupByOptions={[
+                    { field: "description", operation: "group" },
+                    { field: "totalValue", operation: "sum" },
+                  ]}
+                />
+              </div>
+
+              {/* Tercera columna */}
+              <div className="col-sm-6">
+                <AreaChart
+                  data={filteredData}
+                  xAxis="date"
+                  yAxis="quantity"
+                  groupBy="description"
+                  title="Firmas por mecanismo de validación"
+                  subTitle="example"
+                  description="example"
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      
       )}
     </div>
   );

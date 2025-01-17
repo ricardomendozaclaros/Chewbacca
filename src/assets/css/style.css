@@ -36,6 +36,7 @@ h4,
 h5,
 h6 {
   font-family: "Nunito", sans-serif;
+  font-weight: bold;
 }
 
 /*--------------------------------------------------------------
@@ -43,7 +44,7 @@ h6 {
 --------------------------------------------------------------*/
 #main {
   margin-top: 60px;
-  padding: 20px 30px;
+  padding: 10px 10px;
   transition: all 0.3s;
 }
 
@@ -218,7 +219,8 @@ h6 {
 
 /* Card */
 .card {
-  margin-bottom: 30px;
+  padding: 5px;
+  margin-bottom: 5px;
   border: none;
   border-radius: 5px;
   box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1);
@@ -232,12 +234,21 @@ h6 {
   padding: 15px;
 }
 
+.card-text{
+  margin-top: 2px;
+  font-size: 12px !important;
+  color: #899bbd;
+  font-size: 14px;
+  font-weight: 400;
+}
+
 .card-title {
-  padding: 20px 0 0 0;
-  font-size: 18px;
+  padding: 5px 0 0 0;
+  font-size: 15px;
   font-weight: 500;
   color: #012970;
   font-family: "Poppins", sans-serif;
+  margin: 0;
 }
 
 .card-title span {
@@ -251,6 +262,7 @@ h6 {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 .card-img-overlay {
