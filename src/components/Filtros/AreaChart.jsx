@@ -73,6 +73,9 @@ const AreaChart = ({
         },
         legend: {
           data: groupValues,
+          textStyle: {
+            fontSize:9
+          }
         },
         toolbox: {
           feature: {
