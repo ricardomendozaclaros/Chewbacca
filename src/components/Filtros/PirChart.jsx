@@ -143,7 +143,7 @@ const PieChart = ({
           ref={chartRef}
           style={{
             width: "100%",
-            height: `${height}px`,
+            height: `${height}%`,
             display: isLoading ? 'none' : 'block'
           }}
         />

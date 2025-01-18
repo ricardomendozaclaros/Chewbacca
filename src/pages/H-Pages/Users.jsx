@@ -167,13 +167,54 @@ export default function Users() {
       {!isLoading && !error && filteredData.length > 0 && (
         <div className="card">
           <div className="p-1">
+            {/* Fila 1 */}
             <div className="row g-1">
               {/* Primera columna */}
-              <div className="col-sm-3">
+              <div className="col-sm-3"></div>
+
+              {/* Segunda columna */}
+              <div className="col-sm-3"></div>
+
+              {/* Tercera columna */}
+              <div className="col-sm-6">
+                <div className="row g-1 align-items-center">
+                  <div className="col-sm-4">
+                    <TotalsCardComponent
+                      data={646}
+                      title="Recuento"
+                      subTitle=""
+                      description="example"
+                      icon="bi bi-currency-dollar"
+                    />
+                  </div>
+                  <div className="col-sm-4">
+                    <TotalsCardComponent
+                      data={166}
+                      title="Recuento"
+                      subTitle=""
+                      description="example"
+                    />
+                  </div>
+                  <div className="col-sm-4">
+                    <TotalsCardComponent
+                      data={812}
+                      title="Recuento"
+                      subTitle=""
+                      description="example"
+                      icon="bi bi-credit-card"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Fila 2 */}
+            <div className="row g-1">
+              <div className="col-sm-12">
                 <TransactionTable
                   data={filteredData}
-                  title="Trasacciones y consumo por método de validación"
-                  subTitle="example"
+                  title=""
+                  subTitle=""
                   description="example"
                   showTotal={true}
                   columns={[
@@ -187,21 +228,22 @@ export default function Users() {
                     { field: "totalValue", operation: "sum" },
                   ]}
                 />
-                <TransactionTable
+              </div>
+            </div>
+
+            {/* Fila 3 */}
+            <div className="row g-1">
+              {/* Primera columna */}
+              <div className="col-sm-6">
+                <AreaChart
                   data={filteredData}
-                  title="Roles"
-                  subTitle="Son roles"
-                  description="esto es descripcion"
-                  showTotal={true}
-                  height={200}
-                  columns={[
-                    ["Rol", "role"],
-                    ["Cantidad", "quantity"],
-                  ]}
-                  groupByOptions={[
-                    { field: "role", operation: "group" },
-                    { field: "quantity", operation: "count" },
-                  ]}
+                  xAxis="date"
+                  yAxis="quantity"
+                  groupBy="description"
+                  title=""
+                  subTitle=""
+                  description="example"
+                  height="200"
                 />
               </div>
 
@@ -211,19 +253,22 @@ export default function Users() {
                   data={filteredData}
                   valueField="quantity"
                   nameField="role"
-                  title="Distribución por Rol"
-                  subTitle="example"
+                  title=""
+                  subTitle=""
                   description="example"
                   height={200}
                 />
-                
+              </div>
+
+              {/* Tercera columna */}
+              <div className="col-sm-3">
                 <TransactionTable
                   data={filteredData}
-                  title="Firmas"
-                  subTitle="example"
+                  title=""
+                  subTitle=""
                   description="example"
                   showTotal={true}
-                  height={300}
+                  height={200}
                   columns={[
                     ["Tipo Firma", "description"],
                     ["Transaccion", "totalValue"],
@@ -232,84 +277,6 @@ export default function Users() {
                     { field: "description", operation: "group" },
                     { field: "totalValue", operation: "sum" },
                   ]}
-                />
-              </div>
-
-              {/* Tercera columna */}
-              <div className="col-sm-6">
-                <div className="row g-1 align-items-center">
-                  <div className="col-sm-4">
-                    <TotalsCardComponent
-                    data={47000}
-                      title="Total"
-                      subTitle="Promocionales"
-                      description="example"
-                      icon="bi bi-currency-dollar"
-                    />
-                  </div>
-                  <div className="col-sm-4">
-                    <TotalsCardComponent
-                    data={121000}
-                      title="No Promocionales"
-                      subTitle="example"
-                      description="example"
-                      icon="bi bi-wallet2"
-                    />
-                  </div>
-                  <div className="col-sm-4">
-                    <TotalsCardComponent
-                    data={169000}
-                      title="Sub Total"
-                      subTitle="example"
-                      description="example"
-                      icon="bi bi-credit-card"
-                    />
-                  </div>
-                </div>
-
-                <div className="row g-1 align-items-center">
-                  <div className="col-sm-3">
-                    <TotalsCardComponent
-                    data={47000}
-                      title="Pospago"
-                      subTitle="personas"
-                      description=""
-                    />
-                  </div>
-                  <div className="col-sm-3">
-                    <TotalsCardComponent
-                    data={121000}
-                      title="Prepago"
-                      subTitle="personas"
-                      description=""
-                    />
-                  </div>
-                  <div className="col-sm-3">
-                    <TotalsCardComponent
-                    data={169000}
-                      title="Pospago"
-                      subTitle="empresas"
-                      description=""
-                    />
-                  </div>
-                  <div className="col-sm-3">
-                    <TotalsCardComponent
-                    data={169000}
-                      title="Prepago"
-                      subTitle="empresas"
-                      description=""
-                    />
-                  </div>
-                </div>
-
-                <AreaChart
-                  data={filteredData}
-                  xAxis="date"
-                  yAxis="quantity"
-                  groupBy="description"
-                  title="Firmas por mecanismo de validación"
-                  subTitle="example"
-                  description="example"
                 />
               </div>
             </div>
