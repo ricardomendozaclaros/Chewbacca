@@ -243,7 +243,7 @@ export default function Users() {
                   title=""
                   subTitle=""
                   description="example"
-                  height="200"
+                  height="220"
                 />
               </div>
 
@@ -268,7 +268,7 @@ export default function Users() {
                   subTitle=""
                   description="example"
                   showTotal={true}
-                  height={200}
+                  height={220}
                   columns={[
                     ["Tipo Firma", "description"],
                     ["Transaccion", "totalValue"],

@@ -223,7 +223,7 @@ export default function Transactions() {
                   subTitle="example"
                   description="example"
                   showTotal={true}
-                  height={300}
+                  height={330}
                   columns={[
                     ["Tipo Firma", "description"],
                     ["Transaccion", "totalValue"],
@@ -310,6 +310,7 @@ export default function Transactions() {
                   title="Firmas por mecanismo de validación"
                   subTitle="example"
                   description="example"
+                  height="320"
                 />
               </div>
             </div>
