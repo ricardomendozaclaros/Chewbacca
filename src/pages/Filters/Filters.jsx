@@ -91,7 +91,6 @@ export default function Filters() {
     }
   }, []);
 
-  console.log(filteredData);
 
   return (
     <div className="">

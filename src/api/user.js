@@ -38,7 +38,6 @@ const GetUser = async (dateRange = null) => {
 
     // Intentar leer la respuesta y loguear su contenido
     const text = await response.text();
-    console.log('Respuesta raw:', text);
     
     let data;
     try {
@@ -49,7 +48,6 @@ const GetUser = async (dateRange = null) => {
       return [];
     }
 
-    console.log('Datos recibidos:', data);
     return data;
     
   } catch (error) {

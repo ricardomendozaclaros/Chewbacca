@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import DataTable from "react-data-table-component";
+import { useParseValue } from '../../hooks/useParseValue';
 
 /**
  * @typedef {Object} ColumnConfig
@@ -19,30 +20,30 @@ export default function TransactionTable({
   height
 }) {
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Keep columns generation unchanged
+  const { parseValue } = useParseValue();
+  
   const tableColumns = useMemo(() => {
     if (!columns || columns.length === 0) return [];
     return columns.map(([header, field]) => ({
       name: header,
       selector: (row) => row[field],
       sortable: true,
-      grow: 1,
-      minWidth: '50px',
-      maxWidth: 'auto',
-      cell: row => (
-        <div 
-          title={row[field]} 
-          style={{
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            width: '100%',
-          }}
-        >
-          {row[field]}
-        </div>
-      ),
+      cell: row => {
+        const displayValue = parseValue(field, row[field]);
+        return (
+          <div 
+            title={displayValue} 
+            style={{
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              width: '100%',
+            }}
+          >
+            {displayValue}
+          </div>
+        );
+      },
     }));
   }, [columns]);
 

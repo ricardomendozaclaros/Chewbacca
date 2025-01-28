@@ -1,4 +1,5 @@
 import { useEffect, useRef, useMemo } from "react";
+import { useParseValue } from '../../hooks/useParseValue';
 import _ from 'lodash';
 
 const AreaChart = ({
@@ -13,6 +14,7 @@ const AreaChart = ({
 }) => {
   const chartRef = useRef(null);
   const chartInstance = useRef(null);
+  const { parseValue } = useParseValue();
 
   // Paleta de colores diversa y profesional
   const colors = [
@@ -35,8 +37,6 @@ const AreaChart = ({
     return `rgba(${r}, ${g}, ${b}, 0.1)`;
   });
 
-  
-
   const processedData = useMemo(() => {
     if (!data?.length) return { xAxisData: [], series: [], groupValues: [] };
 
@@ -50,7 +50,7 @@ const AreaChart = ({
     const xAxisData = _.keys(groupedData).sort();
 
     const series = groupValues.map((groupValue, index) => ({
-      name: groupValue,
+      name: parseValue(groupBy, groupValue), // Parse group names
       type: "line",
       stack: "Total",
       areaStyle: {
@@ -73,7 +73,7 @@ const AreaChart = ({
       )
     }));
 
-    return { xAxisData, series, groupValues };
+    return { xAxisData, series, groupValues: groupValues.map(val => parseValue(groupBy, val)) };
   }, [data, xAxis, yAxis, groupBy]);
 
   useEffect(() => {

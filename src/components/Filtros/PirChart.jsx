@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import _ from 'lodash';
+import { useParseValue } from '../../hooks/useParseValue';
 
 const PieChart = ({
   data,
@@ -12,6 +13,7 @@ const PieChart = ({
 }) => {
   const chartRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { parseValue } = useParseValue();
 
   const colors = [
     '#2D61D3',  // Azul corporativo
@@ -28,7 +30,7 @@ const PieChart = ({
     if (!data?.length) return [];
     const grouped = _.groupBy(data, nameField);
     return _.map(grouped, (items, name) => ({
-      name,
+      name: parseValue(nameField, name),
       value: _.sumBy(items, item => Number(item[valueField]) || 0)
     }));
   }, [data, valueField, nameField]);

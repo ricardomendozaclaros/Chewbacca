@@ -1,0 +1,20 @@
+{
+  "description": {
+    "SIGNATURE": "Firma Comun Enterprise",
+    "AUTH_OTP": "Firma Premium Grande",
+    "AUTH_QUESTIONS": "Firma Premium Mediana",
+    "SIGNATURE_SIMPLE": "Firma Simple",
+    "AUTH_OTP_VERIFIED": "Firma Premium Grande Verificada",
+    "SIGNATURE_SIMPLE_MANY": "Firma Simple Múltiple",
+    "AUTH_DIGITAL_SIGN": "Firma Digital",
+    "AUTH_FACIAL_RECOGNITION": "Firma Facial"
+  },
+  "role": {
+    "Administrator": "Administrador",
+    "Person": "Persona",
+    "SuperAdmin": "Super Administrador",
+    "Agent": "Agente",
+    "Coordinator": "Coordinador",
+    "Manager": "Gerente"
+  }
+}

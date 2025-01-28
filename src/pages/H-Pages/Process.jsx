@@ -91,7 +91,6 @@ export default function Process() {
     }
   }, []);
 
-  console.log(filteredData);
 
   return (
     <div className="">

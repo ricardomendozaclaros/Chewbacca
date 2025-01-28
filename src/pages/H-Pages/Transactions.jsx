@@ -91,7 +91,6 @@ export default function Transactions() {
     }
   }, []);
 
-  console.log(filteredData);
 
   return (
     <div className="">
