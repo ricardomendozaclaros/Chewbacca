@@ -1,4 +1,4 @@
-const TotalsCardComponent = ({ data, title, subTitle, description, icon = "" }) => {
+const TotalsCardComponent = ({ data, title, subTitle, description, icon = "", unknown = false }) => {
   return (
     <div className="card info-card sales-card">
       <div className="px-2">
@@ -13,9 +13,9 @@ const TotalsCardComponent = ({ data, title, subTitle, description, icon = "" }) 
             </div>
           )}
           <div className="ps-3">
-            <h6>{data | "NA"}</h6>
-            <span className="text-success small pt-1 fw-bold">8%</span>{" "}
-            <span className="text-muted small pt-2 ps-1">increase</span>
+            <h6>{unknown ? "?" : (data | "NA")}</h6>
+            <span className="text-success small pt-1 fw-bold">{unknown ? "##" : "8%"}</span>{" "}
+            <span className="text-muted small pt-2 ps-1">{unknown ? "subtitle" : "increase"}</span>
           </div>
         </div>
         <p className="card-text mt-2">{description}</p>
