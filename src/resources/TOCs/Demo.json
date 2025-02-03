@@ -2,35 +2,17 @@
   {
       "name": "ESS SI Ejecutiva",
       "isSublist": false,
-      "to": "/",
+      "to": "/Page1",
       "logo": "bi bi-dash-circle"
   },
-  
   {
-    "name": "Operaciones",
-    "isSublist": true,
-    "sublist": [
-      {
-        "name": "Transacciones",
-        "to": "/transactions"
-      },
-      {
-        "name": "Usuarios",
-        "to": "/users"
-      },
-      {
-        "name": "Procesos",
-        "to": "/process"
-      }
-    ],
-    "logo": "bi bi-info-circle"
+    "name": "ESS SI Ejecutiva 2",
+    "isSublist": false,
+    "to": "/Page1",
+    "logo": "bi bi-dash-circle"
   },
   {
-      "Separado": "Produccion",
-      "isSeperador" : true
-  },
-  {
-    "name": "Direcciones",
+    "name": "Operaciones Charlie",
     "isSublist": true,
     "sublist": [
       {
@@ -62,8 +44,35 @@
         "to": "/Page3"
       },
       {
-        "name": "Filtros",
-        "to": "/filters"
+        "name": "Marketing",
+        "to": "/Page3"
+      }
+    ],
+    "logo": "bi bi-info-circle"
+  },
+  {
+      "Separado": "Produccion",
+      "isSeperador" : true
+  },
+  {
+    "name": "Marketing",
+    "isSublist": true,
+    "sublist": [
+      {
+        "name": "General",
+        "to": "/Page1"
+      },
+      {
+        "name": "Prepago",
+        "to": "/Page2"
+      },
+      {
+        "name": "PostPago",
+        "to": "/Page3"
+      },
+      {
+        "name": "Origenes",
+        "to": "/Page1"
       }
     ],
     "logo": "bi bi-info-circle"

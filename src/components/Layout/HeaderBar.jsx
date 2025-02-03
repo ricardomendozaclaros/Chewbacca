@@ -3,6 +3,8 @@ import { useAuth0 } from "@auth0/auth0-react";
 
 export default function HeaderBar({ toggleSidebar }) {
   const { logout, user, isAuthenticated } = useAuth0();
+  const randomUserNumber = Math.floor(Math.random() * 9) + 1;
+
   return (
     <>
       <header
@@ -10,13 +12,16 @@ export default function HeaderBar({ toggleSidebar }) {
         className="header fixed-top d-flex align-items-center"
       >
         <div className="d-flex align-items-center justify-content-between">
-        <b> Visión 360°</b>
+        <b>Datareport Chewbacca</b>
           <i
             className="bi bi-list toggle-sidebar-btn"
             onClick={toggleSidebar}
             style={{ cursor: "pointer" }}
           ></i>
-          <div> - Dashboard Integral de Gestión Empresarial</div>
+          <div>Panel Integral de Gestión y Consolidación de Datos - AutenTIC Sign</div>
+{/* "Dashboard Centralizado de Gestión y Datos - AutenTIC Sign"
+"AutenTIC Sign: Plataforma Integral de Gestión y Datos"
+"AutenTIC Sign: Panel Maestro de Gestión y Consolidación de Información" */}
         </div>
 
         {/* <div className="search-bar">
@@ -224,7 +229,7 @@ export default function HeaderBar({ toggleSidebar }) {
                 data-bs-toggle="dropdown"
               >
                 <img
-                  src={isAuthenticated ? user.picture : "/src/assets/img/profile-img.jpg"}
+                  src={isAuthenticated ? user.picture : `/src/assets/img/user${randomUserNumber}.png`}
                   alt="Profile"
                   className="rounded-circle"
                 />

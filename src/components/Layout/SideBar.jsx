@@ -23,7 +23,7 @@ export default function SideBar() {
 
   return (
     <aside id="sidebar" className="sidebar">
-      <img src="/src/resources/image/logo.jpeg" alt="" width={250}/>
+      <img src="/src/resources/image/logo.jpeg" alt="" width={183}  style={{ display: "block", margin: "0 auto" }}/>
       <ul className="sidebar-nav" id="sidebar-nav">
         {menuItems && menuItems.map((option) => (
           !option.isSeperador ? (
