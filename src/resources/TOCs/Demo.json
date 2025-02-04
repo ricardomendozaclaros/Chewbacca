@@ -2,28 +2,14 @@
   {
       "name": "ESS SI Ejecutiva",
       "isSublist": false,
-      "to": "/",
+      "to": "/Page1",
       "logo": "bi bi-dash-circle"
   },
-  
   {
-    "name": "Operaciones",
-    "isSublist": true,
-    "sublist": [
-      {
-        "name": "Transacciones",
-        "to": "/transactions"
-      },
-      {
-        "name": "Usuarios",
-        "to": "/users"
-      },
-      {
-        "name": "Procesos",
-        "to": "/process"
-      }
-    ],
-    "logo": "bi bi-info-circle"
+    "name": "ESS SI Ejecutiva 2",
+    "isSublist": false,
+    "to": "/Page1",
+    "logo": "bi bi-dash-circle"
   },
   {
       "Separado": "Marketing",

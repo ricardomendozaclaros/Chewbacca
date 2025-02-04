@@ -1,3 +1,38 @@
 {
-  "layout": []
+  "layout": [
+    {
+      "i": "totalsCard-1736889607277",
+      "x": 0,
+      "y": 0,
+      "w": 6,
+      "h": 4,
+      "type": "totalsCard",
+      "data": [],
+      "title": "Título no definido",
+      "subTitle": "",
+      "description": "",
+      "processType": "count",
+      "selectedField": "enterpriseName",
+      "xAxisField": "date",
+      "moved": false,
+      "static": false
+    },
+    {
+      "i": "totalsCard-1736889688405",
+      "x": 0,
+      "y": 4,
+      "w": 4,
+      "h": 3,
+      "type": "totalsCard",
+      "data": [],
+      "title": "Título no definido",
+      "subTitle": "",
+      "description": "",
+      "processType": "sum",
+      "selectedField": "role",
+      "xAxisField": "date",
+      "moved": false,
+      "static": false
+    }
+  ]
 }
