@@ -5,7 +5,6 @@ import { es } from "date-fns/locale";
 import Select from "react-select";
 import { GetSignatureProcesses } from "../../api/signatureProcess.js";
 
-import AreaChart from "../../components/Filtros/AreaChart.jsx";
 import PieChart from "../../components/Filtros/PirChart.jsx";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";

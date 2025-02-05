@@ -17,6 +17,7 @@ import Process from './pages/H-Pages/Process'
 import Pag100 from './pages/H-Pages/Pag100'
 import Pag101 from './pages/H-Pages/Pag101';
 import Pag102 from './pages/H-Pages/Pag102';
+import Pag200 from './pages/H-Pages/Pag200';
 
 function App() {
   
@@ -32,6 +33,7 @@ function App() {
         <Route path="pag100" element={<Pag100 />} />
         <Route path="pag101" element={<Pag101 />} />
         <Route path="pag102" element={<Pag102 />} />
+        <Route path="pag200" element={<Pag200 />} />
 
         {/* <Route path="page1" element={<Page1 />} />
         <Route path="page2" element={<Page2 />} />

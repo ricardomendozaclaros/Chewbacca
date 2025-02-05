@@ -12,7 +12,7 @@
     "logo": "bi bi-dash-circle"
   },
   {
-      "Separado": "Marketing",
+      "Separado": "Areas",
       "isSeperador" : true
   },
   {
@@ -30,6 +30,10 @@
       {
         "name": "Pag102",
         "to": "/Pag102"
+      },
+      {
+        "name": "Pag200",
+        "to": "/Pag200"
       }
     ],
     "logo": "bi bi-info-circle"

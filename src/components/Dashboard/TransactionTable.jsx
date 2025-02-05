@@ -23,11 +23,41 @@ export default function TransactionTable({
   const { parseValue } = useParseValue();
   
   const tableColumns = useMemo(() => {
-    if (!columns || columns.length === 0) return [];
+    // If columns empty, generate from data structure
+    if (!columns || columns.length === 0) {
+      if (!data || data.length === 0) return [];
+      
+      const firstRow = data[0];
+      return Object.keys(firstRow).map(key => ({
+        name: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize
+        selector: (row) => row[key],
+        sortable: true,
+        resizable: true, // Enable column resizing
+        cell: row => {
+          const displayValue = parseValue(key, row[key]);
+          return (
+            <div 
+              title={displayValue} 
+              style={{
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                width: '100%',
+              }}
+            >
+              {displayValue}
+            </div>
+          );
+        },
+      }));
+    }
+
+    // Original logic for provided columns
     return columns.map(([header, field]) => ({
       name: header,
       selector: (row) => row[field],
       sortable: true,
+      resizable: true, // Enable column resizing
       cell: row => {
         const displayValue = parseValue(field, row[field]);
         return (
@@ -45,7 +75,7 @@ export default function TransactionTable({
         );
       },
     }));
-  }, [columns]);
+  }, [columns, data]);
 
   const processedData = useMemo(() => {
     if (!groupByOptions || groupByOptions.length === 0) {
@@ -120,27 +150,28 @@ export default function TransactionTable({
         }}>
           <DataTable
             columns={tableColumns}
-            data={[...processedData, {
-              uniqueId: 'total-row',
-              [columns[columns.length - 2][1]]: 'Total',
-              [columns[columns.length - 1][1]]: total,
-            }]}
+            data={showTotal && columns.length >= 2 ? 
+              [...processedData, {
+                uniqueId: 'total-row',
+                [columns[columns.length - 2][1]]: 'Total',
+                [columns[columns.length - 1][1]]: total,
+              }] : 
+              processedData
+            }
             keyField="uniqueId"
             fixedHeader={!!height}
             fixedHeaderScrollHeight={`${height}px`}
             highlightOnHover
             striped
-            // Add responsive prop for better column handling
             responsive
-            // Add dense prop for more compact rows
             dense
             customStyles={{
               rows: {
                 style: {
-                  '&:last-of-type': {
+                  '&:last-of-type': showTotal ? {
                     fontWeight: 'bold',
                     backgroundColor: '#f8f9fa'
-                  }
+                  } : {}
                 }
               },
               headCells: {

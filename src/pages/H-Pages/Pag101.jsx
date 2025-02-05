@@ -26,7 +26,6 @@ export default function Pag101() {
       try {
         setIsLoading(true);
         const result = await GetUser();
-        console.log(result);
         setAllData(result);
         setFilteredData(result);
       } catch (error) {
