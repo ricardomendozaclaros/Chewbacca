@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import { config } from "./config/default.js";
 import { redisService } from "./lib/redis.js";
 import enterpriseRoutes from "./routes/enterprise.js";
+
 import signatureRoutes from "./routes/signatures.js";
 import accountingRoutes from "./routes/accounting.js";
 import customerAccountRoutes from "./routes/customerAccount.js";

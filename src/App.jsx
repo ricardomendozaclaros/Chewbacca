@@ -22,6 +22,8 @@ import Pag003 from './pages/pagesStatic/Pag003'
 import Pag100 from './pages/pagesStatic/Pag100'
 import Pag101 from './pages/pagesStatic/Pag101';
 import Pag102 from './pages/pagesStatic/Pag102';
+
+//
 import Pag200 from './pages/pagesStatic/Pag200';
 
 function App() {
