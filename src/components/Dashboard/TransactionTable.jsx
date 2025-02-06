@@ -20,6 +20,7 @@ export default function TransactionTable({
   height
 }) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const { parseValue } = useParseValue();
   
   const tableColumns = useMemo(() => {
@@ -126,17 +127,36 @@ export default function TransactionTable({
     });
   }, [data, groupByOptions, columns]);
 
+  // Filter data based on search term, considering translated values
+  const filteredData = useMemo(() => {
+    if (!searchTerm) return processedData;
+
+    return processedData.filter(row => {
+      return Object.entries(row).some(([field, value]) => {
+        // Apply parseValue to get the translated or formatted value
+        const displayValue = parseValue(field, value);
+        // Compare the display value with the search term
+        return String(displayValue).toLowerCase().includes(searchTerm.toLowerCase());
+      });
+    });
+  }, [processedData, searchTerm, parseValue]);
+
   // Calculate total of last column with fixed logic
   const total = useMemo(() => {
     if (!showTotal || !columns || columns.length === 0) return 0;
     
     const lastColumn = columns[columns.length - 1][1]; // Get field name of last column
-    // Calculate from processedData instead of raw data
-    return processedData.reduce((sum, row) => {
+    // Calculate from filteredData instead of raw data
+    return filteredData.reduce((sum, row) => {
       const value = Number(row[lastColumn]) || 0;
       return sum + value;
     }, 0).toFixed(2);
-  }, [processedData, columns, showTotal]);
+  }, [filteredData, columns, showTotal]);
+
+  // Clear search term
+  const clearSearch = () => {
+    setSearchTerm("");
+  };
 
   return (
     <div className="card">
@@ -144,19 +164,60 @@ export default function TransactionTable({
         <h5 className="card-title">
           {title} <span>{subTitle ? `| ${subTitle}` : ''}  </span>
         </h5>
+        {/* Search Input */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'flex-end', // Alinea el contenido a la derecha
+          marginBottom: '10px', // Espacio inferior para separar de la tabla
+          position: 'relative', // Para posicionar el botón de limpieza
+        }}>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              padding: '5px 30px 5px 10px', // Espacio para el botón de limpieza
+              margin: "5px 0 5px 0",
+              width: '200px',
+              boxSizing: 'border-box',
+              border: '1px solid #ccc',
+              borderRadius: '5px',
+            }}
+          />
+          {/* Botón de limpieza */}
+          {searchTerm && (
+            <button
+              onClick={clearSearch}
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#999',
+                fontSize: '16px',
+              }}
+            >
+              ×
+            </button>
+          )}
+        </div>
         <div style={{ 
           height: height ? `${height}px` : 'auto',
-          overflowY: height ? 'auto' : 'visible'
+          overflow: 'hidden', // Eliminar el scroll del contenedor
         }}>
           <DataTable
             columns={tableColumns}
             data={showTotal && columns.length >= 2 ? 
-              [...processedData, {
+              [...filteredData, {
                 uniqueId: 'total-row',
                 [columns[columns.length - 2][1]]: 'Total',
                 [columns[columns.length - 1][1]]: total,
               }] : 
-              processedData
+              filteredData
             }
             keyField="uniqueId"
             fixedHeader={!!height}

@@ -2,12 +2,10 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
+import Select from "react-select"; // Importar react-select
 import { GetSignatureProcesses } from "../../api/signatureProcess.js";
-
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
-
 import { useParseValue } from "../../hooks/useParseValue.js";
-
 import { Search } from "lucide-react";
 
 export default function Pag200() {
@@ -21,6 +19,7 @@ export default function Pag200() {
   // Estados para filtros
   const [dateRange, setDateRange] = useState([null, null]);
   const [selectedPlans, setSelectedPlans] = useState([]);
+  const [signatureTypes, setSignatureTypes] = useState([]); // Tipos de firmas únicos
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -28,9 +27,17 @@ export default function Pag200() {
       try {
         setIsLoading(true);
         const result = await GetSignatureProcesses();
-        setOriginalData(result); // Store original data
+        setOriginalData(result); // Almacenar datos originales
 
-        // Initial transform without filters
+        // Extraer tipos de firmas únicos
+        const uniqueSignatureTypes = [
+          ...new Set(result.map((item) => item.description)),
+        ];
+        setSignatureTypes(
+          uniqueSignatureTypes.map((type) => ({ value: type, label: type }))
+        );
+
+        // Transformar y establecer datos iniciales
         transformAndSetData(result);
       } catch (error) {
         console.error("Error cargando datos:", error);
@@ -43,7 +50,7 @@ export default function Pag200() {
     loadData();
   }, []);
 
-  // Add transform function
+  // Función para transformar y establecer datos
   const transformAndSetData = useCallback((data) => {
     const signatureTypes = [...new Set(data.map((item) => item.description))];
 
@@ -69,29 +76,38 @@ export default function Pag200() {
     setFilteredData(transformedData);
   }, []);
 
-
-  // Función memoizada para filtrar datos
+  // Función para filtrar datos
   const filterData = useCallback(() => {
     const [startDate, endDate] = dateRange;
     let filtered = [...originalData];
 
+    // Filtrar por rango de fechas
     if (startDate) {
       filtered = filtered.filter((item) => new Date(item.date) >= startDate);
     }
-
     if (endDate) {
       filtered = filtered.filter((item) => new Date(item.date) <= endDate);
     }
 
-    transformAndSetData(filtered);
-  }, [dateRange, originalData, transformAndSetData]);
+    // Filtrar por tipos de firmas seleccionados
+    if (selectedPlans.length > 0) {
+      const selectedTypes = selectedPlans.map((plan) => plan.value);
+      filtered = filtered.filter((item) =>
+        selectedTypes.includes(item.description)
+      );
+    }
 
+    transformAndSetData(filtered);
+  }, [dateRange, originalData, selectedPlans, transformAndSetData]);
+
+  // Manejar cambios en la selección de tipos de firmas
   const handlePlanChange = useCallback((selected) => {
     if (!selected) {
       setSelectedPlans([]);
       return;
     }
 
+    // Si se selecciona "Todos los planes"
     if (selected.find((option) => option.value === "all")) {
       setSelectedPlans([{ value: "all", label: "Todos los planes" }]);
     } else {
@@ -99,13 +115,51 @@ export default function Pag200() {
     }
   }, []);
 
+  // Estilos personalizados para el combobox
+  const customStyles = {
+    multiValue: (base) => ({
+      ...base,
+      maxWidth: "200px", // Ancho máximo de cada elemento seleccionado
+      whiteSpace: "nowrap", // Evitar que el texto se divida en varias líneas
+      overflow: "hidden", // Ocultar el desbordamiento
+      textOverflow: "ellipsis", // Mostrar puntos suspensivos si el texto es demasiado largo
+    }),
+    valueContainer: (base) => ({
+      ...base,
+      maxHeight: "40px", // Altura máxima del contenedor de valores seleccionados
+      overflowX: "auto", // Scroll horizontal
+      flexWrap: "nowrap", // Evitar que los elementos se apilen
+      display: "flex", // Mostrar elementos en una sola línea
+      alignItems: "center", // Centrar verticalmente los elementos
+    }),
+  };
+
   return (
     <div className="">
       {/* Filtros */}
       <div className="card p-2">
         <div className="row">
-          <div className="col-sm-9 d-flex align-items-center">
+          <div className="col-sm-6 d-flex align-items-center">
             <h2 className="font-weight-bold mx-2">Por Cuentas</h2>
+          </div>
+
+          {/* Filtro de tipos de firmas */}
+          <div className="col-sm-3">
+            <label className="block text-sm font-medium mb-1">
+              Tipo de Firma
+            </label>
+            <Select
+              isMulti
+              options={[
+                ...signatureTypes,
+              ]}
+              value={selectedPlans}
+              onChange={handlePlanChange}
+              placeholder="Tipos de firmas..."
+              closeMenuOnSelect={false}
+              isDisabled={isLoading}
+              styles={customStyles} // Aplicar estilos personalizados
+            />
           </div>
 
           <div className="col-sm-3">
@@ -128,13 +182,12 @@ export default function Pag200() {
               <button
                 onClick={filterData}
                 disabled={isLoading}
-                className="btn bg-secondary p-2 border-0 mx-1"
+                className="btn bg-primary p-2 border-0 mx-1"
               >
                 <Search className="w-75" />
               </button>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -152,8 +205,7 @@ export default function Pag200() {
         </div>
       )}
 
-      {/* Gráficos */}
-
+      {/* Gráficos y tablas */}
       {!isLoading && !error && filteredData.length > 0 && (
         <div className="card">
           <div className="p-1">
@@ -190,7 +242,7 @@ export default function Pag200() {
               </div>
             </div>
 
-            {/* Fila 2 */}
+            {/* Fila 2 - Tabla por cuentas */}
             <div className="row g-1">
               <div className="col-sm-12">
                 <TransactionTable
