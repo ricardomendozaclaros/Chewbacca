@@ -6,18 +6,23 @@ import Home from './pages/Home';
 // import Page4 from './pages/Page4';
 // import Page5 from './pages/Page5';
 import Layout from './pages/Layout';
-import Error from './pages/Error';
 import Filtros from './pages/Filters/Filters';
 
 // oficial pages hardcode
-import Transactions from './pages/H-Pages/Transactions'
-import Users from './pages/H-Pages/Users'
-import Process from './pages/H-Pages/Process'
+import Transactions from './pages/pagesStatic/Transactions'
+import Users from './pages/pagesStatic/Users'
+import Process from './pages/pagesStatic/Process'
+
+//manager
+import Pag001 from './pages/pagesStatic/Pag001'
+import Pag002 from './pages/pagesStatic/Pag002'
+import Pag003 from './pages/pagesStatic/Pag003'
+
 //marketing
-import Pag100 from './pages/H-Pages/Pag100'
-import Pag101 from './pages/H-Pages/Pag101';
-import Pag102 from './pages/H-Pages/Pag102';
-import Pag200 from './pages/H-Pages/Pag200';
+import Pag100 from './pages/pagesStatic/Pag100'
+import Pag101 from './pages/pagesStatic/Pag101';
+import Pag102 from './pages/pagesStatic/Pag102';
+import Pag200 from './pages/pagesStatic/Pag200';
 
 function App() {
   
@@ -30,6 +35,11 @@ function App() {
         <Route path="transactions" element={<Transactions />} />
         <Route path="users" element={<Users />} />
         <Route path="process" element={<Process />} />
+
+        <Route path="pag001" element={<Pag001 />} />
+        <Route path="pag002" element={<Pag002 />} />
+        <Route path="pag003" element={<Pag003 />} />
+
         <Route path="pag100" element={<Pag100 />} />
         <Route path="pag101" element={<Pag101 />} />
         <Route path="pag102" element={<Pag102 />} />
@@ -40,7 +50,7 @@ function App() {
         <Route path="page3" element={<Page3 />} />
         <Route path="page4" element={<Page4 />} />
         <Route path="page5" element={<Page5 />} /> */}
-        <Route path="error" element={<Error />} />
+        
         <Route path="filters" element={<Filtros />} />
       </Route>
       <Route path="*" element={<Navigate to="/" />} />

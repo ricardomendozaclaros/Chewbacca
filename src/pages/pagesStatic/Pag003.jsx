@@ -11,7 +11,7 @@ import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.
 
 import { Search } from "lucide-react";
 
-export default function Pag100() {
+export default function Pag003() {
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,7 +96,7 @@ export default function Pag100() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h2 className="font-weight-bold mx-2">General</h2>
+            <h2 className="font-weight-bold mx-2">Seguridad y Cumplimiento</h2>
           </div>
 
           <div className="col-sm-3">
@@ -174,7 +174,7 @@ export default function Pag100() {
                       data={0}
                       title="Total Documentos Cargados"
                       subTitle=""
-                      description=""
+                      description="."
                       icon="bi bi-arrow-left-right"
                       unknown={true}
                     />
@@ -184,7 +184,7 @@ export default function Pag100() {
                       data={646}
                       title="Total Paginas"
                       subTitle=""
-                      description=""
+                      description="."
                       icon="bi bi-arrow-left-right"
                       unknown={true}
                     />
@@ -193,7 +193,7 @@ export default function Pag100() {
                     <TotalsCardComponent
                       data={166}
                       title="Total Agua Ahorrada"
-                      subTitle=""
+                      subTitle=" ."
                       description="10 litros de agua por hoja"
                       icon="bi bi-arrow-left-right"
                       unknown={true}

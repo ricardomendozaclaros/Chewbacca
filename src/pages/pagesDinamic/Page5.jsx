@@ -1,19 +1,19 @@
-// src/pages/Page2.js
+// src/pages/Page5.js
 import { useState, useEffect, useRef } from "react";
-import HeaderComponent from "../components/Header";
-import GridContainer from "../components/GridLayoutWrapper";
-import ContextMenuComponent from "../components/ContextMenu";
-import DateColumnFilter from "../components/Filters/DateColumnFilter";
-import { GetEnterprises } from "../api/enterprise";
-import { loadConfig, saveConfig } from "../utils/configHandler";
+import HeaderComponent from "../../components/Header";
+import GridContainer from "../../components/GridLayoutWrapper";
+import ContextMenuComponent from "../../components/ContextMenu";
+import DateColumnFilter from "../../components/Filters/DateColumnFilter";
+import { GetSignatureProcesses } from "../../api/signatureProcess";
+import { loadConfig, saveConfig } from "../../utils/configHandler";
 import {
   processChartData
-} from "../utils/chartProcessor";  // Importar funciones de procesamiento
+} from "../../utils/chartProcessor";  // Importar funciones de procesamiento
 
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 
-const Page2 = () => {
+const Page5 = () => {
   const [layout, setLayout] = useState([]);
   const [isDraggable, setIsDraggable] = useState(true);
   const [gridWidth, setGridWidth] = useState(window.innerWidth);
@@ -33,7 +33,7 @@ const Page2 = () => {
     const loadData = async () => {
       if (isInitialLoad) {
         // En la carga inicial, obtener el año completo
-        const result = await GetEnterprises();
+        const result = await GetSignatureProcesses();
         setAllData(result);
         setData(result);
         setFilteredData(result);
@@ -53,7 +53,7 @@ const Page2 = () => {
   // Cargar configuración inicial
   useEffect(() => {
     const fetchConfig = async () => {
-      const savedLayout = await loadConfig("Page2");
+      const savedLayout = await loadConfig("Page5");
       if (savedLayout) {
         const initializedLayout = savedLayout.map(item => ({
           ...item,
@@ -143,7 +143,7 @@ const Page2 = () => {
     }));
 
     setLayout(updatedLayout);
-    await saveConfig("Page2", updatedLayout);
+    await saveConfig("Page5", updatedLayout);
     console.log("Configuración guardada en el backend.");
   };
 
@@ -257,7 +257,7 @@ const Page2 = () => {
         toggleDraggable={() => setIsDraggable((prev) => !prev)}
         addComponent={addComponent}
         data={filteredData}
-        title="Operaciones"
+        title="Finanzas"
       />
 
       <DateColumnFilter
@@ -297,4 +297,4 @@ const Page2 = () => {
   );
 };
 
-export default Page2;
+export default Page5;

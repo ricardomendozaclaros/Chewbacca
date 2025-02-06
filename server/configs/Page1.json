@@ -1,9 +1,9 @@
 {
   "endpoits": [
-    {"id":"EndPoint0001", "url":"http://localhost:3000/api/graph1"},
-    {"id":"EndPoint0002", "url":"http://localhost:3000/api/graph1"},
-    {"id":"EndPoint0003", "url":"http://localhost:3000/api/graph1"},
-    {"id":"EndPoint0004", "url":"http://localhost:3000/api/graph1"}],
+    {"id":"EndPoint0001", "url":"https://360.autenticsign.com/api/graph1"},
+    {"id":"EndPoint0002", "url":"https://360.autenticsign.com/api/graph1"},
+    {"id":"EndPoint0003", "url":"https://360.autenticsign.com/api/graph1"},
+    {"id":"EndPoint0004", "url":"https://360.autenticsign.com/api/graph1"}],
   "layout": [
     {
       "Id": "Graph001",

@@ -1,23 +1,34 @@
 [
   {
-      "name": "ESS SI Ejecutiva",
+    "Separado": "Ejecutivo",
+    "isSeperador" : true
+  },
+  {
+      "name": "Operaciones y Uso del Servicio",
       "isSublist": false,
-      "to": "/Page1",
+      "to": "/Pag001",
       "logo": "bi bi-dash-circle"
   },
   {
-    "name": "ESS SI Ejecutiva 2",
+    "name": "Comerciales y Financieros",
     "isSublist": false,
-    "to": "/Page1",
+    "to": "/Pag002",
     "logo": "bi bi-dash-circle"
   },
   {
-      "Separado": "Areas",
+    "name": "Seguridad y Cumplimiento",
+    "isSublist": false,
+    "to": "/Pag003",
+    "logo": "bi bi-dash-circle"
+  },
+  {
+      "Separado": "Areas Operativas",
       "isSeperador" : true
   },
   {
     "name": "Marketing",
     "isSublist": true,
+    "logo": "bi bi-info-circle",
     "sublist": [
       {
         "name": "Pag100",
@@ -35,8 +46,6 @@
         "name": "Pag200",
         "to": "/Pag200"
       }
-    ],
-    "logo": "bi bi-info-circle"
+    ]
   }
-
 ]
