@@ -1,13 +1,13 @@
 {
   "description": {
-    "SIGNATURE": "Firma Comun Enterprise",
-    "AUTH_OTP": "Firma Premium Grande",
-    "AUTH_QUESTIONS": "Firma Premium Mediana",
+    "SIGNATURE": "Firma",
+    "AUTH_OTP": "Autorizaciones OTP",
+    "AUTH_QUESTIONS": "Autorizacion Pregunta Reto",
     "SIGNATURE_SIMPLE": "Firma Simple",
-    "AUTH_OTP_VERIFIED": "Firma Premium Grande Verificada",
+    "AUTH_OTP_VERIFIED": "Firma OTP Verificada",
     "SIGNATURE_SIMPLE_MANY": "Firma Simple Múltiple",
     "AUTH_DIGITAL_SIGN": "Firma Digital",
-    "AUTH_FACIAL_RECOGNITION": "Firma Facial"
+    "AUTH_FACIAL_RECOGNITION": "Firma Reconocimiento Facial"
   },
   "role": {
     "Administrator": "Administrador",
