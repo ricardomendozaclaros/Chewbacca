@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
-import Select from "react-select"; // Importar react-select
+import Select from "react-select";
 import { GetSignatureProcesses } from "../../api/signatureProcess.js";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import { useParseValue } from "../../hooks/useParseValue.js";
@@ -21,7 +21,7 @@ export default function Pag200() {
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [signatureTypes, setSignatureTypes] = useState([]); // Tipos de firmas únicos
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales (solo una vez al montar el componente)
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -29,13 +29,16 @@ export default function Pag200() {
         const result = await GetSignatureProcesses();
         setOriginalData(result); // Almacenar datos originales
 
-        // Extraer tipos de firmas únicos
+        // Extraer tipos de firmas únicos y traducirlos
         const uniqueSignatureTypes = [
           ...new Set(result.map((item) => item.description)),
         ];
-        setSignatureTypes(
-          uniqueSignatureTypes.map((type) => ({ value: type, label: type }))
-        );
+        const translatedSignatureTypes = uniqueSignatureTypes.map((type) => ({
+          value: type, // Valor original (sin traducir)
+          label: parseValue("description", type), // Etiqueta traducida
+        }));
+
+        setSignatureTypes(translatedSignatureTypes);
 
         // Transformar y establecer datos iniciales
         transformAndSetData(result);
@@ -48,7 +51,7 @@ export default function Pag200() {
     };
 
     loadData();
-  }, []);
+  }, []); // Sin dependencias: solo se ejecuta una vez al montar el componente
 
   // Función para transformar y establecer datos
   const transformAndSetData = useCallback((data) => {
@@ -150,9 +153,7 @@ export default function Pag200() {
             </label>
             <Select
               isMulti
-              options={[
-                ...signatureTypes,
-              ]}
+              options={signatureTypes} // Usar las opciones traducidas
               value={selectedPlans}
               onChange={handlePlanChange}
               placeholder="Tipos de firmas..."
