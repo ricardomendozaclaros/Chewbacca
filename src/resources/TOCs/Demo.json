@@ -19,7 +19,7 @@
     "name": "Seguridad y Cumplimiento",
     "isSublist": false,
     "to": "/Pag003",
-    "logo": "diagram-3-fill"
+    "logo": "bi bi-shield-lock"
   },
   {
       "Separado": "Areas Operativas",
@@ -31,15 +31,15 @@
     "logo": "bi bi-cart-check",
     "sublist": [
       {
-        "name": "Pag100",
+        "name": "General",
         "to": "/Pag100"
       },
       {
-        "name": "Pag101",
+        "name": "Prepago",
         "to": "/Pag101"
       },
       {
-        "name": "Pag102",
+        "name": "Postpago",
         "to": "/Pag102"
       },
       {
