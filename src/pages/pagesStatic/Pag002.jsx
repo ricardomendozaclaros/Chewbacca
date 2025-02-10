@@ -96,7 +96,7 @@ export default function Pag002() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h2 className="font-weight-bold mx-2">Comerciales y Financieros</h2>
+            <h4 className="font-weight-bold mx-2">Comerciales y Financieros</h4>
           </div>
 
           <div className="col-sm-3">

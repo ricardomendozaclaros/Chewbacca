@@ -96,7 +96,7 @@ export default function Pag100() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h2 className="font-weight-bold mx-2">General</h2>
+            <h4 className="font-weight-bold mx-2">General</h4>
           </div>
 
           <div className="col-sm-3">
@@ -175,7 +175,7 @@ export default function Pag100() {
                       title="Total Documentos Cargados"
                       subTitle=""
                       description="."
-                      icon="bi bi-arrow-left-right"
+                      icon="ri-file-paper-2-line"
                       unknown={true}
                     />
                   </div>
@@ -185,7 +185,8 @@ export default function Pag100() {
                       title="Total Paginas"
                       subTitle=""
                       description="."
-                      icon="bi bi-arrow-left-right"
+                      icon="ri-file-paper-line"
+                      iconBgColor = "#ffefef"
                       unknown={true}
                     />
                   </div>
@@ -195,7 +196,8 @@ export default function Pag100() {
                       title="Total Agua Ahorrada"
                       subTitle=" ."
                       description="10 litros de agua por hoja"
-                      icon="bi bi-arrow-left-right"
+                      icon="bi bi-droplet"
+                      iconBgColor = "#e1fdff"
                       unknown={true}
                     />
                   </div>
@@ -205,7 +207,8 @@ export default function Pag100() {
                       title="Total árboles salvados"
                       subTitle=""
                       description="Aprox 8.000 hojas por árbol"
-                      icon="bi bi-arrow-left-right"
+                      icon="bi bi-tree"
+                      iconBgColor = "#e6fbef"
                       unknown={true}
                     />
                   </div>

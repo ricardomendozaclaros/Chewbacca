@@ -143,7 +143,7 @@ export default function Pag200() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h2 className="font-weight-bold mx-2">Por Cuentas</h2>
+            <h4 className="font-weight-bold mx-2">Por Cuentas</h4>
           </div>
 
           {/* Filtro de tipos de firmas */}

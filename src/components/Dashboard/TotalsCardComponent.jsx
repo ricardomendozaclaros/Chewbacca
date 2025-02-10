@@ -1,4 +1,4 @@
-const TotalsCardComponent = ({ data, title, subTitle, description, icon = "", unknown = false }) => {
+const TotalsCardComponent = ({ data, title, subTitle, description, icon = "",  iconBgColor = "#f8f9fa", unknown = false }) => {
   return (
     <div className="card info-card sales-card">
       <div className="px-2">
@@ -8,7 +8,7 @@ const TotalsCardComponent = ({ data, title, subTitle, description, icon = "", un
 
         <div className="d-flex align-items-center">
           {icon && icon !== "" && (
-            <div className="card-icon rounded-circle d-flex align-items-center justify-content-center">
+            <div className="card-icon rounded-circle d-flex align-items-center justify-content-center"  style={{ backgroundColor: iconBgColor }}>
               <i className={icon}></i>
             </div>
           )}
