@@ -14,5 +14,12 @@ export const config = {
         username: 'marketing@autentic.com.co',
         password: 'Aut3ntic#2024'
       }
+    },
+    apiCertifirma:{
+      baseUrl: 'https://datareport-certifirma.autenticsign.com',
+      credentials: {
+        username: 'test@test.com',
+        password: '123456'
+      }
     }
   };

@@ -25,6 +25,7 @@ import Pag102 from './pages/pagesStatic/Pag102';
 
 //
 import Pag200 from './pages/pagesStatic/Pag200';
+import Pag201 from './pages/pagesStatic/Pag201';
 
 function App() {
   
@@ -46,6 +47,7 @@ function App() {
         <Route path="pag101" element={<Pag101 />} />
         <Route path="pag102" element={<Pag102 />} />
         <Route path="pag200" element={<Pag200 />} />
+        <Route path="pag201" element={<Pag201 />} />
 
         {/* <Route path="page1" element={<Page1 />} />
         <Route path="page2" element={<Page2 />} />
