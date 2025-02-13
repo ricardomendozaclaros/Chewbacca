@@ -6,7 +6,8 @@ import Select from "react-select";
 import { GetSignatureProcesses } from "../../api/signatureProcess.js";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import { useParseValue } from "../../hooks/useParseValue.js";
-import { Search } from "lucide-react";
+import { ImageOff, Search } from "lucide-react";
+import ExportButton from "../../components/BtnExportar.jsx";
 
 export default function Pag200() {
   const { parseValue } = useParseValue();
@@ -20,6 +21,8 @@ export default function Pag200() {
   const [dateRange, setDateRange] = useState([null, null]);
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [signatureTypes, setSignatureTypes] = useState([]); // Tipos de firmas únicos
+
+  
 
   // Cargar datos iniciales (solo una vez al montar el componente)
   useEffect(() => {
@@ -52,6 +55,44 @@ export default function Pag200() {
 
     loadData();
   }, []); // Sin dependencias: solo se ejecuta una vez al montar el componente
+
+  const exportData = [
+    {
+      name: "Resumen de Consumos",
+      data: Object.entries(
+        filteredData.reduce((acc, item) => {
+          Object.keys(item).forEach((key) => {
+            if (!["nit", "enterpriseName", "date"].includes(key) && item[key] > 0) {
+              acc[key] = (acc[key] || 0) + item[key];
+            }
+          });
+          return acc;
+        }, {})
+      ).map(([type, count]) => ({
+        Firma: type,
+        Cantidad: count,
+      })),
+    },
+    {
+      name: "Por cuentas",
+      data: filteredData.map((item) => {
+        const row = {
+          NIT: item.nit,
+          Nombre: item.enterpriseName,
+        };
+        Object.keys(item).forEach((key) => {
+          if (!["nit", "enterpriseName", "date"].includes(key)) {
+            row[parseValue("description", key)] = item[key];
+          }
+        });
+        return row;
+      }),
+    },
+    {
+      name: "Todos los datos",
+      data: originalData,
+    },
+  ];
 
   // Función para transformar y establecer datos
   const transformAndSetData = useCallback((data) => {
@@ -147,46 +188,55 @@ export default function Pag200() {
           </div>
 
           {/* Filtro de tipos de firmas */}
-          <div className="col-sm-3">
-            <label className="block text-sm font-medium mb-1">
-              Tipo de Firma
-            </label>
-            <Select
-              isMulti
-              options={signatureTypes} // Usar las opciones traducidas
-              value={selectedPlans}
-              onChange={handlePlanChange}
-              placeholder="Tipos de firmas..."
-              closeMenuOnSelect={false}
-              isDisabled={isLoading}
-              styles={customStyles} // Aplicar estilos personalizados
-            />
-          </div>
 
-          <div className="col-sm-3">
-            <label className="block text-sm font-medium mb-1">Periodo</label>
-            <div className="d-flex align-items-center">
-              <DatePicker
-                selectsRange={true}
-                startDate={dateRange[0]}
-                endDate={dateRange[1]}
-                onChange={setDateRange}
-                locale={es}
-                isClearable={true}
-                placeholderText="Filtrar por rango de fechas"
-                className="form-control rounded p-2"
-                disabled={isLoading}
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
+          <div className="col-sm-6 d-flex align-items-center justify-content-end">
+            <div className="mx-2 w-50">
+              <label className="block text-sm font-medium mb-2">
+                Tipo de Firma
+              </label>
+              <Select
+                isMulti
+                options={signatureTypes} // Usar las opciones traducidas
+                value={selectedPlans}
+                onChange={handlePlanChange}
+                placeholder="Tipos de firmas..."
+                closeMenuOnSelect={false}
+                isDisabled={isLoading}
+                styles={customStyles} // Aplicar estilos personalizados
               />
-              <button
-                onClick={filterData}
-                disabled={isLoading}
-                className="btn bg-primary p-2 border-0 mx-1"
-              >
-                <Search className="w-75" />
-              </button>
+            </div>
+            <div className="mx-2">
+              <label className="block text-sm font-medium mb-1">Periodo</label>
+              <div className="d-flex align-items-center">
+                <DatePicker
+                  selectsRange={true}
+                  startDate={dateRange[0]}
+                  endDate={dateRange[1]}
+                  onChange={setDateRange}
+                  locale={es}
+                  isClearable={true}
+                  placeholderText="Filtrar por rango de fechas"
+                  className="form-control rounded p-2"
+                  disabled={isLoading}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+                <button
+                  onClick={filterData}
+                  disabled={isLoading}
+                  className="btn btn-primary p-2 border-0 mx-1"
+                >
+                  <Search className="w-75" />
+                </button>
+              </div>
+            </div>
+            <div className="mx-2">
+              <ExportButton
+                data={exportData}
+                fileName="reporte_pag200.xlsx"
+                sheets={exportData}
+              />
             </div>
           </div>
         </div>

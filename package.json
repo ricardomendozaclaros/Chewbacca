@@ -27,7 +27,8 @@
     "react-select": "^5.9.0",
     "redis": "^4.7.0",
     "redis-server": "^1.2.2",
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
