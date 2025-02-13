@@ -41,11 +41,8 @@
       {
         "name": "Postpago",
         "to": "/Pag102"
-      },
-      {
-        "name": "Pag200",
-        "to": "/Pag200"
       }
+      
     ]
   },
   {
@@ -98,6 +95,14 @@
       {
         "name": "Contabilidad y Facturación",
         "to": "/Pag100"
+      },
+      {
+        "name": "Recursos Humanos",
+        "to": "/Pag101"
+      },
+      {
+        "name": "Consumos",
+        "to": "/Pag200"
       },
       {
         "name": "Recursos Humanos",
