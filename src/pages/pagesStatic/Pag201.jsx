@@ -121,27 +121,87 @@ export default function Pag201() {
   }, []);
 
   // Función para filtrar datos
-  const filterData = useCallback(() => {
-    const [startDate, endDate] = dateRange;
-    let filtered = [...originalData];
-
-    // Filtrar por rango de fechas
-    if (startDate) {
-      filtered = filtered.filter((item) => new Date(item.date) >= startDate);
-    }
-    if (endDate) {
-      filtered = filtered.filter((item) => new Date(item.date) <= endDate);
-    }
-
-    // Filtrar por tipos de firmas seleccionados
-    if (selectedPlans.length > 0) {
-      const selectedTypes = selectedPlans.map((plan) => plan.value);
-      filtered = filtered.filter((item) =>
-        selectedTypes.includes(item.description)
+  const filterData = useCallback(async () => {
+    let [startDate, endDate] = dateRange;
+    console.log(dateRange)
+    // Si dateRange es nulo o vacío, usar el rango de los últimos 14 días
+    if (!startDate || !endDate || dateRange === null) {
+      const today = new Date();
+      const twoWeeksAgo = new Date(today);
+      twoWeeksAgo.setDate(today.getDate() - 14);
+  
+      startDate = twoWeeksAgo;
+      endDate = today;
+  
+      console.log(
+        "No se seleccionaron fechas. Usando rango por defecto (últimos 14 días):",
+        startDate,
+        endDate
       );
+    } else {
+      console.log("Fechas seleccionadas:", startDate, endDate);
     }
-
-    transformAndSetData(filtered);
+  
+    // Verificar si las fechas seleccionadas están dentro del rango de originalData
+    const hasDataForRange = originalData.some(
+      (item) =>
+        new Date(item.date) >= startDate && new Date(item.date) <= endDate
+    );
+  
+    if (!hasDataForRange) {
+      console.log(
+        "Las fechas seleccionadas NO están en la data actual. Realizando nueva consulta a Redis..."
+      );
+  
+      // Si no hay datos para el rango seleccionado, realizar una nueva llamada
+      try {
+        setIsLoading(true);
+        const newData = await GetSignatureProcessesCertifirma({
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: endDate.toISOString().split('T')[0],
+        });
+  
+        console.log("Nuevos datos obtenidos de Redis:", newData);
+  
+        // Actualizar originalData con los nuevos datos
+        setOriginalData((prevData) => [...prevData, ...newData]);
+  
+        // Transformar y establecer los nuevos datos
+        transformAndSetData([...originalData, ...newData]);
+      } catch (error) {
+        console.error("Error fetching new data:", error);
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      console.log(
+        "Las fechas seleccionadas SÍ están en la data actual. Usando caché..."
+      );
+  
+      // Si los datos ya están disponibles, aplicar el filtro
+      let filtered = [...originalData];
+  
+      // Filtrar por rango de fechas
+      if (startDate) {
+        filtered = filtered.filter((item) => new Date(item.date) >= startDate);
+      }
+      if (endDate) {
+        filtered = filtered.filter((item) => new Date(item.date) <= endDate);
+      }
+  
+      // Filtrar por tipos de firmas seleccionados
+      if (selectedPlans.length > 0) {
+        const selectedTypes = selectedPlans.map((plan) => plan.value);
+        filtered = filtered.filter((item) =>
+          selectedTypes.includes(item.description)
+        );
+      }
+  
+      console.log("Datos filtrados desde caché:", filtered);
+  
+      transformAndSetData(filtered);
+    }
   }, [dateRange, originalData, selectedPlans, transformAndSetData]);
 
   // Manejar cambios en la selección de tipos de firmas
@@ -234,7 +294,7 @@ export default function Pag201() {
             <div className="mx-2">
               <ExportButton
                 data={exportData}
-                fileName="reporte_pag200.xlsx"
+                fileName="reporte_pag201.xlsx"
                 sheets={exportData}
               />
             </div>
