@@ -6,7 +6,7 @@ const formatDateToISOString = (date) => {
 const getLastTwoWeeksDates = () => {
   const today = new Date();
   const twoWeeksAgo = new Date(today);
-  twoWeeksAgo.setDate(today.getDate() - 14); // Retroceder 14 días
+  twoWeeksAgo.setDate(today.getDate() - 30); // Retroceder 14 días
   
   return {
     startDate: formatDateToISOString(twoWeeksAgo),
