@@ -12,13 +12,14 @@ export default function HeaderBar({ toggleSidebar }) {
         className="header fixed-top d-flex align-items-center"
       >
         <div className="d-flex align-items-center justify-content-between">
-        <b>Datareport Chewbacca</b>
+        <b>Datareport Autentic</b>
+       
           <i
             className="bi bi-list toggle-sidebar-btn"
             onClick={toggleSidebar}
             style={{ cursor: "pointer" }}
           ></i>
-          <div>Panel Integral de Gestión y Consolidación de Datos - AutenTIC Sign</div>
+          <div>Panel Integral de Gestión y Consolidación de Datos - Autentic Sign</div>
 {/* "Dashboard Centralizado de Gestión y Datos - AutenTIC Sign"
 "AutenTIC Sign: Plataforma Integral de Gestión y Datos"
 "AutenTIC Sign: Panel Maestro de Gestión y Consolidación de Información" */}
@@ -226,21 +227,23 @@ export default function HeaderBar({ toggleSidebar }) {
               <a
                 className="nav-link nav-profile d-flex align-items-center pe-0"
                 href="#"
-                data-bs-toggle="dropdown"
-              >
-                <img
-                  src={isAuthenticated ? user.picture : `/src/assets/img/user${randomUserNumber}.png`}
+                data-bs-toggle="dropdown">
+               <img 
+                  src={isAuthenticated 
+                    ? user.picture 
+                    : `${process.env.NODE_ENV === "production" ? "assets/img" : "src/assets/img"}/user${randomUserNumber}.png`
+                  }
                   alt="Profile"
                   className="rounded-circle"
                 />
                 <span className="d-none d-md-block dropdown-toggle ps-2">
-                  {isAuthenticated ? user.name : "Guest"}
+                  {isAuthenticated ? user.name : "User demo"}
                 </span>
               </a>
 
               <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
                 <li className="dropdown-header">
-                  <h6>{isAuthenticated ? user.nickname : "Guest"}</h6>
+                  <h6>{isAuthenticated ? user.nickname : "User demo"}</h6>
                 </li>
                 <li>
                   <hr className="dropdown-divider" />
@@ -252,7 +255,7 @@ export default function HeaderBar({ toggleSidebar }) {
                     href="users-profile.html"
                   >
                     <i className="bi bi-person"></i>
-                    <span>My Profile</span>
+                    <span>Mi perfil</span>
                   </a>
                 
                   <hr className="dropdown-divider" />
@@ -264,7 +267,7 @@ export default function HeaderBar({ toggleSidebar }) {
                     href="users-profile.html"
                   >
                     <i className="bi bi-gear"></i>
-                    <span>Account Settings</span>
+                    <span>Configuraciones</span>
                   </a>
                 </li>
                 <li>
@@ -277,7 +280,7 @@ export default function HeaderBar({ toggleSidebar }) {
                     href="pages-faq.html"
                   >
                     <i className="bi bi-question-circle"></i>
-                    <span>Need Help?</span>
+                    <span>Bitacora</span>
                   </a>
                 </li>
                 <li>
@@ -290,7 +293,7 @@ export default function HeaderBar({ toggleSidebar }) {
                     onClick={logout}
                   >
                     <i className="bi bi-box-arrow-right"></i>
-                    <span>Sign Out</span>
+                    <span>Salida</span>
                   </button>
                 </li>
               </ul>

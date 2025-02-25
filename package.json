@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+   
     "lint": "eslint .",
     "preview": "vite preview"
-  },
+  }, 
+  "_comments": " xcopy src\assets\img\*.* dist\assets\img\ /E /I /Y ",
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",
     "bootstrap": "^5.3.3",

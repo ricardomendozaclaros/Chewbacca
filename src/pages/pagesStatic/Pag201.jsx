@@ -263,7 +263,7 @@ export default function Pag201() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h4 className="font-weight-bold mx-2">Por Cuentas</h4>
+            <h4 className="font-weight-bold mx-2">Resumen de consumos Certicama</h4>
           </div>
 
           {/* Filtro de tipos de firmas */}
@@ -300,7 +300,6 @@ export default function Pag201() {
                   showMonthDropdown
                   showYearDropdown
                   dropdownMode="select"
-                  
                 />
                 <button
                   onClick={filterData}

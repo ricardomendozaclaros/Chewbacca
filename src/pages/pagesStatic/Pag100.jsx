@@ -172,9 +172,9 @@ export default function Pag100() {
                   <div className="col-sm-3">
                     <TotalsCardComponent
                       data={0}
-                      title="Total Documentos Cargados"
-                      subTitle=""
-                      description="."
+                      title="Total Procesos Cargados"
+                      subTitle="Documento"
+                      description="ddd."
                       icon="ri-file-paper-2-line"
                       unknown={true}
                     />
@@ -183,8 +183,8 @@ export default function Pag100() {
                     <TotalsCardComponent
                       data={646}
                       title="Total Paginas"
-                      subTitle=""
-                      description="."
+                      subTitle="Pagina"
+                      description="Cantidad de paginas incluyendo los documentos adjuntos"
                       icon="ri-file-paper-line"
                       iconBgColor = "#ffefef"
                       unknown={true}
@@ -194,8 +194,8 @@ export default function Pag100() {
                     <TotalsCardComponent
                       data={166}
                       title="Total Agua Ahorrada"
-                      subTitle=" ."
-                      description="10 litros de agua por hoja"
+                      subTitle="Litro"
+                      description="Para producir una sola hoja de papel A4 (aprox. 5 gr), entre 5 y 10 litros de agua"
                       icon="bi bi-droplet"
                       iconBgColor = "#e1fdff"
                       unknown={true}
@@ -205,8 +205,8 @@ export default function Pag100() {
                     <TotalsCardComponent
                       data={812}
                       title="Total árboles salvados"
-                      subTitle=""
-                      description="Aprox 8.000 hojas por árbol"
+                      subTitle="(Arbol)"
+                      description="un árbol puede producir alrededor de 10,000 a 20,000 hojas de papel A4"
                       icon="bi bi-tree"
                       iconBgColor = "#e6fbef"
                       unknown={true}
