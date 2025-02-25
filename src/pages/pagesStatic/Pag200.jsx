@@ -90,7 +90,40 @@ export default function Pag200() {
     },
     {
       name: "Todos los datos",
-      data: originalData,
+      data: originalData.filter(item => {
+        // Get default dates if no range selected
+        let [startDate, endDate] = dateRange;
+        
+        if (!startDate || dateRange === null) {
+          const today = new Date();
+          today.setHours(23,59,59,999);
+          const twoWeeksAgo = new Date(today);
+          twoWeeksAgo.setDate(today.getDate() - 14);
+          twoWeeksAgo.setHours(0,0,0,0);
+        
+          startDate = twoWeeksAgo;
+          endDate = today;
+        } else {
+          startDate = new Date(startDate.setHours(0,0,0,0));
+          // If no end date, use start date as end date
+          endDate = endDate ? new Date(endDate.setHours(23,59,59,999)) : new Date(startDate);
+          // Set end date to end of day if it's the same as start date
+          if (endDate === startDate) {
+            endDate.setHours(23,59,59,999);
+          }
+        }
+    
+        // Filtrar por fecha
+        const dateInRange = new Date(item.date) >= startDate && 
+                           new Date(item.date) <= endDate;
+    
+        // Filtrar por tipos de firma seleccionados
+        const typeMatches = selectedPlans.length > 0
+          ? selectedPlans.some(plan => plan.value === item.description)
+          : true;
+    
+        return dateInRange && typeMatches;
+      }),
     },
   ];
 
@@ -123,23 +156,20 @@ export default function Pag200() {
   // Función para filtrar datos
   const filterData = useCallback(async () => {
     let [startDate, endDate] = dateRange;
-    console.log(dateRange)
-    // Si dateRange es nulo o vacío, usar el rango de los últimos 14 días
+    
     if (!startDate || !endDate || dateRange === null) {
       const today = new Date();
+      today.setHours(23,59,59,999);
       const twoWeeksAgo = new Date(today);
       twoWeeksAgo.setDate(today.getDate() - 14);
-  
+      twoWeeksAgo.setHours(0,0,0,0);
+    
       startDate = twoWeeksAgo;
       endDate = today;
-  
-      console.log(
-        "No se seleccionaron fechas. Usando rango por defecto (últimos 14 días):",
-        startDate,
-        endDate
-      );
     } else {
-      console.log("Fechas seleccionadas:", startDate, endDate);
+      // Set time for selected dates
+      startDate = new Date(startDate.setHours(0,0,0,0));
+      endDate = new Date(endDate.setHours(23,59,59,999));
     }
   
     // Verificar si las fechas seleccionadas están dentro del rango de originalData
