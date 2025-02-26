@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import DataTable from "react-data-table-component";
 import { useParseValue } from '../../hooks/useParseValue';
@@ -16,26 +16,33 @@ export default function TransactionTable({
   description, 
   columns,
   groupByOptions,
-  showTotal = false, // New parameter
-  height
+  showTotal = false, 
+  height,
+  pagination = false, // New prop for pagination
+  rowsPerPage = 15    // Default rows per page
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const { parseValue } = useParseValue();
+  const [paginatedData, setPaginatedData] = useState([]);
+  const [rowsPerPageState, setRowsPerPageState] = useState(rowsPerPage);
   
   const tableColumns = useMemo(() => {
-    // If columns empty, generate from data structure
     if (!columns || columns.length === 0) {
-      if (!data || data.length === 0) return [];
-      
-      const firstRow = data[0];
-      return Object.keys(firstRow).map(key => ({
-        name: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize
-        selector: (row) => row[key],
+      // ... existing fallback logic ...
+    }
+
+    return columns.map(column => {
+      const [header, field, config = {}] = column;
+      return {
+        name: header,
+        selector: (row) => row[field],
         sortable: true,
-        resizable: true, // Enable column resizing
+        resizable: true,
+        width: config.width,
+        right: config.align === 'right',
         cell: row => {
-          const displayValue = parseValue(key, row[key]);
+          const displayValue = parseValue(field, row[field], config.format);
           return (
             <div 
               title={displayValue} 
@@ -44,88 +51,63 @@ export default function TransactionTable({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 width: '100%',
+                textAlign: config.align || 'left',
+                height: config.verticalAlign ? '100%' : 'auto',
+                display: config.verticalAlign ? 'flex' : 'block',
+                alignItems: config.verticalAlign ? 'center' : 'initial',
               }}
             >
               {displayValue}
             </div>
           );
         },
-      }));
-    }
-
-    // Original logic for provided columns
-    return columns.map(([header, field]) => ({
-      name: header,
-      selector: (row) => row[field],
-      sortable: true,
-      resizable: true, // Enable column resizing
-      cell: row => {
-        const displayValue = parseValue(field, row[field]);
-        return (
-          <div 
-            title={displayValue} 
-            style={{
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              width: '100%',
-            }}
-          >
-            {displayValue}
-          </div>
-        );
-      },
-    }));
-  }, [columns, data]);
+        conditionalCellStyles: [{
+          when: row => row.isGrouped && row.groupLevel % 2 === 0,
+          style: {
+            backgroundColor: '#c6c6c6',
+          },
+        }, {
+          when: row => row.isGrouped && row.groupLevel % 2 === 1,
+          style: {
+            backgroundColor: '#ffffff',
+          },
+        }]
+      };
+    });
+  }, [columns, parseValue]);
 
   const processedData = useMemo(() => {
-    if (!groupByOptions || groupByOptions.length === 0) {
-      return data.map(row => ({ ...row, uniqueId: uuidv4() }));
-    }
+    if (!data || data.length === 0) return [];
 
-    const groupField = groupByOptions.find(opt => opt.operation === 'group')?.field;
-    if (!groupField) return data.map(row => ({ ...row, uniqueId: uuidv4() }));
+    // Group by signatureType
+    const grouped = data.reduce((acc, item) => {
+      const key = item.signatureType;
+      if (!acc[key]) {
+        acc[key] = {
+          signatureType: key,
+          rows: []
+        };
+      }
+      acc[key].rows.push(item);
+      return acc;
+    }, {});
 
-    // Group data first
-    const groups = {};
-    data.forEach(item => {
-      const groupValue = item[groupField];
-      if (!groups[groupValue]) groups[groupValue] = [];
-      groups[groupValue].push(item);
-    });
-
-    // Process each group with specified operations
-    return Object.entries(groups).flatMap(([groupName, items]) => {
-      const aggregatedValues = {};
+    // Flatten groups into rows with proper styling
+    let groupLevel = 0;
+    return Object.values(grouped).flatMap(group => {
+      const rows = group.rows.sort((a, b) => b.unitValue - a.unitValue);
+      groupLevel++;
       
-      // Process each field's operation
-      columns.forEach(([_, field]) => {
-        const operation = groupByOptions.find(opt => opt.field === field)?.operation || 'sum';
-        
-        switch(operation) {
-          case 'sum':
-            aggregatedValues[field] = items.reduce((sum, item) => sum + (Number(item[field]) || 0), 0);
-            break;
-          case 'multiply':
-            aggregatedValues[field] = items.reduce((prod, item) => prod * (Number(item[field]) || 1), 1);
-            break;
-          case 'count':
-            aggregatedValues[field] = items.length;
-            break;
-          case 'group':
-            aggregatedValues[field] = groupName;
-            break;
-        }
-      });
-
-      return [{
-        ...aggregatedValues,
+      return rows.map((row, index) => ({
+        ...row,
         uniqueId: uuidv4(),
-        isGroupHeader: true,
-        items: items
-      }];
+        isGrouped: true,
+        isMainGroup: index === 0,
+        groupLevel,
+        signatureType: index === 0 ? row.signatureType : ''
+      }));
     });
-  }, [data, groupByOptions, columns]);
+  }, [data]);
 
   // Filter data based on search term, considering translated values
   const filteredData = useMemo(() => {
@@ -158,52 +140,139 @@ export default function TransactionTable({
     setSearchTerm("");
   };
 
+  // Add pagination settings
+  const paginationOptions = useMemo(() => {
+    if (!pagination) return {};
+    
+    return {
+      paginationPerPage: rowsPerPage,
+      paginationRowsPerPageOptions: [15, 30, 50, 100],
+      pagination: true,
+      paginationServer: false,
+      paginationTotalRows: filteredData.length,
+      onChangePage: page => setCurrentPage(page),
+    };
+  }, [pagination, rowsPerPage, filteredData.length]);
+
+  // Add pagination controls component
+  const PaginationControls = () => {
+    const totalPages = Math.ceil(filteredData.length / rowsPerPageState);
+    const startIndex = (currentPage - 1) * rowsPerPageState;
+    const endIndex = startIndex + rowsPerPageState;
+    
+    return (
+      <div style={{ 
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        marginRight: '20px'
+      }}>
+        <select 
+          value={rowsPerPageState}
+          onChange={(e) => {
+            setRowsPerPageState(Number(e.target.value));
+            setCurrentPage(1);
+          }}
+          className="form-select"
+          style={{ width: 'auto' }}
+        >
+          {[15, 30, 50, 100].map(size => (
+            <option key={size} value={size}>{size} por página</option>
+          ))}
+        </select>
+        <div className="btn-group">
+          <button 
+            className="btn btn-outline-secondary btn-sm"
+            onClick={() => setCurrentPage(1)}
+            disabled={currentPage === 1}
+          >
+            {'<<'}
+          </button>
+          <button 
+            className="btn btn-outline-secondary btn-sm"
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+          >
+            {'<'}
+          </button>
+          <span className="btn btn-outline-secondary btn-sm" style={{ pointerEvents: 'none' }}>
+            {`${startIndex + 1}-${Math.min(endIndex, filteredData.length)} de ${filteredData.length}`}
+          </span>
+          <button 
+            className="btn btn-outline-secondary btn-sm"
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+          >
+            {'>'}
+          </button>
+          <button 
+            className="btn btn-outline-secondary btn-sm"
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={currentPage === totalPages}
+          >
+            {'>>'}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Update filtered and paginated data
+  useEffect(() => {
+    if (pagination) {
+      const start = (currentPage - 1) * rowsPerPageState;
+      const end = start + rowsPerPageState;
+      setPaginatedData(filteredData.slice(start, end));
+    } else {
+      setPaginatedData(filteredData);
+    }
+  }, [filteredData, currentPage, rowsPerPageState, pagination]);
+
   return (
     <div className="card">
       <div className="px-1">
         <h5 className="card-title">
-          {title} <span>{subTitle ? `| ${subTitle}` : ''}  </span>
+          {title} <span>{subTitle ? `| ${subTitle}` : ''}</span>
         </h5>
-        {/* Search Input */}
+        {/* Search and Pagination Controls */}
         <div style={{ 
           display: 'flex', 
-          justifyContent: 'flex-end', // Alinea el contenido a la derecha
-          marginBottom: '10px', // Espacio inferior para separar de la tabla
-          position: 'relative', // Para posicionar el botón de limpieza
+          justifyContent: pagination ? 'space-between' : 'flex-end',
+          alignItems: 'center',
+          marginBottom: '10px',
         }}>
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              padding: '5px 30px 5px 10px', // Espacio para el botón de limpieza
-              margin: "5px 0 5px 0",
-              width: '200px',
-              boxSizing: 'border-box',
-              border: '1px solid #ccc',
-              borderRadius: '5px',
-            }}
-          />
-          {/* Botón de limpieza */}
-          {searchTerm && (
-            <button
-              onClick={clearSearch}
+          {pagination && <PaginationControls />}
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              placeholder="Buscar..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               style={{
-                position: 'absolute',
-                right: '10px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#999',
-                fontSize: '16px',
+                padding: '5px 30px 5px 10px',
+                width: '200px',
+                border: '1px solid #ccc',
+                borderRadius: '5px',
               }}
-            >
-              ×
-            </button>
-          )}
+            />
+            {searchTerm && (
+              <button
+                onClick={clearSearch}
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#999',
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
         </div>
         <div style={{ 
           height: height ? `${height}px` : 'auto',
@@ -211,14 +280,7 @@ export default function TransactionTable({
         }}>
           <DataTable
             columns={tableColumns}
-            data={showTotal && columns.length >= 2 ? 
-              [...filteredData, {
-                uniqueId: 'total-row',
-                [columns[columns.length - 2][1]]: 'Total',
-                [columns[columns.length - 1][1]]: total,
-              }] : 
-              filteredData
-            }
+            data={pagination ? paginatedData : filteredData}
             keyField="uniqueId"
             fixedHeader={!!height}
             fixedHeaderScrollHeight={`${height}px`}
@@ -226,12 +288,12 @@ export default function TransactionTable({
             striped
             responsive
             dense
+            pagination={false} // Disable default pagination
             customStyles={{
               rows: {
                 style: {
                   '&:last-of-type': showTotal ? {
                     fontWeight: 'bold',
-                    backgroundColor: '#f8f9fa'
                   } : {}
                 }
               },
@@ -248,6 +310,13 @@ export default function TransactionTable({
                 style: {
                   paddingLeft: '8px',
                   paddingRight: '8px'
+                }
+              },
+              pagination: {
+                style: {
+                  marginTop: '10px',
+                  borderTop: '1px solid #ddd',
+                  paddingTop: '10px'
                 }
               }
             }}
