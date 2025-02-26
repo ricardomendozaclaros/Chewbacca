@@ -3,50 +3,44 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
 import Select from "react-select";
-import { GetSignatureProcesses } from "../../api/signatureProcess.js";
+import { GetSignatureProcesses} from "../../api/signatureProcess.js";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
+import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
 import { useParseValue } from "../../hooks/useParseValue.js";
 import { ImageOff, Search } from "lucide-react";
 import ExportButton from "../../components/BtnExportar.jsx";
 
 export default function Pag200() {
   const { parseValue } = useParseValue();
-  const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [originalData, setOriginalData] = useState([]);
+  const [activeTab, setActiveTab] = useState('resumen');
 
   // Estados para filtros
   const [dateRange, setDateRange] = useState([null, null]);
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [signatureTypes, setSignatureTypes] = useState([]); // Tipos de firmas únicos
 
-  
+  const daysAgo = 14; // Número de días para el rango de fechas
 
   // Cargar datos iniciales (solo una vez al montar el componente)
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        const result = await GetSignatureProcesses();
-        setOriginalData(result); // Almacenar datos originales
-
-        // Extraer tipos de firmas únicos y traducirlos
-        const uniqueSignatureTypes = [
-          ...new Set(result.map((item) => item.description)),
-        ];
-        const translatedSignatureTypes = uniqueSignatureTypes.map((type) => ({
-          value: type, // Valor original (sin traducir)
-          label: parseValue("description", type), // Etiqueta traducida
-        }));
-
-        setSignatureTypes(translatedSignatureTypes);
-
-        // Transformar y establecer datos iniciales
+        const today = new Date();
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() - daysAgo);
+        
+        const result = await GetSignatureProcesses({
+          startDate: startDate.toISOString().split('T')[0],
+          endDate: today.toISOString().split('T')[0]
+        });
+        
         transformAndSetData(result);
       } catch (error) {
-        console.error("Error cargando datos:", error);
+        console.error("Error loading data:", error);
         setError(error.message);
       } finally {
         setIsLoading(false);
@@ -56,16 +50,15 @@ export default function Pag200() {
     loadData();
   }, []); // Sin dependencias: solo se ejecuta una vez al montar el componente
 
-  const exportData = [
+  const exportData = useMemo(() => [
     {
       name: "Resumen de Consumos",
       data: Object.entries(
         filteredData.reduce((acc, item) => {
-          Object.keys(item).forEach((key) => {
-            if (!["nit", "enterpriseName", "date"].includes(key) && item[key] > 0) {
-              acc[key] = (acc[key] || 0) + item[key];
-            }
-          });
+          if (!acc[item.description]) {
+            acc[item.description] = 0;
+          }
+          acc[item.description]++;
           return acc;
         }, {})
       ).map(([type, count]) => ({
@@ -75,164 +68,146 @@ export default function Pag200() {
     },
     {
       name: "Por cuentas",
-      data: filteredData.map((item) => {
-        const row = {
-          NIT: item.nit,
-          Nombre: item.enterpriseName,
-        };
-        Object.keys(item).forEach((key) => {
-          if (!["nit", "enterpriseName", "date"].includes(key)) {
-            row[parseValue("description", key)] = item[key];
+      data: Object.values(
+        filteredData.reduce((acc, item) => {
+          const key = `${item.enterpriseId}-${item.enterpriseName}`;
+          if (!acc[key]) {
+            acc[key] = {
+              NIT: item.enterpriseId,
+              Nombre: item.enterpriseName,
+              ...Object.fromEntries([...new Set(filteredData.map(i => i.description))].map(type => [type, 0]))
+            };
           }
-        });
-        return row;
-      }),
+          acc[key][item.description]++;
+          return acc;
+        }, {})
+      ),
     },
     {
       name: "Todos los datos",
-      data: originalData.filter(item => {
-        // Get default dates if no range selected
-        let [startDate, endDate] = dateRange;
-        
-        if (!startDate || dateRange === null) {
-          const today = new Date();
-          today.setHours(23,59,59,999);
-          const twoWeeksAgo = new Date(today);
-          twoWeeksAgo.setDate(today.getDate() - 14);
-          twoWeeksAgo.setHours(0,0,0,0);
-        
-          startDate = twoWeeksAgo;
-          endDate = today;
-        } else {
-          startDate = new Date(startDate.setHours(0,0,0,0));
-          // If no end date, use start date as end date
-          endDate = endDate ? new Date(endDate.setHours(23,59,59,999)) : new Date(startDate);
-          // Set end date to end of day if it's the same as start date
-          if (endDate === startDate) {
-            endDate.setHours(23,59,59,999);
-          }
-        }
-    
-        // Filtrar por fecha
-        const dateInRange = new Date(item.date) >= startDate && 
-                           new Date(item.date) <= endDate;
-    
-        // Filtrar por tipos de firma seleccionados
-        const typeMatches = selectedPlans.length > 0
-          ? selectedPlans.some(plan => plan.value === item.description)
-          : true;
-    
-        return dateInRange && typeMatches;
-      }),
-    },
-  ];
+      data: filteredData
+    }
+  ], [filteredData]);
+
+// Simplified filterData function
+const filterData = useCallback(async () => {
+  try {
+    setIsLoading(true);
+    let [startDate, endDate] = dateRange;
+
+    if (!startDate) {
+      // If no dates selected, use default range (today - 20 days)
+      const today = new Date();
+      startDate = new Date(today);
+      startDate.setDate(today.getDate() - daysAgo);
+      endDate = today;
+    } else {
+      // If only startDate is selected, use it as endDate too
+      endDate = endDate || startDate;
+    }
+
+    const result = await GetSignatureProcesses({
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0]
+    });
+
+    transformAndSetData(result);
+  } catch (error) {
+    console.error("Error fetching filtered data:", error);
+    setError(error.message);
+  } finally {
+    setIsLoading(false);
+  }
+}, [dateRange]);
+
+// Memoize the summarized data for the first table and total records
+const summarizedData = useMemo(() => {
+  const summary = filteredData.reduce((acc, item) => {
+    if (!acc[item.description]) {
+      acc[item.description] = 0;
+    }
+    acc[item.description]++;
+    return acc;
+  }, {});
+
+  return Object.entries(summary).map(([type, count]) => ({
+    signatureType: type,
+    total: count,
+  }));
+}, [filteredData]);
+
+// Memoize the grouped data for the resumen table
+const groupedData = useMemo(() => {
+  const grouped = filteredData.reduce((acc, item) => {
+    const key = `${item.enterpriseId}-${item.enterpriseName}`;
+    if (!acc[key]) {
+      acc[key] = {
+        nit: item.enterpriseId,
+        enterpriseName: item.enterpriseName,
+        ...Object.fromEntries([...new Set(filteredData.map(i => i.description))].map(type => [type, 0]))
+      };
+    }
+    acc[key][item.description]++;
+    return acc;
+  }, {});
+
+  return Object.values(grouped);
+}, [filteredData]);
+
+// Memoize table components
+const ResumenTable = useMemo(() => (
+  <TransactionTable
+    data={groupedData}
+    title=""
+    subTitle=""
+    description=""
+    showTotal={false}
+    height={450}
+    columns={[
+      ["NIT", "nit"],
+      ["Nombre", "enterpriseName"],
+      ...Object.keys(groupedData[0] || {})
+        .filter(key => !["nit", "enterpriseName"].includes(key))
+        .map(key => [parseValue("description", key), key])
+    ]}
+    groupByOptions={[]}
+  />
+), [groupedData]);
+
+// Update DetalleTable to use raw filtered data
+const DetalleTable = useMemo(() => (
+  <TransactionTable
+    data={filteredData}
+    title=""
+    subTitle=""
+    description=""
+    showTotal={false}
+    height={450}
+    columns={[
+      ["ID", "id"],
+      ["Fecha", "date"],
+      ["Firma", "description"],
+      ["Cantidad", "quantity"],
+      ["Valor unitario", "unitValue"],
+      ["Total", "totalValue"],
+      ["NIT", "enterpriseId"],
+      ["Nombre", "enterpriseName"],
+      ["Email", "email"]
+    ]}
+    groupByOptions={[]}
+  />
+), [filteredData]);
+
+// Simplify totalRecords to just show filteredData length
+const totalRecords = useMemo(() => {
+  return filteredData.length;
+}, [filteredData]);
 
   // Función para transformar y establecer datos
   const transformAndSetData = useCallback((data) => {
-    const signatureTypes = [...new Set(data.map((item) => item.description))];
-
-    const transformedData = Object.values(
-      data.reduce((acc, item) => {
-        const key = `${item.enterpriseId}-${item.enterpriseName}`;
-
-        if (!acc[key]) {
-          acc[key] = {
-            nit: item.enterpriseId,
-            enterpriseName: item.enterpriseName,
-            date: item.date,
-            ...Object.fromEntries(signatureTypes.map((type) => [type, 0])),
-          };
-        }
-
-        acc[key][item.description]++;
-        return acc;
-      }, {})
-    );
-
-    setAllData(transformedData);
-    setFilteredData(transformedData);
+    // Set filtered data directly from API response
+    setFilteredData(data);
   }, []);
-
-  // Función para filtrar datos
-  const filterData = useCallback(async () => {
-    let [startDate, endDate] = dateRange;
-    
-    if (!startDate || !endDate || dateRange === null) {
-      const today = new Date();
-      today.setHours(23,59,59,999);
-      const twoWeeksAgo = new Date(today);
-      twoWeeksAgo.setDate(today.getDate() - 14);
-      twoWeeksAgo.setHours(0,0,0,0);
-    
-      startDate = twoWeeksAgo;
-      endDate = today;
-    } else {
-      // Set time for selected dates
-      startDate = new Date(startDate.setHours(0,0,0,0));
-      endDate = new Date(endDate.setHours(23,59,59,999));
-    }
-  
-    // Verificar si las fechas seleccionadas están dentro del rango de originalData
-    const hasDataForRange = originalData.some(
-      (item) =>
-        new Date(item.date) >= startDate && new Date(item.date) <= endDate
-    );
-  
-    if (!hasDataForRange) {
-      console.log(
-        "Las fechas seleccionadas NO están en la data actual. Realizando nueva consulta a Redis..."
-      );
-  
-      // Si no hay datos para el rango seleccionado, realizar una nueva llamada
-      try {
-        setIsLoading(true);
-        const newData = await GetSignatureProcesses({
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: endDate.toISOString().split('T')[0],
-        });
-  
-        console.log("Nuevos datos obtenidos de Redis:", newData);
-  
-        // Actualizar originalData con los nuevos datos
-        setOriginalData((prevData) => [...prevData, ...newData]);
-  
-        // Transformar y establecer los nuevos datos
-        transformAndSetData([...originalData, ...newData]);
-      } catch (error) {
-        console.error("Error fetching new data:", error);
-        setError(error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      console.log(
-        "Las fechas seleccionadas SÍ están en la data actual. Usando caché..."
-      );
-  
-      // Si los datos ya están disponibles, aplicar el filtro
-      let filtered = [...originalData];
-  
-      // Filtrar por rango de fechas
-      if (startDate) {
-        filtered = filtered.filter((item) => new Date(item.date) >= startDate);
-      }
-      if (endDate) {
-        filtered = filtered.filter((item) => new Date(item.date) <= endDate);
-      }
-  
-      // Filtrar por tipos de firmas seleccionados
-      if (selectedPlans.length > 0) {
-        const selectedTypes = selectedPlans.map((plan) => plan.value);
-        filtered = filtered.filter((item) =>
-          selectedTypes.includes(item.description)
-        );
-      }
-  
-      console.log("Datos filtrados desde caché:", filtered);
-  
-      transformAndSetData(filtered);
-    }
-  }, [dateRange, originalData, selectedPlans, transformAndSetData]);
 
   // Manejar cambios en la selección de tipos de firmas
   const handlePlanChange = useCallback((selected) => {
@@ -268,19 +243,41 @@ export default function Pag200() {
     }),
   };
 
+  // Add this helper function for date formatting
+  const formatDateRange = (dateRange) => {
+    const formatDate = (date) => {
+      const d = new Date(date);
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    };
+  
+    if (!dateRange[0]) {
+      const today = new Date();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - daysAgo);
+      return `Del ${formatDate(startDate)} - ${formatDate(today)}`;
+    }
+  
+    const start = new Date(dateRange[0]);
+    const end = dateRange[1] ? new Date(dateRange[1]) : start;
+    return `Del ${formatDate(start)} - ${formatDate(end)}`;
+  };
+
   return (
     <div className="">
       {/* Filtros */}
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h4 className="font-weight-bold mx-2">Por Cuentas</h4>
+            <h4 className="font-weight-bold mx-2">Consumo de cuentas</h4>
           </div>
 
           {/* Filtro de tipos de firmas */}
 
           <div className="col-sm-6 d-flex align-items-center justify-content-end">
-            <div className="mx-2 w-50">
+            <div className="mx-2 w-50" style={{ zIndex: 1000 }}>
               <label className="block text-sm font-medium mb-2">
                 Tipo de Firma
               </label>
@@ -297,7 +294,7 @@ export default function Pag200() {
             </div>
             <div className="mx-2">
               <label className="block text-sm font-medium mb-1">Periodo</label>
-              <div className="d-flex align-items-center">
+              <div className="d-flex align-items-center" >
                 <DatePicker
                   selectsRange={true}
                   startDate={dateRange[0]}
@@ -352,26 +349,11 @@ export default function Pag200() {
           <div className="p-1">
             {/* Fila 1 - Summary Table */}
             <div className="row g-1 mb-3">
-              <div className="col-sm-4 mx-auto">
+              <div className="col-sm-4">
                 <TransactionTable
-                  data={Object.entries(
-                    filteredData.reduce((acc, item) => {
-                      Object.keys(item).forEach((key) => {
-                        if (
-                          !["nit", "enterpriseName", "date"].includes(key) &&
-                          item[key] > 0
-                        ) {
-                          acc[key] = (acc[key] || 0) + item[key];
-                        }
-                      });
-                      return acc;
-                    }, {})
-                  ).map(([type, count]) => ({
-                    signatureType: type,
-                    total: count,
-                  }))}
+                  data={summarizedData}
                   title="Resumen de Consumos"
-                  subTitle=""
+                  subTitle={formatDateRange(dateRange)}
                   description=""
                   showTotal={false}
                   height={250}
@@ -381,30 +363,53 @@ export default function Pag200() {
                   ]}
                 />
               </div>
+              <div className="col-sm-4">
+                <TotalsCardComponent
+                  data={totalRecords}
+                  title="Total Registros"
+                  subTitle="Registros Encontrados"
+                  description="Total de registros en el período seleccionado"
+                  icon="bi bi-arrow-left-right"
+                  unknown={false}
+                />
+              </div>
             </div>
 
-            {/* Fila 2 - Tabla por cuentas */}
+            {/* New Tabs Section */}
             <div className="row g-1">
               <div className="col-sm-12">
-                <TransactionTable
-                  data={filteredData}
-                  title="Por cuentas"
-                  subTitle=""
-                  description=""
-                  showTotal={false}
-                  height={450}
-                  columns={[
-                    ["NIT", "nit"],
-                    ["Nombre", "enterpriseName"],
-                    ...Object.keys(filteredData[0] || {})
-                      .filter(
-                        (key) =>
-                          !["nit", "enterpriseName", "date"].includes(key)
-                      )
-                      .map((key) => [parseValue("description", key), key]),
-                  ]}
-                  groupByOptions={[]}
-                />
+                <ul className="nav nav-tabs" role="tablist">
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link ${activeTab === 'resumen' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('resumen')}
+                    >
+                      Por tipo firma
+                    </button>
+                  </li>
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link ${activeTab === 'detalle' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('detalle')}
+                    >
+                      Procesos de firma
+                    </button>
+                  </li>
+                </ul>
+
+                <div className="tab-content mt-3">
+                  {activeTab === 'resumen' && (
+                    <div className="tab-pane fade show active">
+                      {ResumenTable}
+                    </div>
+                  )}
+
+                  {activeTab === 'detalle' && (
+                    <div className="tab-pane fade show active">
+                      {DetalleTable}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

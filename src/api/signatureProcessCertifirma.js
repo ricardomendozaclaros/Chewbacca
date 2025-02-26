@@ -1,29 +1,28 @@
 // api/signatureProcess.js
 const formatDateToISOString = (date) => {
-  return date.toISOString().split('T')[0];
+  return new Date(date).toISOString().split('T')[0];
 };
 
-const getLastTwoWeeksDates = () => {
+const getDefaultDateRange = () => {
   const today = new Date();
-  const twoWeeksAgo = new Date(today);
-  twoWeeksAgo.setDate(today.getDate() - 30); // Retroceder 14 días
+  const defaultStart = new Date(today);
+  defaultStart.setDate(today.getDate() - 20);
   
   return {
-    startDate: formatDateToISOString(twoWeeksAgo),
+    startDate: formatDateToISOString(defaultStart),
     endDate: formatDateToISOString(today)
   };
 };
 
-const GetSignatureProcessesCertifirma = async (dateRange = null) => {
+const GetSignatureProcessesCertifirma = async (dates = null) => {
   try {
     let startDate, endDate;
 
-    if (dateRange) {
-      ({ startDate, endDate } = dateRange);
+    if (dates?.startDate || dates?.endDate) {
+      startDate = formatDateToISOString(dates.startDate || dates.endDate);
+      endDate = formatDateToISOString(dates.endDate || dates.startDate);
     } else {
-      const { startDate: defaultStart, endDate: defaultEnd } = getLastTwoWeeksDates();
-      startDate = defaultStart;
-      endDate = defaultEnd;
+      ({ startDate, endDate } = getDefaultDateRange());
     }
 
     console.log(`Consultando firmas desde ${startDate} hasta ${endDate}`);
@@ -69,4 +68,4 @@ const GetSignatureProcessesCertifirma = async (dateRange = null) => {
   }
 };
 
-export { GetSignatureProcessesCertifirma, formatDateToISOString };
+export { GetSignatureProcessesCertifirma };
