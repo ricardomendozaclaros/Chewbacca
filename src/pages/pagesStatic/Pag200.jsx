@@ -79,16 +79,25 @@ export default function Pag200() {
         name: "Resumen de Consumos",
         data: Object.entries(
           filteredData.reduce((acc, item) => {
-            if (!acc[item.description]) {
-              acc[item.description] = 0;
+            const key = `${item.description}-${item.unitValue}`;
+            if (!acc[key]) {
+              acc[key] = {
+                Firma: item.description,
+                Precio: item.unitValue || 0,
+                Cantidad: 0
+              };
             }
-            acc[item.description]++;
+            acc[key].Cantidad++;
             return acc;
           }, {})
-        ).map(([type, count]) => ({
-          Firma: type,
-          Cantidad: count,
-        })),
+        ).sort(([keyA, a], [keyB, b]) => {
+          const [descA] = keyA.split('-');
+          const [descB] = keyB.split('-');
+          if (descA === descB) {
+            return b.Precio - a.Precio; // Sort prices in descending order
+          }
+          return descA.localeCompare(descB);
+        }).map(([_, value]) => value)
       },
       {
         name: "Por cuentas",
@@ -180,18 +189,27 @@ export default function Pag200() {
 
   // Memoize the summarized data for the first table and total records
   const summarizedData = useMemo(() => {
-    const summary = filteredData.reduce((acc, item) => {
-      if (!acc[item.description]) {
-        acc[item.description] = 0;
+    // Group by description and unitValue
+    const grouped = filteredData.reduce((acc, item) => {
+      const key = `${item.description}-${item.unitValue}`;
+      if (!acc[key]) {
+        acc[key] = {
+          signatureType: item.description,
+          unitValue: item.unitValue || 0, // Handle null/undefined unit values
+          total: 0,
+        };
       }
-      acc[item.description]++;
+      acc[key].total++;
       return acc;
     }, {});
 
-    return Object.entries(summary).map(([type, count]) => ({
-      signatureType: type,
-      total: count,
-    }));
+    // Convert to array and sort
+    return Object.values(grouped).sort((a, b) => {
+      if (a.signatureType === b.signatureType) {
+        return b.unitValue - a.unitValue; // Sort prices in descending order
+      }
+      return a.signatureType.localeCompare(b.signatureType);
+    });
   }, [filteredData]);
 
   // Memoize the grouped data for the resumen table
@@ -227,6 +245,8 @@ export default function Pag200() {
         description=""
         showTotal={false}
         height={450}
+        pagination={true}    // Enable pagination
+        rowsPerPage={15}    // Set rows per page
         columns={[
           ["NIT", "nit"],
           ["Nombre", "enterpriseName"],
@@ -241,31 +261,33 @@ export default function Pag200() {
   );
 
   // Update DetalleTable to use raw filtered data
-  const DetalleTable = useMemo(
-    () => (
-      <TransactionTable
-        data={filteredData}
-        title=""
-        subTitle=""
-        description=""
-        showTotal={false}
-        height={450}
-        columns={[
-          ["ID", "id"],
-          ["Fecha", "date"],
-          ["Firma", "description"],
-          ["Cantidad", "quantity"],
-          ["Valor unitario", "unitValue"],
-          ["Total", "totalValue"],
-          ["NIT", "enterpriseId"],
-          ["Nombre", "enterpriseName"],
-          ["Email", "email"],
-        ]}
-        groupByOptions={[]}
-      />
-    ),
-    [filteredData]
-  );
+   const DetalleTable = useMemo(
+      () => (
+        <TransactionTable
+          data={filteredData}
+          title=""
+          subTitle=""
+          description=""
+          showTotal={false}
+          height={450}
+          pagination={true}    // Enable pagination
+          rowsPerPage={15}    // Set rows per page
+          columns={[
+            ["ID", "id"],
+            ["Fecha", "date"],
+            ["Firma", "description"],
+            ["Cantidad", "quantity"],
+            ["Valor unitario", "unitValue"],
+            ["Total", "totalValue"],
+            ["NIT", "enterpriseId"],
+            ["Nombre", "enterpriseName"],
+            ["Email", "email"],
+          ]}
+          groupByOptions={[]}
+        />
+      ),
+      [filteredData]
+    );
 
   // Simplify totalRecords to just show filteredData length
   const totalRecords = useMemo(() => {
@@ -414,9 +436,11 @@ export default function Pag200() {
                   showTotal={false}
                   height={250}
                   columns={[
-                    ["Firma", "signatureType"],
-                    ["Cantidad", "total"],
+                    ["Firma", "signatureType", { width: "60%" }],
+                    ["Precio", "unitValue", { align: "right", width: "20%" },],
+                    ["Cantidad", "total", { align: "right", width: "20%" }],
                   ]}
+                  groupByOptions={["signatureType"]}
                 />
               </div>
               <div className="col-sm-4">
