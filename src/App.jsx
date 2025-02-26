@@ -26,6 +26,7 @@ import Pag102 from './pages/pagesStatic/Pag102';
 //
 import Pag200 from './pages/pagesStatic/Pag200';
 import Pag201 from './pages/pagesStatic/Pag201';
+import SheetDataPage from './pages/SheetDataPage';
 
 function App() {
   
@@ -56,6 +57,8 @@ function App() {
         <Route path="page5" element={<Page5 />} /> */}
         
         <Route path="filters" element={<Filtros />} />
+
+        <Route path="hojas" element={<SheetDataPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>

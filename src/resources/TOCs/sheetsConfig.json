@@ -1,0 +1,30 @@
+{
+  "sheets": [
+    {
+      "name": "recursosHumanos",
+      "url": "https://docs.google.com/spreadsheets/d/1Wp41xp3OOfgnofD7sIuWltdVm5G4D4WGmbc7XT7mhGs/edit",
+      "tabs": [
+        {
+          "name": "Plantilla",
+          "gid": "0"
+        },
+        {
+          "name": "Nomina",
+          "gid": "858829566"
+        }
+      ],
+      "publicUrl": true
+    },
+    {
+      "name": "nuevaHoja",
+      "url": "https://docs.google.com/spreadsheets/d/15ojIk-tJ-MJlca6ujLup2DaNGV_La28xATTYo7b5P1s/edit",
+      "tabs": [
+        {
+          "name": "Principal",
+          "gid": "0"
+        }
+      ],
+      "publicUrl": true
+    }
+  ]
+}
