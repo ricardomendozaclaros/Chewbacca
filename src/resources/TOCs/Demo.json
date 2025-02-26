@@ -41,6 +41,14 @@
       {
         "name": "Postpago",
         "to": "/Pag102"
+      },
+      {
+        "name": "Consumos",
+        "to": "/Pag200"
+      },
+      {
+        "name": "Consumos Certicamara",
+        "to": "/Pag201"
       }
       
     ]
@@ -103,14 +111,6 @@
       {
         "name": "Recursos Humanos",
         "to": "/Pag101"
-      },
-      {
-        "name": "Consumos",
-        "to": "/Pag200"
-      },
-      {
-        "name": "Consumos Certicamara",
-        "to": "/Pag201"
       }
     ]
   },
@@ -129,4 +129,5 @@
       }
     ]
   }
+  
 ]

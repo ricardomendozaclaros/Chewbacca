@@ -153,15 +153,16 @@ export default function Pag201() {
   const summarizedData = useMemo(() => {
     const summary = filteredData.reduce((acc, item) => {
       if (!acc[item.description]) {
-        acc[item.description] = 0;
+        acc[item.description] = { total: 0, unitValue: item.unitValue };
       }
-      acc[item.description]++;
+      acc[item.description].total++;
       return acc;
     }, {});
-
-    return Object.entries(summary).map(([type, count]) => ({
+  
+    return Object.entries(summary).map(([type, data]) => ({
       signatureType: type,
-      total: count,
+      total: data.total,
+      unitValue: data.unitValue,
     }));
   }, [filteredData]);
 
@@ -390,24 +391,25 @@ export default function Pag201() {
               <div className="col-sm-4">
                 <TransactionTable
                   data={summarizedData}
-                  title="Resumen de Consumos"
+                  title="Metodos de autenticación"
                   subTitle={formatDateRange(dateRange)}
                   description=""
                   showTotal={false}
                   height={250}
                   columns={[
                     ["Firma", "signatureType"],
-                    ["Cantidad", "total"],
+                    ["Precio", "unitValue", { align: "right" }],
+                    ["Cantidad", "total", { align: "right" }],
                   ]}
                 />
               </div>
               <div className="col-sm-4">
                 <TotalsCardComponent
                   data={totalRecords}
-                  title="Total Registros"
+                  title="Total Firmas"
                   subTitle="Registros Encontrados"
                   description="Total de registros en el período seleccionado"
-                  icon="bi bi-arrow-left-right"
+                  icon="ri-file-paper-line"
                   unknown={false}
                 />
               </div>
