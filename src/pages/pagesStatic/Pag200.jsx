@@ -3,7 +3,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
 import Select from "react-select";
-import { GetSignatureProcesses} from "../../api/signatureProcess.js";
+import { GetSignatureProcesses } from "../../api/signatureProcess.js";
+import { GetEnterprises } from "../../api/enterprise.js";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
 import { useParseValue } from "../../hooks/useParseValue.js";
@@ -15,12 +16,14 @@ export default function Pag200() {
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('resumen');
+  const [activeTab, setActiveTab] = useState("resumen");
 
   // Estados para filtros
   const [dateRange, setDateRange] = useState([null, null]);
   const [selectedPlans, setSelectedPlans] = useState([]);
   const [signatureTypes, setSignatureTypes] = useState([]); // Tipos de firmas únicos
+  const [enterprises, setEnterprises] = useState([]);
+  const [selectedEnterprises, setSelectedEnterprises] = useState([]);
 
   const daysAgo = 14; // Número de días para el rango de fechas
 
@@ -32,12 +35,12 @@ export default function Pag200() {
         const today = new Date();
         const startDate = new Date(today);
         startDate.setDate(today.getDate() - daysAgo);
-        
+
         const result = await GetSignatureProcesses({
-          startDate: startDate.toISOString().split('T')[0],
-          endDate: today.toISOString().split('T')[0]
+          startDate: startDate.toISOString().split("T")[0],
+          endDate: today.toISOString().split("T")[0],
         });
-        
+
         transformAndSetData(result);
       } catch (error) {
         console.error("Error loading data:", error);
@@ -50,179 +53,224 @@ export default function Pag200() {
     loadData();
   }, []); // Sin dependencias: solo se ejecuta una vez al montar el componente
 
-  const exportData = useMemo(() => [
-    {
-      name: "Resumen de Consumos",
-      data: Object.entries(
-        filteredData.reduce((acc, item) => {
-          if (!acc[item.description]) {
-            acc[item.description] = 0;
-          }
-          acc[item.description]++;
-          return acc;
-        }, {})
-      ).map(([type, count]) => ({
-        Firma: type,
-        Cantidad: count,
-      })),
-    },
-    {
-      name: "Por cuentas",
-      data: Object.values(
-        filteredData.reduce((acc, item) => {
-          const key = `${item.enterpriseId}-${item.enterpriseName}`;
-          if (!acc[key]) {
-            acc[key] = {
-              NIT: item.enterpriseId,
-              Nombre: item.enterpriseName,
-              ...Object.fromEntries([...new Set(filteredData.map(i => i.description))].map(type => [type, 0]))
-            };
-          }
-          acc[key][item.description]++;
-          return acc;
-        }, {})
-      ),
-    },
-    {
-      name: "Todos los datos",
-      data: filteredData
-    }
-  ], [filteredData]);
+  useEffect(() => {
+    const loadEnterprises = async () => {
+      try {
+        const result = await GetEnterprises();
+        // Filter only pospago enterprises and format for Select
+        const pospagos = result
+          .filter((emp) => emp.plan === "pospago")
+          .map((emp) => ({
+            value: emp.enterpriseId,
+            label: emp.enterpriseName,
+          }));
+        setEnterprises(pospagos);
+      } catch (error) {
+        console.error("Error loading enterprises:", error);
+      }
+    };
 
-// Simplified filterData function
-const filterData = useCallback(async () => {
-  try {
-    setIsLoading(true);
-    let [startDate, endDate] = dateRange;
-
-    if (!startDate) {
-      // If no dates selected, use default range (today - 20 days)
-      const today = new Date();
-      startDate = new Date(today);
-      startDate.setDate(today.getDate() - daysAgo);
-      endDate = today;
-    } else {
-      // If only startDate is selected, use it as endDate too
-      endDate = endDate || startDate;
-    }
-
-    const result = await GetSignatureProcesses({
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0]
-    });
-
-    transformAndSetData(result);
-  } catch (error) {
-    console.error("Error fetching filtered data:", error);
-    setError(error.message);
-  } finally {
-    setIsLoading(false);
-  }
-}, [dateRange]);
-
-// Memoize the summarized data for the first table and total records
-const summarizedData = useMemo(() => {
-  const summary = filteredData.reduce((acc, item) => {
-    if (!acc[item.description]) {
-      acc[item.description] = 0;
-    }
-    acc[item.description]++;
-    return acc;
-  }, {});
-
-  return Object.entries(summary).map(([type, count]) => ({
-    signatureType: type,
-    total: count,
-  }));
-}, [filteredData]);
-
-// Memoize the grouped data for the resumen table
-const groupedData = useMemo(() => {
-  const grouped = filteredData.reduce((acc, item) => {
-    const key = `${item.enterpriseId}-${item.enterpriseName}`;
-    if (!acc[key]) {
-      acc[key] = {
-        nit: item.enterpriseId,
-        enterpriseName: item.enterpriseName,
-        ...Object.fromEntries([...new Set(filteredData.map(i => i.description))].map(type => [type, 0]))
-      };
-    }
-    acc[key][item.description]++;
-    return acc;
-  }, {});
-
-  return Object.values(grouped);
-}, [filteredData]);
-
-// Memoize table components
-const ResumenTable = useMemo(() => (
-  <TransactionTable
-    data={groupedData}
-    title=""
-    subTitle=""
-    description=""
-    showTotal={false}
-    height={450}
-    columns={[
-      ["NIT", "nit"],
-      ["Nombre", "enterpriseName"],
-      ...Object.keys(groupedData[0] || {})
-        .filter(key => !["nit", "enterpriseName"].includes(key))
-        .map(key => [parseValue("description", key), key])
-    ]}
-    groupByOptions={[]}
-  />
-), [groupedData]);
-
-// Update DetalleTable to use raw filtered data
-const DetalleTable = useMemo(() => (
-  <TransactionTable
-    data={filteredData}
-    title=""
-    subTitle=""
-    description=""
-    showTotal={false}
-    height={450}
-    columns={[
-      ["ID", "id"],
-      ["Fecha", "date"],
-      ["Firma", "description"],
-      ["Cantidad", "quantity"],
-      ["Valor unitario", "unitValue"],
-      ["Total", "totalValue"],
-      ["NIT", "enterpriseId"],
-      ["Nombre", "enterpriseName"],
-      ["Email", "email"]
-    ]}
-    groupByOptions={[]}
-  />
-), [filteredData]);
-
-// Simplify totalRecords to just show filteredData length
-const totalRecords = useMemo(() => {
-  return filteredData.length;
-}, [filteredData]);
-
-  // Función para transformar y establecer datos
-  const transformAndSetData = useCallback((data) => {
-    // Set filtered data directly from API response
-    setFilteredData(data);
+    loadEnterprises();
   }, []);
 
-  // Manejar cambios en la selección de tipos de firmas
-  const handlePlanChange = useCallback((selected) => {
-    if (!selected) {
-      setSelectedPlans([]);
-      return;
-    }
+  const exportData = useMemo(
+    () => [
+      {
+        name: "Resumen de Consumos",
+        data: Object.entries(
+          filteredData.reduce((acc, item) => {
+            if (!acc[item.description]) {
+              acc[item.description] = 0;
+            }
+            acc[item.description]++;
+            return acc;
+          }, {})
+        ).map(([type, count]) => ({
+          Firma: type,
+          Cantidad: count,
+        })),
+      },
+      {
+        name: "Por cuentas",
+        data: Object.values(
+          filteredData.reduce((acc, item) => {
+            const key = `${item.enterpriseId}-${item.enterpriseName}`;
+            if (!acc[key]) {
+              acc[key] = {
+                NIT: item.enterpriseId,
+                Nombre: item.enterpriseName,
+                ...Object.fromEntries(
+                  [...new Set(filteredData.map((i) => i.description))].map(
+                    (type) => [type, 0]
+                  )
+                ),
+              };
+            }
+            acc[key][item.description]++;
+            return acc;
+          }, {})
+        ),
+      },
+      {
+        name: "Todos los datos",
+        data: filteredData,
+      },
+    ],
+    [filteredData]
+  );
 
-    // Si se selecciona "Todos los planes"
-    if (selected.find((option) => option.value === "all")) {
-      setSelectedPlans([{ value: "all", label: "Todos los planes" }]);
-    } else {
-      setSelectedPlans(selected.filter((option) => option.value !== "all"));
+  // Move transformAndSetData to the top, before it's used
+  const transformAndSetData = useCallback(
+    (data) => {
+      if (!data) return;
+
+      // If enterprises are selected, filter by enterpriseId
+      if (selectedEnterprises.length > 0) {
+        const filtered = data.filter((item) =>
+          selectedEnterprises.some(
+            (enterprise) => enterprise.value === item.enterpriseId
+          )
+        );
+        setFilteredData(filtered);
+      } else {
+        // If no enterprises selected, show all data
+        setFilteredData(data);
+      }
+    },
+    [selectedEnterprises]
+  );
+
+  // Then define filterData
+  const filterData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      let [startDate, endDate] = dateRange;
+
+      if (!startDate) {
+        const today = new Date();
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - daysAgo);
+        endDate = today;
+      } else {
+        endDate = endDate || startDate;
+      }
+
+      const result = await GetSignatureProcesses({
+        startDate: startDate.toISOString().split("T")[0],
+        endDate: endDate.toISOString().split("T")[0],
+      });
+
+      transformAndSetData(result);
+    } catch (error) {
+      console.error("Error fetching filtered data:", error);
+      setError(error.message);
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  }, [dateRange, transformAndSetData]);
+
+  // Then the handleEnterpriseChange
+  const handleEnterpriseChange = useCallback(
+    (selected) => {
+      setSelectedEnterprises(selected || []);
+      transformAndSetData(filteredData);
+    },
+    [transformAndSetData, filteredData]
+  );
+
+  // Memoize the summarized data for the first table and total records
+  const summarizedData = useMemo(() => {
+    const summary = filteredData.reduce((acc, item) => {
+      if (!acc[item.description]) {
+        acc[item.description] = 0;
+      }
+      acc[item.description]++;
+      return acc;
+    }, {});
+
+    return Object.entries(summary).map(([type, count]) => ({
+      signatureType: type,
+      total: count,
+    }));
+  }, [filteredData]);
+
+  // Memoize the grouped data for the resumen table
+  const groupedData = useMemo(() => {
+    const grouped = filteredData.reduce((acc, item) => {
+      const key = `${item.enterpriseId}-${item.enterpriseName}`;
+      if (!acc[key]) {
+        acc[key] = {
+          nit: item.enterpriseId,
+          enterpriseName: item.enterpriseName,
+          ...Object.fromEntries(
+            [...new Set(filteredData.map((i) => i.description))].map((type) => [
+              type,
+              0,
+            ])
+          ),
+        };
+      }
+      acc[key][item.description]++;
+      return acc;
+    }, {});
+
+    return Object.values(grouped);
+  }, [filteredData]);
+
+  // Memoize table components
+  const ResumenTable = useMemo(
+    () => (
+      <TransactionTable
+        data={groupedData}
+        title=""
+        subTitle=""
+        description=""
+        showTotal={false}
+        height={450}
+        columns={[
+          ["NIT", "nit"],
+          ["Nombre", "enterpriseName"],
+          ...Object.keys(groupedData[0] || {})
+            .filter((key) => !["nit", "enterpriseName"].includes(key))
+            .map((key) => [parseValue("description", key), key]),
+        ]}
+        groupByOptions={[]}
+      />
+    ),
+    [groupedData]
+  );
+
+  // Update DetalleTable to use raw filtered data
+  const DetalleTable = useMemo(
+    () => (
+      <TransactionTable
+        data={filteredData}
+        title=""
+        subTitle=""
+        description=""
+        showTotal={false}
+        height={450}
+        columns={[
+          ["ID", "id"],
+          ["Fecha", "date"],
+          ["Firma", "description"],
+          ["Cantidad", "quantity"],
+          ["Valor unitario", "unitValue"],
+          ["Total", "totalValue"],
+          ["NIT", "enterpriseId"],
+          ["Nombre", "enterpriseName"],
+          ["Email", "email"],
+        ]}
+        groupByOptions={[]}
+      />
+    ),
+    [filteredData]
+  );
+
+  // Simplify totalRecords to just show filteredData length
+  const totalRecords = useMemo(() => {
+    return filteredData.length;
+  }, [filteredData]);
 
   // Estilos personalizados para el combobox
   const customStyles = {
@@ -247,19 +295,19 @@ const totalRecords = useMemo(() => {
   const formatDateRange = (dateRange) => {
     const formatDate = (date) => {
       const d = new Date(date);
-      const day = d.getDate().toString().padStart(2, '0');
-      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      const day = d.getDate().toString().padStart(2, "0");
+      const month = (d.getMonth() + 1).toString().padStart(2, "0");
       const year = d.getFullYear();
       return `${day}/${month}/${year}`;
     };
-  
+
     if (!dateRange[0]) {
       const today = new Date();
       const startDate = new Date(today);
       startDate.setDate(today.getDate() - daysAgo);
       return `Del ${formatDate(startDate)} - ${formatDate(today)}`;
     }
-  
+
     const start = new Date(dateRange[0]);
     const end = dateRange[1] ? new Date(dateRange[1]) : start;
     return `Del ${formatDate(start)} - ${formatDate(end)}`;
@@ -278,23 +326,21 @@ const totalRecords = useMemo(() => {
 
           <div className="col-sm-6 d-flex align-items-center justify-content-end">
             <div className="mx-2 w-50" style={{ zIndex: 1000 }}>
-              <label className="block text-sm font-medium mb-2">
-                Tipo de Firma
-              </label>
+              <label className="block text-sm font-medium mb-2">Empresas</label>
               <Select
                 isMulti
-                options={signatureTypes} // Usar las opciones traducidas
-                value={selectedPlans}
-                onChange={handlePlanChange}
-                placeholder="Tipos de firmas..."
+                options={enterprises}
+                value={selectedEnterprises}
+                onChange={handleEnterpriseChange}
+                placeholder="Empresas..."
                 closeMenuOnSelect={false}
                 isDisabled={isLoading}
-                styles={customStyles} // Aplicar estilos personalizados
+                styles={customStyles}
               />
             </div>
             <div className="mx-2">
               <label className="block text-sm font-medium mb-1">Periodo</label>
-              <div className="d-flex align-items-center" >
+              <div className="d-flex align-items-center">
                 <DatePicker
                   selectsRange={true}
                   startDate={dateRange[0]}
@@ -323,6 +369,16 @@ const totalRecords = useMemo(() => {
                 data={exportData}
                 fileName="reporte_pag200.xlsx"
                 sheets={exportData}
+                startDate={
+                  dateRange[0] ||
+                  (() => {
+                    const today = new Date();
+                    const startDate = new Date(today);
+                    startDate.setDate(today.getDate() - daysAgo);
+                    return startDate;
+                  })()
+                }
+                endDate={dateRange[1] || new Date()}
               />
             </div>
           </div>
@@ -381,16 +437,20 @@ const totalRecords = useMemo(() => {
                 <ul className="nav nav-tabs" role="tablist">
                   <li className="nav-item" role="presentation">
                     <button
-                      className={`nav-link ${activeTab === 'resumen' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('resumen')}
+                      className={`nav-link ${
+                        activeTab === "resumen" ? "active" : ""
+                      }`}
+                      onClick={() => setActiveTab("resumen")}
                     >
                       Por tipo firma
                     </button>
                   </li>
                   <li className="nav-item" role="presentation">
                     <button
-                      className={`nav-link ${activeTab === 'detalle' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('detalle')}
+                      className={`nav-link ${
+                        activeTab === "detalle" ? "active" : ""
+                      }`}
+                      onClick={() => setActiveTab("detalle")}
                     >
                       Procesos de firma
                     </button>
@@ -398,13 +458,13 @@ const totalRecords = useMemo(() => {
                 </ul>
 
                 <div className="tab-content mt-3">
-                  {activeTab === 'resumen' && (
+                  {activeTab === "resumen" && (
                     <div className="tab-pane fade show active">
                       {ResumenTable}
                     </div>
                   )}
 
-                  {activeTab === 'detalle' && (
+                  {activeTab === "detalle" && (
                     <div className="tab-pane fade show active">
                       {DetalleTable}
                     </div>

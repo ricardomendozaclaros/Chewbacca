@@ -3,7 +3,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
 import Select from "react-select";
-import { GetSignatureProcesses } from "../../api/signatureProcess.js";
+import { GetSignatureProcesses } from "../../api/signatureProcess2.js";
 
 import PieChart from "../../components/Filtros/PirChart.jsx";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";

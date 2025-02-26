@@ -33,7 +33,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
-        <Route index element={<Home />} />
+        <Route index element={<Pag001 />} />
 
         <Route path="transactions" element={<Transactions />} />
         <Route path="users" element={<Users />} />
