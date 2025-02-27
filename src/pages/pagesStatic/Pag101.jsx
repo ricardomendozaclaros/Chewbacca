@@ -195,14 +195,23 @@ export default function Pag101() {
     [activeTab, filteredNominaData, filteredPlantillasData]
   );
 
+  const PLANTILLAS_COLUMNS = ['nombre', 'cargo', 'fecha ingreso', 'sueldo neto', 'sueldo bruto'];
+
   // Get columns for active tab
   const tableColumns = useMemo(() => {
     const currentData = activeTab === 'Nomina' ? filteredNominaData : filteredPlantillasData;
     if (!currentData?.columns?.length) return [];
     
     const monetaryFields = ['sueldo', 'bruto', 'neto', 'descuentos', 'bonos', 'total', 'precio'];
+    let columnsToShow = currentData.columns;
+
+    if (activeTab === 'Plantillas') {
+      columnsToShow = currentData.columns.filter(column => 
+        PLANTILLAS_COLUMNS.includes(column.toLowerCase())
+      );
+    }
     
-    return currentData.columns.map(column => [
+    return columnsToShow.map(column => [
       column.charAt(0).toUpperCase() + column.slice(1),
       column,
       {
@@ -260,21 +269,9 @@ export default function Pag101() {
                 >
                   <Search className="w-75" />
                 </button>
-                {filterActive && (
-                  <button
-                    onClick={clearFilters}
-                    className="btn btn-outline-danger p-2 border-0 mx-1"
-                  >
-                    ×
-                  </button>
-                )}
+            
               </div>
-              {filterActive && dateRange[0] && (
-                <div className="mt-2 text-sm text-muted">
-                  Filtrando desde {dateRange[0]?.toLocaleDateString()} 
-                  {dateRange[1] ? ` hasta ${dateRange[1]?.toLocaleDateString()}` : ''}
-                </div>
-              )}
+              
             </div>
           </div>
         </div>
@@ -328,10 +325,7 @@ export default function Pag101() {
                       description=""
                       columns={tableColumns}
                       height={450}
-                      pagination={true}
-                      rowsPerPage={15}
                       groupByOptions={[]}
-                      showTotal={true}
                     />
                   </div>
                 </div>
