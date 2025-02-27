@@ -1,31 +1,40 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { v4 as uuidv4 } from 'uuid'; // Add this import
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { v4 as uuidv4 } from 'uuid';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
-import Select from "react-select";
-import { GetSignatureProcessesCertifirma } from "../../api/signatureProcessCertifirma.js";
+import { Search } from "lucide-react";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
-import { ImageOff, Search } from "lucide-react";
-import ExportButton from "../../components/BtnExportar.jsx";
 import { googleSheetsService } from '../../utils/googleSheetsService';
 import sheetsConfig from '../../resources/TOCs/sheetsConfig.json';
 
 export default function Pag101() {
-  // Separate states for each data type
+  // Datos originales (sin filtrar)
   const [nominaData, setNominaData] = useState({ data: [], columns: [] });
   const [plantillasData, setPlantillasData] = useState({ data: [], columns: [] });
+  
+  // Datos filtrados
+  const [filteredNominaData, setFilteredNominaData] = useState({ data: [], columns: [] });
+  const [filteredPlantillasData, setFilteredPlantillasData] = useState({ data: [], columns: [] });
+  
   const [activeTab, setActiveTab] = useState('Nomina');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState([null, null]);
+  const [filterActive, setFilterActive] = useState(false);
+  const dataLoadedRef = useRef(false);
 
   // Cargar datos iniciales
   useEffect(() => {
     const loadData = async () => {
+      // Evitar cargas múltiples
+      if (dataLoadedRef.current) return;
+      
       try {
         setIsLoading(true);
+        console.log("Cargando datos desde Google Sheets...");
+        
         const sheetConfig = sheetsConfig.sheets.find(sheet => sheet.name === "recursosHumanos");
         
         if (!sheetConfig) {
@@ -38,24 +47,45 @@ export default function Pag101() {
           skipEmptyRows: true
         });
 
+        console.log("Datos recibidos:", result);
+
         // Process Nomina data
         if (result.results?.Nomina?.data?.length) {
           const nomina = result.results.Nomina.data;
+          const nominaWithIds = nomina.map(row => ({ ...row, uniqueId: uuidv4() }));
+          
           setNominaData({
-            data: nomina.map(row => ({ ...row, uniqueId: uuidv4() })),
+            data: nominaWithIds,
             columns: Object.keys(nomina[0] || {})
           });
+          
+          setFilteredNominaData({
+            data: nominaWithIds,
+            columns: Object.keys(nomina[0] || {})
+          });
+          
+          console.log("Datos de nómina procesados:", nominaWithIds.length);
         }
 
         // Process Plantillas data
         if (result.results?.Plantilla?.data?.length) {
           const plantillas = result.results.Plantilla.data;
+          const plantillasWithIds = plantillas.map(row => ({ ...row, uniqueId: uuidv4() }));
+          
           setPlantillasData({
-            data: plantillas.map(row => ({ ...row, uniqueId: uuidv4() })),
+            data: plantillasWithIds,
             columns: Object.keys(plantillas[0] || {})
           });
+          
+          setFilteredPlantillasData({
+            data: plantillasWithIds,
+            columns: Object.keys(plantillas[0] || {})
+          });
+          
+          console.log("Datos de plantillas procesados:", plantillasWithIds.length);
         }
 
+        dataLoadedRef.current = true;
       } catch (error) {
         console.error("Error loading data:", error);
         setError(error.message);
@@ -67,15 +97,107 @@ export default function Pag101() {
     loadData();
   }, []);
 
+  // Función para aplicar filtros
+  const applyFilters = useCallback(() => {
+    const [startDate, endDate] = dateRange;
+    console.log("Aplicando filtros con fechas:", startDate, endDate);
+    
+    if (!startDate && !endDate) {
+      // Si no hay fechas seleccionadas, mostrar todos los datos
+      setFilteredNominaData(nominaData);
+      setFilteredPlantillasData(plantillasData);
+      setFilterActive(false);
+      return;
+    }
+    
+    // Buscar la columna de fecha en cada dataset
+    const findDateColumn = (columns) => {
+      return columns.find(col => 
+        col.toLowerCase().includes('fecha') || 
+        col.toLowerCase().includes('date') || 
+        col.toLowerCase() === 'fech'
+      );
+    };
+    
+    // Filtrar datos de nómina
+    if (nominaData.data.length > 0) {
+      const dateColumn = findDateColumn(nominaData.columns);
+      console.log("Columna de fecha en nómina:", dateColumn);
+      
+      let filteredData = [...nominaData.data];
+      
+      if (dateColumn) {
+        filteredData = filteredData.filter(item => {
+          const itemDate = new Date(item[dateColumn]);
+          // Si la fecha no es válida, incluir la fila
+          if (isNaN(itemDate.getTime())) return true;
+          
+          // Aplicar filtro de fecha
+          if (startDate && itemDate < startDate) return false;
+          if (endDate && itemDate > endDate) return false;
+          
+          return true;
+        });
+      }
+      
+      setFilteredNominaData({
+        ...nominaData,
+        data: filteredData
+      });
+      
+      console.log(`Nómina filtrada: ${filteredData.length} de ${nominaData.data.length}`);
+    }
+    
+    // Filtrar datos de plantillas
+    if (plantillasData.data.length > 0) {
+      const dateColumn = findDateColumn(plantillasData.columns);
+      console.log("Columna de fecha en plantillas:", dateColumn);
+      
+      let filteredData = [...plantillasData.data];
+      
+      if (dateColumn) {
+        filteredData = filteredData.filter(item => {
+          const itemDate = new Date(item[dateColumn]);
+          // Si la fecha no es válida, incluir la fila
+          if (isNaN(itemDate.getTime())) return true;
+          
+          // Aplicar filtro de fecha
+          if (startDate && itemDate < startDate) return false;
+          if (endDate && itemDate > endDate) return false;
+          
+          return true;
+        });
+      }
+      
+      setFilteredPlantillasData({
+        ...plantillasData,
+        data: filteredData
+      });
+      
+      console.log(`Plantillas filtradas: ${filteredData.length} de ${plantillasData.data.length}`);
+    }
+    
+    setFilterActive(true);
+  }, [dateRange, nominaData, plantillasData]);
+
+  // Limpiar filtros
+  const clearFilters = useCallback(() => {
+    setDateRange([null, null]);
+    setFilteredNominaData(nominaData);
+    setFilteredPlantillasData(plantillasData);
+    setFilterActive(false);
+    console.log("Filtros limpiados");
+  }, [nominaData, plantillasData]);
+
   // Get active data based on current tab
   const activeData = useMemo(() => 
-    activeTab === 'Nomina' ? nominaData.data : plantillasData.data, 
-    [activeTab, nominaData, plantillasData]
+    activeTab === 'Nomina' ? filteredNominaData.data : filteredPlantillasData.data, 
+    [activeTab, filteredNominaData, filteredPlantillasData]
   );
 
   // Get columns for active tab
   const tableColumns = useMemo(() => {
-    const currentData = activeTab === 'Nomina' ? nominaData : plantillasData;
+    const currentData = activeTab === 'Nomina' ? filteredNominaData : filteredPlantillasData;
     if (!currentData?.columns?.length) return [];
     
     const monetaryFields = ['sueldo', 'bruto', 'neto', 'descuentos', 'bonos', 'total', 'precio'];
@@ -88,7 +210,7 @@ export default function Pag101() {
           column.toLowerCase().includes(term)) ? 'right' : 'left'
       }
     ]);
-  }, [activeTab, nominaData, plantillasData]);
+  }, [activeTab, filteredNominaData, filteredPlantillasData]);
 
   // Add some CSS for tab styling
   const tabStyles = {
@@ -107,8 +229,6 @@ export default function Pag101() {
             </h4>
           </div>
 
-          {/* Filtro de tipos de firmas */}
-
           <div className="col-sm-6 d-flex align-items-center justify-content-end">
             <div className="mx-2">
               <label className="block text-sm font-medium mb-1">Periodo</label>
@@ -117,7 +237,12 @@ export default function Pag101() {
                   selectsRange={true}
                   startDate={dateRange[0]}
                   endDate={dateRange[1]}
-                  onChange={setDateRange}
+                  onChange={(update) => {
+                    setDateRange(update);
+                    if (update[0] === null && update[1] === null) {
+                      clearFilters();
+                    }
+                  }}
                   locale={es}
                   isClearable={true}
                   placeholderText="Filtrar por rango de fechas"
@@ -126,15 +251,30 @@ export default function Pag101() {
                   showMonthDropdown
                   showYearDropdown
                   dropdownMode="select"
+                  dateFormat="dd/MM/yyyy"
                 />
                 <button
-                  onClick={() => console.log("dateRange")}
-                  disabled={isLoading}
+                  onClick={applyFilters}
+                  disabled={isLoading || (dateRange[0] === null && dateRange[1] === null)}
                   className="btn btn-primary p-2 border-0 mx-1"
                 >
                   <Search className="w-75" />
                 </button>
+                {filterActive && (
+                  <button
+                    onClick={clearFilters}
+                    className="btn btn-outline-danger p-2 border-0 mx-1"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
+              {filterActive && dateRange[0] && (
+                <div className="mt-2 text-sm text-muted">
+                  Filtrando desde {dateRange[0]?.toLocaleDateString()} 
+                  {dateRange[1] ? ` hasta ${dateRange[1]?.toLocaleDateString()}` : ''}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -162,21 +302,20 @@ export default function Pag101() {
               <div className="col-sm-12">
                 <ul className="nav nav-tabs" role="tablist">
                   <li className="nav-item" role="presentation">
-                  <button
+                    <button
                       className={activeTab === "Plantillas" ? tabStyles.active : tabStyles.inactive}
                       onClick={() => setActiveTab("Plantillas")}
                     >
-                      Plantillas ({plantillasData?.data?.length || 0})
+                      Plantillas ({filteredPlantillasData?.data?.length || 0})
                     </button>
                   </li>
                   <li className="nav-item" role="presentation">
-                  <button
+                    <button
                       className={activeTab === "Nomina" ? tabStyles.active : tabStyles.inactive}
                       onClick={() => setActiveTab("Nomina")}
                     >
-                      Nómina ({nominaData?.data?.length || 0})
+                      Nómina ({filteredNominaData?.data?.length || 0})
                     </button>
-                    
                   </li>
                 </ul>
 
@@ -189,7 +328,10 @@ export default function Pag101() {
                       description=""
                       columns={tableColumns}
                       height={450}
+                      pagination={true}
+                      rowsPerPage={15}
                       groupByOptions={[]}
+                      showTotal={true}
                     />
                   </div>
                 </div>
