@@ -6,6 +6,7 @@ import { es } from "date-fns/locale";
 import { Search } from "lucide-react";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
+import AreaChart from "../../components/Filtros/AreaChart.jsx";
 import { googleSheetsService } from "../../utils/googleSheetsService";
 import sheetsConfig from "../../resources/TOCs/sheetsConfig.json";
 import PieChart from "../../components/Filtros/PirChart";
@@ -306,6 +307,49 @@ export default function Pag101() {
     ]);
   }, [activeTab, filteredNominaData, filteredPlantillasData]);
 
+  // Obtener datos para el gráfico de área de nómina
+  const nominaChartData = useMemo(() => {
+    // Si no hay datos de nómina, retornamos un array vacío
+    if (!filteredNominaData?.data?.length) return [];
+
+    // Verificar si tenemos las columnas necesarias
+    const hasRequiredColumns = filteredNominaData.columns.some(col => 
+      col.toLowerCase() === 'año' || col.toLowerCase() === 'year'
+    ) && filteredNominaData.columns.some(col => 
+      col.toLowerCase() === 'mens' || col.toLowerCase() === 'mes' || col.toLowerCase() === 'month'
+    ) && filteredNominaData.columns.some(col => 
+      col.toLowerCase() === 'planilla' || col.toLowerCase() === 'payroll'
+    );
+
+    if (!hasRequiredColumns) {
+      console.log("No se encontraron las columnas necesarias para el gráfico");
+      return [];
+    }
+
+    // Encontrar las columnas exactas
+    const yearCol = filteredNominaData.columns.find(col => 
+      col.toLowerCase() === 'año' || col.toLowerCase() === 'year'
+    );
+    const monthCol = filteredNominaData.columns.find(col => 
+      col.toLowerCase() === 'mens' || col.toLowerCase() === 'mes' || col.toLowerCase() === 'month'
+    );
+    const payrollCol = filteredNominaData.columns.find(col => 
+      col.toLowerCase() === 'planilla' || col.toLowerCase() === 'payroll'
+    );
+
+    // Preparar datos para el gráfico
+    const chartData = filteredNominaData.data.map(item => ({
+      // Usar año y mes para el eje X
+      date: `${item[yearCol]}-${item[monthCol]}`,
+      // Valor de planilla para el eje Y
+      Planilla: parseFloat(item[payrollCol]) || 0,
+      // Usar año como grupo
+      year: item[yearCol]
+    }));
+
+    return chartData;
+  }, [filteredNominaData]);
+
   // First, add this calculation after your existing useMemo hooks
   const inactivePlantillasStats = useMemo(() => {
     const totalRecords = filteredPlantillasData?.data?.length || 0;
@@ -553,6 +597,28 @@ export default function Pag101() {
       {error && (
         <div className="bg-red-50 p-4 rounded-lg mb-6">
           <p className="text-red-600">Error: {error}</p>
+        </div>
+      )}
+
+      {/* Gráfico de área para nómina */}
+      {!isLoading && !error && activeTab === "Nomina" && (
+        <div className="card mb-4">
+          <div className="p-3">
+            <div className="row">
+              <div className="col-12">
+                <AreaChart
+                  data={nominaChartData}
+                  xAxis="date"
+                  yAxis="Planilla"
+                  groupBy="year"
+                  title="Evolución de la Nómina"
+                  subTitle="Por mes"
+                  description="Tendencia de los costos de nómina por período"
+                  height="300"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
