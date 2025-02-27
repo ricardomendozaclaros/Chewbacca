@@ -195,23 +195,14 @@ export default function Pag101() {
     [activeTab, filteredNominaData, filteredPlantillasData]
   );
 
-  const PLANTILLAS_COLUMNS = ['nombre', 'cargo', 'fecha ingreso', 'sueldo neto', 'sueldo bruto'];
-
   // Get columns for active tab
   const tableColumns = useMemo(() => {
     const currentData = activeTab === 'Nomina' ? filteredNominaData : filteredPlantillasData;
     if (!currentData?.columns?.length) return [];
     
     const monetaryFields = ['sueldo', 'bruto', 'neto', 'descuentos', 'bonos', 'total', 'precio'];
-    let columnsToShow = currentData.columns;
-
-    if (activeTab === 'Plantillas') {
-      columnsToShow = currentData.columns.filter(column => 
-        PLANTILLAS_COLUMNS.includes(column.toLowerCase())
-      );
-    }
     
-    return columnsToShow.map(column => [
+    return currentData.columns.map(column => [
       column.charAt(0).toUpperCase() + column.slice(1),
       column,
       {
@@ -220,6 +211,96 @@ export default function Pag101() {
       }
     ]);
   }, [activeTab, filteredNominaData, filteredPlantillasData]);
+
+  // Calcular métricas para las tarjetas de Plantillas
+  const plantillaMetrics = useMemo(() => {
+    if (!filteredPlantillasData?.data?.length) return {
+      lastEmployee: { name: "N/A", date: "N/A" },
+      totalBonuses: 0,
+      totalPayroll: 0
+    };
+    
+    // Buscar las columnas necesarias
+    const nombreColumn = filteredPlantillasData.columns.find(col => 
+      col.toLowerCase().includes('nombre'));
+    
+    const fechaColumn = filteredPlantillasData.columns.find(col => 
+      col.toLowerCase().includes('fecha'));
+    
+    const bonosColumn = filteredPlantillasData.columns.find(col => 
+      col.toLowerCase().includes('bono'));
+    
+    const totalColumn = filteredPlantillasData.columns.find(col => 
+      col.toLowerCase().includes('total percibido'));
+    
+    // Ordenar por fecha para encontrar el último empleado contratado
+    let lastEmployee = { name: "No disponible", date: "N/A" };
+    
+    if (nombreColumn && fechaColumn) {
+      // Filtrar solo los que tienen fecha válida
+      const validEmployees = filteredPlantillasData.data
+        .filter(item => item[fechaColumn] && new Date(item[fechaColumn]).toString() !== 'Invalid Date')
+        .sort((a, b) => new Date(b[fechaColumn]) - new Date(a[fechaColumn]));
+      
+      if (validEmployees.length > 0) {
+        const latest = validEmployees[0];
+        lastEmployee = { 
+          name: latest[nombreColumn] || "N/A", 
+          date: latest[fechaColumn] || "N/A" 
+        };
+      }
+    }
+    
+    // Calcular el total de bonos
+    let totalBonuses = 0;
+    if (bonosColumn) {
+      totalBonuses = filteredPlantillasData.data.reduce((sum, item) => {
+        const value = item[bonosColumn];
+        if (!value) return sum;
+        
+        // Convertir a número si es string
+        const numValue = typeof value === 'string' 
+          ? parseFloat(value.replace(/[^\d.,]/g, '').replace(',', '.')) 
+          : parseFloat(value);
+        
+        return sum + (isNaN(numValue) ? 0 : numValue);
+      }, 0);
+    }
+    
+    // Calcular el total de la planilla
+    let totalPayroll = 0;
+    if (totalColumn) {
+      totalPayroll = filteredPlantillasData.data.reduce((sum, item) => {
+        const value = item[totalColumn];
+        if (!value) return sum;
+        
+        // Convertir a número si es string
+        const numValue = typeof value === 'string' 
+          ? parseFloat(value.replace(/[^\d.,]/g, '').replace(',', '.')) 
+          : parseFloat(value);
+        
+        return sum + (isNaN(numValue) ? 0 : numValue);
+      }, 0);
+    }
+    
+    
+
+    return {
+      lastEmployee,
+      totalBonuses,
+      totalPayroll
+    };
+  }, [filteredPlantillasData]);
+
+  // Formatear valores monetarios
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
 
   // Add some CSS for tab styling
   const tabStyles = {
@@ -261,6 +342,7 @@ export default function Pag101() {
                   showYearDropdown
                   dropdownMode="select"
                   dateFormat="dd/MM/yyyy"
+                  popperPlacement="bottom-end"
                 />
                 <button
                   onClick={applyFilters}
@@ -269,9 +351,21 @@ export default function Pag101() {
                 >
                   <Search className="w-75" />
                 </button>
-            
+                {filterActive && (
+                  <button
+                    onClick={clearFilters}
+                    className="btn btn-outline-danger p-2 border-0 mx-1"
+                  >
+                    ×
+                  </button>
+                )}
               </div>
-              
+              {filterActive && dateRange[0] && (
+                <div className="mt-2 text-sm text-muted">
+                  Filtrando desde {dateRange[0]?.toLocaleDateString()} 
+                  {dateRange[1] ? ` hasta ${dateRange[1]?.toLocaleDateString()}` : ''}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -288,6 +382,50 @@ export default function Pag101() {
       {error && (
         <div className="bg-red-50 p-4 rounded-lg mb-6">
           <p className="text-red-600">Error: {error}</p>
+        </div>
+      )}
+
+      {/* Tarjetas para plantillas */}
+      {!isLoading && !error && activeTab === "Plantillas" && (
+        <div className="card mb-4">
+          <div className="card-body">
+            <div className="row g-3">
+              <div className="col-sm-4">
+                <TotalsCardComponent
+                  data={plantillaMetrics.lastEmployee.name}
+                  title="Último empleado contratado" 
+                  subTitle={plantillaMetrics.lastEmployee.date}
+                  description="Empleado más reciente en la planilla"
+                  icon="bi bi-person"
+                  iconBgColor="#e6fbef"
+                  unknown={false}
+                  format="string"
+                />
+              </div>
+              <div className="col-sm-4">
+                <TotalsCardComponent
+                  data={plantillaMetrics.totalBonuses}
+                  title="Total Bonos"
+                  subTitle="COP"
+                  description="Suma total de bonos pagados"
+                  icon="bi bi-award"
+                  iconBgColor="#fff4e6"
+                  unknown={false}
+                />
+              </div>
+              <div className="col-sm-4">
+                <TotalsCardComponent
+                  data={plantillaMetrics.totalPayroll}
+                  title="Total Planilla"
+                  subTitle="COP"
+                  description="Suma total de todos los pagos (Total Percibido)"
+                  icon="bi bi-cash-stack"
+                  iconBgColor="#e1f5fe"
+                  unknown={false}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -325,7 +463,10 @@ export default function Pag101() {
                       description=""
                       columns={tableColumns}
                       height={450}
+                      pagination={true}
+                      rowsPerPage={15}
                       groupByOptions={[]}
+                      showTotal={true}
                     />
                   </div>
                 </div>
