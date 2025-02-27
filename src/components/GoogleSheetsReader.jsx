@@ -1,19 +1,20 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { googleSheetsService } from '../utils/googleSheetsService';
 import sheetsConfig from '../resources/TOCs/sheetsConfig.json';
-import DataTable from 'react-data-table-component';
 import { v4 as uuidv4 } from 'uuid';
 import TransactionTable from "../components/Dashboard/TransactionTable.jsx";
 
 /**
- * Componente para leer datos de Google Sheets usando react-data-table-component
+ * Componente para leer datos de Google Sheets usando TransactionTable
  */
 const GoogleSheetsReader = ({
   configName = 'recursosHumanos',
   onDataLoaded,
   className = '',
   height,
-  showTotal = false
+  showTotal = false,
+  dateRange = [null, null], // Nuevo prop para recibir el rango de fechas
+  filterByDate = false     // Nuevo prop para indicar si se debe filtrar por fecha
 }) => {
   // Estados del componente
   const [data, setData] = useState({});
@@ -102,7 +103,7 @@ const GoogleSheetsReader = ({
         
         // Notificar al componente padre
         if (onDataLoaded) {
-          onDataLoaded(result.results);
+          onDataLoaded(processedData);
         }
       } catch (err) {
         if (isMounted) {
@@ -118,7 +119,7 @@ const GoogleSheetsReader = ({
       isMounted = false;
     };
   }, [configName, onDataLoaded]);
-  
+
   // Generar columnas para la tabla actual
   const tableColumns = useMemo(() => {
     if (!activeTab || !data[activeTab]) return [];
@@ -133,32 +134,51 @@ const GoogleSheetsReader = ({
     ]);
   }, [activeTab, data]);
   
-  // Filtrar datos según el término de búsqueda
+  // Aplicar filtro de fechas y búsqueda a los datos
   const filteredData = useMemo(() => {
-    if (!activeTab || !data[activeTab] || !searchTerm) {
-      return data[activeTab]?.data || [];
+    if (!activeTab || !data[activeTab]) return [];
+    
+    let result = [...data[activeTab].data];
+    
+    // Aplicar filtro de fechas si está habilitado
+    if (filterByDate && dateRange[0] !== null) {
+      const [startDate, endDate] = dateRange;
+      
+      result = result.filter(item => {
+        // Buscar la primera columna que contiene una fecha
+        const dateColumns = data[activeTab].columns.filter(col => 
+          col.toLowerCase().includes('fecha') || col.toLowerCase().includes('date')
+        );
+        
+        if (dateColumns.length === 0) return true; // Si no hay columnas de fecha, incluir todas las filas
+        
+        const dateField = dateColumns[0];
+        const itemDate = new Date(item[dateField]);
+        
+        // Si la fecha no es válida, incluir la fila
+        if (isNaN(itemDate.getTime())) return true;
+        
+        // Filtrar por rango de fechas
+        if (startDate && itemDate < startDate) return false;
+        if (endDate && itemDate > endDate) return false;
+        
+        return true;
+      });
     }
     
-    return data[activeTab].data.filter(row => {
-      return Object.entries(row).some(([field, value]) => {
-        if (field === 'uniqueId') return false;
-        const displayValue = parseValue(field, value);
-        return String(displayValue).toLowerCase().includes(searchTerm.toLowerCase());
+    // Aplicar filtro de búsqueda
+    if (searchTerm) {
+      result = result.filter(row => {
+        return Object.entries(row).some(([field, value]) => {
+          if (field === 'uniqueId') return false;
+          const displayValue = parseValue(field, value);
+          return String(displayValue).toLowerCase().includes(searchTerm.toLowerCase());
+        });
       });
-    });
-  }, [activeTab, data, searchTerm]);
-  
-  // Calcular total si es necesario
-  const total = useMemo(() => {
-    if (!showTotal || !activeTab || !data[activeTab]) return 0;
+    }
     
-    const lastColumn = data[activeTab].columns[data[activeTab].columns.length - 1];
-    
-    return filteredData.reduce((sum, row) => {
-      const value = Number(row[lastColumn]) || 0;
-      return sum + value;
-    }, 0).toFixed(2);
-  }, [filteredData, showTotal, activeTab, data]);
+    return result;
+  }, [activeTab, data, searchTerm, dateRange, filterByDate]);
   
   // Limpiar búsqueda
   const clearSearch = () => {
@@ -182,7 +202,29 @@ const GoogleSheetsReader = ({
       
       {!loading && !error && Object.keys(data).length > 0 && (
         <div className="card">
-          {/* Updated Tabs Navigation */}
+          {/* Búsqueda */}
+          <div className="p-3 border-bottom d-flex justify-content-end">
+            <div className="input-group" style={{ maxWidth: '300px' }}>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button
+                  className="btn btn-outline-secondary"
+                  type="button"
+                  onClick={clearSearch}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {/* Pestañas */}
           <div className="row g-1">
             <div className="col-sm-12">
               <ul className="nav nav-tabs" role="tablist">
@@ -192,7 +234,11 @@ const GoogleSheetsReader = ({
                       className={`nav-link ${activeTab === tabName ? "active" : ""}`}
                       onClick={() => setActiveTab(tabName)}
                     >
-                      {tabName} ({tabData.records})
+                      {tabName} ({
+                        filterByDate || searchTerm 
+                          ? filteredData.length
+                          : tabData.records
+                      })
                     </button>
                   </li>
                 ))}
@@ -211,6 +257,7 @@ const GoogleSheetsReader = ({
                       pagination={true}
                       rowsPerPage={15}
                       groupByOptions={[]}
+                      showTotal={showTotal}
                     />
                   </div>
                 )}

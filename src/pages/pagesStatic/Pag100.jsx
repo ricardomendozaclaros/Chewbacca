@@ -1,112 +1,50 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
-import Select from "react-select";
-import { GetSignatureProcesses } from "../../api/signatureProcess2.js";
-
-import PieChart from "../../components/Filtros/PirChart.jsx";
-import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
-import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
-
 import { Search } from "lucide-react";
+import GoogleSheetsReader from "../../components/GoogleSheetsReader";
 
 export default function Pag100() {
-  const [allData, setAllData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  // Estados para filtros
   const [dateRange, setDateRange] = useState([null, null]);
-  const [selectedPlans, setSelectedPlans] = useState([]);
+  const [sheetsData, setSheetsData] = useState(null);
+  const [filterActive, setFilterActive] = useState(false);
 
-  // Cargar datos iniciales
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const result = await GetSignatureProcesses();
-        setAllData(result);
-        setFilteredData(result);
-      } catch (error) {
-        console.error("Error cargando datos:", error);
-        setError(error.message);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Manejador para cuando se cargan los datos de Google Sheets
+  const handleDataLoaded = (data) => {
+    setSheetsData(data);
+    setIsLoading(false);
+  };
 
-    loadData();
-  }, []);
-
-  // Opciones de planes
-  const planOptions = useMemo(() => {
-    const uniquePlans = [...new Set(allData.map((item) => item.plan))];
-    return [
-      { value: "all", label: "Todos los planes" },
-      ...uniquePlans.map((plan) => ({
-        value: plan,
-        label: plan.charAt(0).toUpperCase() + plan.slice(1),
-      })),
-    ];
-  }, [allData]);
-
-  // Función memoizada para filtrar datos
-  const filterData = useCallback(() => {
-    let result = [...allData];
-    const [startDate, endDate] = dateRange;
-
-    if (startDate) {
-      result = result.filter((item) => new Date(item.date) >= startDate);
-    }
-
-    if (endDate) {
-      result = result.filter((item) => new Date(item.date) <= endDate);
-    }
-
-    if (
-      selectedPlans.length > 0 &&
-      !selectedPlans.find((p) => p.value === "all")
-    ) {
-      result = result.filter((item) =>
-        selectedPlans.some((plan) => plan.value === item.plan)
-      );
-    }
-
-    setFilteredData(result);
-  }, [allData, dateRange, selectedPlans]);
-
-  const handlePlanChange = useCallback((selected) => {
-    if (!selected) {
-      setSelectedPlans([]);
-      return;
-    }
-
-    if (selected.find((option) => option.value === "all")) {
-      setSelectedPlans([{ value: "all", label: "Todos los planes" }]);
-    } else {
-      setSelectedPlans(selected.filter((option) => option.value !== "all"));
-    }
+  // Función para aplicar el filtro de fechas
+  const applyDateFilter = useCallback(() => {
+    setFilterActive(true);
   }, []);
 
   return (
     <div className="">
       {/* Filtros */}
-      <div className="card p-2">
+      <div className="card p-2 mb-4">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
             <h4 className="font-weight-bold mx-2">General</h4>
           </div>
 
-          <div className="col-sm-3">
+          <div className="col-sm-6">
             <label className="block text-sm font-medium mb-1">Periodo</label>
             <div className="d-flex align-items-center">
               <DatePicker
                 selectsRange={true}
                 startDate={dateRange[0]}
                 endDate={dateRange[1]}
-                onChange={setDateRange}
+                onChange={(update) => {
+                  setDateRange(update);
+                  if (update[0] === null && update[1] === null) {
+                    setFilterActive(false);
+                  }
+                }}
                 locale={es}
                 isClearable={true}
                 placeholderText="Filtrar por rango de fechas"
@@ -117,35 +55,18 @@ export default function Pag100() {
                 dropdownMode="select"
               />
               <button
-                onClick={filterData}
-                disabled={isLoading}
+                onClick={applyDateFilter}
+                disabled={isLoading || (dateRange[0] === null && dateRange[1] === null)}
                 className="btn bg-secondary p-2 border-0 mx-1"
               >
                 <Search className="w-75" />
               </button>
             </div>
           </div>
-
-          <div className="col-sm-3">
-            <label className="block text-sm font-medium mb-1">Planes</label>
-            <div className="d-flex align-items-center">
-              <Select
-                isMulti
-                options={planOptions}
-                value={selectedPlans}
-                onChange={handlePlanChange}
-                placeholder="Filtrar por planes"
-                className="rounded"
-                classNamePrefix="select"
-                isClearable={true}
-                isDisabled={isLoading}
-              />
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Estados */}
+      {/* Estados de carga y error */}
       {isLoading && (
         <div className="text-center p-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
@@ -159,102 +80,17 @@ export default function Pag100() {
         </div>
       )}
 
-      {/* Gráficos */}
-
-      {!isLoading && !error && filteredData.length > 0 && (
-        <div className="card">
-          <div className="p-1">
-            {/* Fila 1 */}
-            <div className="row g-1">
-              {/* Tercera columna */}
-              <div className="col-sm-12">
-                <div className="row g-1 align-items-center">
-                  <div className="col-sm-3">
-                    <TotalsCardComponent
-                      data={0}
-                      title="Total Procesos Cargados"
-                      subTitle="Documento"
-                      description="ddd."
-                      icon="ri-file-paper-2-line"
-                      unknown={true}
-                    />
-                  </div>
-                  <div className="col-sm-3">
-                    <TotalsCardComponent
-                      data={646}
-                      title="Total Paginas"
-                      subTitle="Pagina"
-                      description="Cantidad de paginas incluyendo los documentos adjuntos"
-                      icon="ri-file-paper-line"
-                      iconBgColor = "#ffefef"
-                      unknown={true}
-                    />
-                  </div>
-                  <div className="col-sm-3">
-                    <TotalsCardComponent
-                      data={166}
-                      title="Total Agua Ahorrada"
-                      subTitle="Litro"
-                      description="Para producir una sola hoja de papel A4 (aprox. 5 gr), entre 5 y 10 litros de agua"
-                      icon="bi bi-droplet"
-                      iconBgColor = "#e1fdff"
-                      unknown={true}
-                    />
-                  </div>
-                  <div className="col-sm-3">
-                    <TotalsCardComponent
-                      data={812}
-                      title="Total árboles salvados"
-                      subTitle="(Arbol)"
-                      description="un árbol puede producir alrededor de 10,000 a 20,000 hojas de papel A4"
-                      icon="bi bi-tree"
-                      iconBgColor = "#e6fbef"
-                      unknown={true}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Fila 2 */}
-            <div className="row g-1">
-              <div className="col-sm-8">
-                <TransactionTable
-                  data={filteredData}
-                  title=""
-                  subTitle=""
-                  description=""
-                  showTotal={true}
-                  height={350}
-                  columns={[
-                    ["", "description"],
-                    ["PrePago", "prepago"],
-                    ["PostPago", "postpago"],
-                    ["Total", "postpago"],
-                  ]}
-                  groupByOptions={[
-                    { field: "description", operation: "group" },
-                    // { field: "unitValue", operation: "count" },
-                    // { field: "totalValue", operation: "sum" },
-                  ]}
-                />
-              </div>
-              <div className="col-sm-4">
-                <PieChart
-                  data={filteredData}
-                  valueField="quantity"
-                  nameField="role"
-                  title=""
-                  subTitle=""
-                  description="Cantidad de firmas Prepago vs Postpago"
-                  height={330}
-                />
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
+      {/* GoogleSheetsReader */}
+      <div className="card p-4">
+        <GoogleSheetsReader
+          configName="nuevaHoja"
+          onDataLoaded={handleDataLoaded}
+          height={500}
+          showTotal={true}
+          dateRange={dateRange}
+          filterByDate={filterActive}
+        />
+      </div>
     </div>
   );
 }
