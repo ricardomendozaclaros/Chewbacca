@@ -14,10 +14,8 @@ const SheetDataPage = () => {
 
       <div className="bg-white rounded-lg shadow p-6">
         <GoogleSheetsReader
-          configName="recursosHumanos"
+          configName="nuevaHoja"
           onDataLoaded={handleDataLoaded}
-          height={500} // Altura fija para la tabla con scroll
-          showTotal={true} // Mostrar fila de totales
         />
       </div>
     </>

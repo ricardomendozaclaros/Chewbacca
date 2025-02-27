@@ -23,10 +23,10 @@ class ApiServiceCertifirma {
 
   async fetchSignatureProcessesCertifirma(startDate, endDate) {
     const headers = this.getHeaders();
-    console.log('🔄 Request URL:', `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}&pageSize=1000&pageNumber=1`);
+    console.log('🔄 Request URL:', `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}&pageSize=10000000&pageNumber=1`);
     
     const response = await this.fetchWithRetries(
-      `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}&pageSize=100000&pageNumber=1`,
+      `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}&pageSize=10000000&pageNumber=1`,
       { headers }
     );
     
