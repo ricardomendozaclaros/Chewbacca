@@ -8,6 +8,7 @@ import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
 import { googleSheetsService } from "../../utils/googleSheetsService";
 import sheetsConfig from "../../resources/TOCs/sheetsConfig.json";
+import PieChart from "../../components/Filtros/PirChart";
 
 export default function Pag101() {
   // Datos originales (sin filtrar)
@@ -27,7 +28,7 @@ export default function Pag101() {
     columns: [],
   });
 
-  const [activeTab, setActiveTab] = useState("Nomina");
+  const [activeTab, setActiveTab] = useState("Plantillas");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState([null, null]);
@@ -387,6 +388,56 @@ export default function Pag101() {
     inactive: "nav-link text-secondary",
   };
 
+  // Add this new memo to process department data
+  const departmentStats = useMemo(() => {
+    if (!filteredPlantillasData?.data?.length) return [];
+
+    // Find the department column
+    const depColumn = filteredPlantillasData.columns.find((col) =>
+      col.toLowerCase().includes("departamento")
+    );
+
+    if (!depColumn) return [];
+
+    // Count occurrences of each department
+    const depCount = filteredPlantillasData.data.reduce((acc, item) => {
+      const dept = item[depColumn] || "No Asignado";
+      acc[dept] = (acc[dept] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Convert to array format required by PieChart
+    return Object.entries(depCount).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [filteredPlantillasData]);
+
+  // Add this new memo after departmentStats
+  const workplaceStats = useMemo(() => {
+    if (!filteredPlantillasData?.data?.length) return [];
+
+    // Find the workplace column
+    const workplaceColumn = filteredPlantillasData.columns.find((col) =>
+      col.toLowerCase().includes("lugar de trabajo")
+    );
+
+    if (!workplaceColumn) return [];
+
+    // Count occurrences of each workplace
+    const workplaceCount = filteredPlantillasData.data.reduce((acc, item) => {
+      const workplace = item[workplaceColumn] || "No Asignado";
+      acc[workplace] = (acc[workplace] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Convert to array format required by PieChart
+    return Object.entries(workplaceCount).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [filteredPlantillasData]);
+
   return (
     <div className="">
       {/* Filtros */}
@@ -461,22 +512,6 @@ export default function Pag101() {
             <div className="row g-1">
               <div className="col-sm-4">
                 <TotalsCardComponent
-                  data={inactivePlantillasStats.text}
-                  title="Plantillas Inactivas"
-                  subTitle="Total inactivos / Total registros"
-                  description="Proporción de plantillas en estado inactivo"
-                  icon="bi bi-person-x"
-                  iconBgColor="#fee2e2"
-                  unknown={false}
-                  format={"string"}
-                />
-              </div>
-            </div>
-
-            {/* fila 2 */}
-            <div className="row g-1">
-              <div className="col-sm-4">
-                <TotalsCardComponent
                   data={plantillaMetrics.lastEmployee.name}
                   title="Último empleado contratado"
                   subTitle={plantillaMetrics.lastEmployee.date}
@@ -507,6 +542,44 @@ export default function Pag101() {
                   icon="bi bi-cash-stack"
                   iconBgColor="#e1f5fe"
                   unknown={false}
+                />
+              </div>
+            </div>
+
+            {/* fila 2 */}
+            <div className="row g-1">
+              <div className="col-sm-4">
+                <TotalsCardComponent
+                  data={inactivePlantillasStats.text}
+                  title="Plantillas Inactivas"
+                  subTitle="Total inactivos / Total registros"
+                  description="Proporción de plantillas en estado inactivo"
+                  icon="bi bi-person-x"
+                  iconBgColor="#fee2e2"
+                  unknown={false}
+                  format={"string"}
+                />
+              </div>
+              <div className="col-sm-3">
+                <PieChart
+                  data={departmentStats}
+                  title="Distribución por Departamento"
+                  subTitle={`Total: ${filteredPlantillasData.data.length}`}
+                  description="Cantidad de empleados por departamento"
+                  valueField="value"
+                  nameField="name"
+                  height="250"
+                />
+              </div>
+              <div className="col-sm-3">
+                <PieChart
+                  data={workplaceStats}
+                  title="Distribución por Lugar de Trabajo"
+                  subTitle={`Total: ${filteredPlantillasData.data.length}`}
+                  description="Cantidad de empleados por lugar de trabajo"
+                  valueField="value"
+                  nameField="name"
+                  height="250"
                 />
               </div>
             </div>
