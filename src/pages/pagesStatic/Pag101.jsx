@@ -1,24 +1,33 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
 import { Search } from "lucide-react";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
-import { googleSheetsService } from '../../utils/googleSheetsService';
-import sheetsConfig from '../../resources/TOCs/sheetsConfig.json';
+import { googleSheetsService } from "../../utils/googleSheetsService";
+import sheetsConfig from "../../resources/TOCs/sheetsConfig.json";
 
 export default function Pag101() {
   // Datos originales (sin filtrar)
   const [nominaData, setNominaData] = useState({ data: [], columns: [] });
-  const [plantillasData, setPlantillasData] = useState({ data: [], columns: [] });
-  
+  const [plantillasData, setPlantillasData] = useState({
+    data: [],
+    columns: [],
+  });
+
   // Datos filtrados
-  const [filteredNominaData, setFilteredNominaData] = useState({ data: [], columns: [] });
-  const [filteredPlantillasData, setFilteredPlantillasData] = useState({ data: [], columns: [] });
-  
-  const [activeTab, setActiveTab] = useState('Nomina');
+  const [filteredNominaData, setFilteredNominaData] = useState({
+    data: [],
+    columns: [],
+  });
+  const [filteredPlantillasData, setFilteredPlantillasData] = useState({
+    data: [],
+    columns: [],
+  });
+
+  const [activeTab, setActiveTab] = useState("Nomina");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState([null, null]);
@@ -30,21 +39,23 @@ export default function Pag101() {
     const loadData = async () => {
       // Evitar cargas múltiples
       if (dataLoadedRef.current) return;
-      
+
       try {
         setIsLoading(true);
         console.log("Cargando datos desde Google Sheets...");
-        
-        const sheetConfig = sheetsConfig.sheets.find(sheet => sheet.name === "recursosHumanos");
-        
+
+        const sheetConfig = sheetsConfig.sheets.find(
+          (sheet) => sheet.name === "recursosHumanos"
+        );
+
         if (!sheetConfig) {
           throw new Error(`Configuración no encontrada`);
         }
-        
+
         const { url, tabs } = sheetConfig;
         const result = await googleSheetsService.getAllTabsData(url, tabs, {
           autoTypeConversion: true,
-          skipEmptyRows: true
+          skipEmptyRows: true,
         });
 
         console.log("Datos recibidos:", result);
@@ -52,37 +63,46 @@ export default function Pag101() {
         // Process Nomina data
         if (result.results?.Nomina?.data?.length) {
           const nomina = result.results.Nomina.data;
-          const nominaWithIds = nomina.map(row => ({ ...row, uniqueId: uuidv4() }));
-          
+          const nominaWithIds = nomina.map((row) => ({
+            ...row,
+            uniqueId: uuidv4(),
+          }));
+
           setNominaData({
             data: nominaWithIds,
-            columns: Object.keys(nomina[0] || {})
+            columns: Object.keys(nomina[0] || {}),
           });
-          
+
           setFilteredNominaData({
             data: nominaWithIds,
-            columns: Object.keys(nomina[0] || {})
+            columns: Object.keys(nomina[0] || {}),
           });
-          
+
           console.log("Datos de nómina procesados:", nominaWithIds.length);
         }
 
         // Process Plantillas data
         if (result.results?.Plantilla?.data?.length) {
           const plantillas = result.results.Plantilla.data;
-          const plantillasWithIds = plantillas.map(row => ({ ...row, uniqueId: uuidv4() }));
-          
+          const plantillasWithIds = plantillas.map((row) => ({
+            ...row,
+            uniqueId: uuidv4(),
+          }));
+
           setPlantillasData({
             data: plantillasWithIds,
-            columns: Object.keys(plantillas[0] || {})
+            columns: Object.keys(plantillas[0] || {}),
           });
-          
+
           setFilteredPlantillasData({
             data: plantillasWithIds,
-            columns: Object.keys(plantillas[0] || {})
+            columns: Object.keys(plantillas[0] || {}),
           });
-          
-          console.log("Datos de plantillas procesados:", plantillasWithIds.length);
+
+          console.log(
+            "Datos de plantillas procesados:",
+            plantillasWithIds.length
+          );
         }
 
         dataLoadedRef.current = true;
@@ -101,7 +121,7 @@ export default function Pag101() {
   const applyFilters = useCallback(() => {
     const [startDate, endDate] = dateRange;
     console.log("Aplicando filtros con fechas:", startDate, endDate);
-    
+
     if (!startDate && !endDate) {
       // Si no hay fechas seleccionadas, mostrar todos los datos
       setFilteredNominaData(nominaData);
@@ -109,74 +129,79 @@ export default function Pag101() {
       setFilterActive(false);
       return;
     }
-    
+
     // Buscar la columna de fecha en cada dataset
     const findDateColumn = (columns) => {
-      return columns.find(col => 
-        col.toLowerCase().includes('fecha') || 
-        col.toLowerCase().includes('date') || 
-        col.toLowerCase() === 'fech'
+      return columns.find(
+        (col) =>
+          col.toLowerCase().includes("fecha") ||
+          col.toLowerCase().includes("date") ||
+          col.toLowerCase() === "fech"
       );
     };
-    
+
     // Filtrar datos de nómina
     if (nominaData.data.length > 0) {
       const dateColumn = findDateColumn(nominaData.columns);
       console.log("Columna de fecha en nómina:", dateColumn);
-      
+
       let filteredData = [...nominaData.data];
-      
+
       if (dateColumn) {
-        filteredData = filteredData.filter(item => {
+        filteredData = filteredData.filter((item) => {
           const itemDate = new Date(item[dateColumn]);
           // Si la fecha no es válida, incluir la fila
           if (isNaN(itemDate.getTime())) return true;
-          
+
           // Aplicar filtro de fecha
           if (startDate && itemDate < startDate) return false;
           if (endDate && itemDate > endDate) return false;
-          
+
           return true;
         });
       }
-      
+
       setFilteredNominaData({
         ...nominaData,
-        data: filteredData
+        data: filteredData,
       });
-      
-      console.log(`Nómina filtrada: ${filteredData.length} de ${nominaData.data.length}`);
+
+      console.log(
+        `Nómina filtrada: ${filteredData.length} de ${nominaData.data.length}`
+      );
     }
-    
+
     // Filtrar datos de plantillas
     if (plantillasData.data.length > 0) {
       const dateColumn = findDateColumn(plantillasData.columns);
       console.log("Columna de fecha en plantillas:", dateColumn);
-      
+
       let filteredData = [...plantillasData.data];
-      
+
       if (dateColumn) {
-        filteredData = filteredData.filter(item => {
+        filteredData = filteredData.filter((item) => {
           const itemDate = new Date(item[dateColumn]);
           // Si la fecha no es válida, incluir la fila
           if (isNaN(itemDate.getTime())) return true;
-          
+
           // Aplicar filtro de fecha
           if (startDate && itemDate < startDate) return false;
           if (endDate && itemDate > endDate) return false;
-          
+
           return true;
         });
       }
-      
+
       setFilteredPlantillasData({
         ...plantillasData,
-        data: filteredData
+        data: filteredData,
       });
-      
-      console.log(`Plantillas filtradas: ${filteredData.length} de ${plantillasData.data.length}`);
+
+      console.log(
+        `Plantillas filtradas: ${filteredData.length} de ${plantillasData.data.length}`
+      );
     }
-    
+
     setFilterActive(true);
   }, [dateRange, nominaData, plantillasData]);
 
@@ -190,122 +215,176 @@ export default function Pag101() {
   }, [nominaData, plantillasData]);
 
   // Get active data based on current tab
-  const activeData = useMemo(() => 
-    activeTab === 'Nomina' ? filteredNominaData.data : filteredPlantillasData.data, 
+  const activeData = useMemo(
+    () =>
+      activeTab === "Nomina"
+        ? filteredNominaData.data
+        : filteredPlantillasData.data,
     [activeTab, filteredNominaData, filteredPlantillasData]
   );
 
+  const PLANTILLAS_COLUMNS = [
+    "nombre",
+    "cargo",
+    "fecha ingreso",
+    "sueldo neto",
+    "sueldo bruto",
+  ];
+
   // Get columns for active tab
   const tableColumns = useMemo(() => {
-    const currentData = activeTab === 'Nomina' ? filteredNominaData : filteredPlantillasData;
+    const currentData =
+      activeTab === "Nomina" ? filteredNominaData : filteredPlantillasData;
     if (!currentData?.columns?.length) return [];
-    
-    const monetaryFields = ['sueldo', 'bruto', 'neto', 'descuentos', 'bonos', 'total', 'precio'];
-    
-    return currentData.columns.map(column => [
+
+    const monetaryFields = [
+      "sueldo",
+      "bruto",
+      "neto",
+      "descuentos",
+      "bonos",
+      "total",
+      "precio",
+    ];
+    let columnsToShow = currentData.columns;
+
+    if (activeTab === "Plantillas") {
+      columnsToShow = currentData.columns.filter((column) =>
+        PLANTILLAS_COLUMNS.includes(column.toLowerCase())
+      );
+    }
+
+    return columnsToShow.map((column) => [
       column.charAt(0).toUpperCase() + column.slice(1),
       column,
       {
-        align: monetaryFields.some(term => 
-          column.toLowerCase().includes(term)) ? 'right' : 'left'
-      }
+        align: monetaryFields.some((term) =>
+          column.toLowerCase().includes(term)
+        )
+          ? "right"
+          : "left",
+      },
     ]);
   }, [activeTab, filteredNominaData, filteredPlantillasData]);
 
+  // First, add this calculation after your existing useMemo hooks
+  const inactivePlantillasStats = useMemo(() => {
+    const totalRecords = filteredPlantillasData?.data?.length || 0;
+    const inactiveRecords =
+      filteredPlantillasData?.data?.filter(
+        (item) => item.estado?.toLowerCase() === "inactivo"
+      )?.length || 0;
+
+    return {
+      total: totalRecords,
+      inactive: inactiveRecords,
+      text: `${inactiveRecords}/${totalRecords}`,
+    };
+  }, [filteredPlantillasData]);
+
   // Calcular métricas para las tarjetas de Plantillas
   const plantillaMetrics = useMemo(() => {
-    if (!filteredPlantillasData?.data?.length) return {
-      lastEmployee: { name: "N/A", date: "N/A" },
-      totalBonuses: 0,
-      totalPayroll: 0
-    };
-    
+    if (!filteredPlantillasData?.data?.length)
+      return {
+        lastEmployee: { name: "N/A", date: "N/A" },
+        totalBonuses: 0,
+        totalPayroll: 0,
+      };
+
     // Buscar las columnas necesarias
-    const nombreColumn = filteredPlantillasData.columns.find(col => 
-      col.toLowerCase().includes('nombre'));
-    
-    const fechaColumn = filteredPlantillasData.columns.find(col => 
-      col.toLowerCase().includes('fecha'));
-    
-    const bonosColumn = filteredPlantillasData.columns.find(col => 
-      col.toLowerCase().includes('bono'));
-    
-    const totalColumn = filteredPlantillasData.columns.find(col => 
-      col.toLowerCase().includes('total percibido'));
-    
+    const nombreColumn = filteredPlantillasData.columns.find((col) =>
+      col.toLowerCase().includes("nombre")
+    );
+
+    const fechaColumn = filteredPlantillasData.columns.find((col) =>
+      col.toLowerCase().includes("fecha")
+    );
+
+    const bonosColumn = filteredPlantillasData.columns.find((col) =>
+      col.toLowerCase().includes("bono")
+    );
+
+    const totalColumn = filteredPlantillasData.columns.find((col) =>
+      col.toLowerCase().includes("total percibido")
+    );
+
     // Ordenar por fecha para encontrar el último empleado contratado
     let lastEmployee = { name: "No disponible", date: "N/A" };
-    
+
     if (nombreColumn && fechaColumn) {
       // Filtrar solo los que tienen fecha válida
       const validEmployees = filteredPlantillasData.data
-        .filter(item => item[fechaColumn] && new Date(item[fechaColumn]).toString() !== 'Invalid Date')
+        .filter(
+          (item) =>
+            item[fechaColumn] &&
+            new Date(item[fechaColumn]).toString() !== "Invalid Date"
+        )
         .sort((a, b) => new Date(b[fechaColumn]) - new Date(a[fechaColumn]));
-      
+
       if (validEmployees.length > 0) {
         const latest = validEmployees[0];
-        lastEmployee = { 
-          name: latest[nombreColumn] || "N/A", 
-          date: latest[fechaColumn] || "N/A" 
+        lastEmployee = {
+          name: latest[nombreColumn] || "N/A",
+          date: latest[fechaColumn] || "N/A",
         };
       }
     }
-    
+
     // Calcular el total de bonos
     let totalBonuses = 0;
     if (bonosColumn) {
       totalBonuses = filteredPlantillasData.data.reduce((sum, item) => {
         const value = item[bonosColumn];
         if (!value) return sum;
-        
+
         // Convertir a número si es string
-        const numValue = typeof value === 'string' 
-          ? parseFloat(value.replace(/[^\d.,]/g, '').replace(',', '.')) 
-          : parseFloat(value);
-        
+        const numValue =
+          typeof value === "string"
+            ? parseFloat(value.replace(/[^\d.,]/g, "").replace(",", "."))
+            : parseFloat(value);
+
         return sum + (isNaN(numValue) ? 0 : numValue);
       }, 0);
     }
-    
+
     // Calcular el total de la planilla
     let totalPayroll = 0;
     if (totalColumn) {
       totalPayroll = filteredPlantillasData.data.reduce((sum, item) => {
         const value = item[totalColumn];
         if (!value) return sum;
-        
+
         // Convertir a número si es string
-        const numValue = typeof value === 'string' 
-          ? parseFloat(value.replace(/[^\d.,]/g, '').replace(',', '.')) 
-          : parseFloat(value);
-        
+        const numValue =
+          typeof value === "string"
+            ? parseFloat(value.replace(/[^\d.,]/g, "").replace(",", "."))
+            : parseFloat(value);
+
         return sum + (isNaN(numValue) ? 0 : numValue);
       }, 0);
     }
-    
-    
 
     return {
       lastEmployee,
       totalBonuses,
-      totalPayroll
+      totalPayroll,
     };
   }, [filteredPlantillasData]);
 
   // Formatear valores monetarios
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
       minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      maximumFractionDigits: 0,
     }).format(value);
   };
 
   // Add some CSS for tab styling
   const tabStyles = {
     active: "nav-link active text-primary",
-    inactive: "nav-link text-secondary"
+    inactive: "nav-link text-secondary",
   };
 
   return (
@@ -346,26 +425,15 @@ export default function Pag101() {
                 />
                 <button
                   onClick={applyFilters}
-                  disabled={isLoading || (dateRange[0] === null && dateRange[1] === null)}
+                  disabled={
+                    isLoading ||
+                    (dateRange[0] === null && dateRange[1] === null)
+                  }
                   className="btn btn-primary p-2 border-0 mx-1"
                 >
                   <Search className="w-75" />
                 </button>
-                {filterActive && (
-                  <button
-                    onClick={clearFilters}
-                    className="btn btn-outline-danger p-2 border-0 mx-1"
-                  >
-                    ×
-                  </button>
-                )}
               </div>
-              {filterActive && dateRange[0] && (
-                <div className="mt-2 text-sm text-muted">
-                  Filtrando desde {dateRange[0]?.toLocaleDateString()} 
-                  {dateRange[1] ? ` hasta ${dateRange[1]?.toLocaleDateString()}` : ''}
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -387,13 +455,30 @@ export default function Pag101() {
 
       {/* Tarjetas para plantillas */}
       {!isLoading && !error && activeTab === "Plantillas" && (
-        <div className="card mb-4">
-          <div className="card-body">
-            <div className="row g-3">
+        <div className="card">
+          <div className="p-1">
+            {/* fila 1 */}
+            <div className="row g-1">
+              <div className="col-sm-4">
+                <TotalsCardComponent
+                  data={inactivePlantillasStats.text}
+                  title="Plantillas Inactivas"
+                  subTitle="Total inactivos / Total registros"
+                  description="Proporción de plantillas en estado inactivo"
+                  icon="bi bi-person-x"
+                  iconBgColor="#fee2e2"
+                  unknown={false}
+                  format={"string"}
+                />
+              </div>
+            </div>
+
+            {/* fila 2 */}
+            <div className="row g-1">
               <div className="col-sm-4">
                 <TotalsCardComponent
                   data={plantillaMetrics.lastEmployee.name}
-                  title="Último empleado contratado" 
+                  title="Último empleado contratado"
                   subTitle={plantillaMetrics.lastEmployee.date}
                   description="Empleado más reciente en la planilla"
                   icon="bi bi-person"
@@ -433,41 +518,56 @@ export default function Pag101() {
       {!isLoading && !error && (
         <div className="card">
           <div className="p-1">
+            {/* Ultima fila */}
             <div className="row g-1">
               <div className="col-sm-12">
-                <ul className="nav nav-tabs" role="tablist">
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={activeTab === "Plantillas" ? tabStyles.active : tabStyles.inactive}
-                      onClick={() => setActiveTab("Plantillas")}
-                    >
-                      Plantillas ({filteredPlantillasData?.data?.length || 0})
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={activeTab === "Nomina" ? tabStyles.active : tabStyles.inactive}
-                      onClick={() => setActiveTab("Nomina")}
-                    >
-                      Nómina ({filteredNominaData?.data?.length || 0})
-                    </button>
-                  </li>
-                </ul>
+                <div className="card">
+                  <div className="p-1">
+                    <div className="row g-1">
+                      <div className="col-sm-12">
+                        <ul className="nav nav-tabs" role="tablist">
+                          <li className="nav-item" role="presentation">
+                            <button
+                              className={
+                                activeTab === "Plantillas"
+                                  ? tabStyles.active
+                                  : tabStyles.inactive
+                              }
+                              onClick={() => setActiveTab("Plantillas")}
+                            >
+                              Plantillas (
+                              {filteredPlantillasData?.data?.length || 0})
+                            </button>
+                          </li>
+                          <li className="nav-item" role="presentation">
+                            <button
+                              className={
+                                activeTab === "Nomina"
+                                  ? tabStyles.active
+                                  : tabStyles.inactive
+                              }
+                              onClick={() => setActiveTab("Nomina")}
+                            >
+                              Nómina ({filteredNominaData?.data?.length || 0})
+                            </button>
+                          </li>
+                        </ul>
 
-                <div className="tab-content mt-3">
-                  <div className="tab-pane fade show active">
-                    <TransactionTable
-                      data={activeData}
-                      title=""
-                      subTitle=""
-                      description=""
-                      columns={tableColumns}
-                      height={450}
-                      pagination={true}
-                      rowsPerPage={15}
-                      groupByOptions={[]}
-                      showTotal={true}
-                    />
+                        <div className="tab-content mt-3">
+                          <div className="tab-pane fade show active">
+                            <TransactionTable
+                              data={activeData}
+                              title=""
+                              subTitle=""
+                              description=""
+                              columns={tableColumns}
+                              height={450}
+                              groupByOptions={[]}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
