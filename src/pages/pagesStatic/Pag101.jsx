@@ -10,7 +10,45 @@ import { googleSheetsService } from "../../utils/googleSheetsService";
 import sheetsConfig from "../../resources/TOCs/sheetsConfig.json";
 import PieChart from "../../components/Filtros/PirChart";
 
+// Estilos personalizados para el DatePicker
+const customDatePickerStyles = {
+  datepickerWrapper: {
+    position: "relative",
+    zIndex: 1000, // Asegura que el DatePicker esté por encima de otros elementos
+  },
+  datepickerInput: {
+    width: "100%",
+  },
+};
+
+// Estilos para ser inyectados en el head del documento
+const injectGlobalStyles = () => {
+  // Si ya existe el estilo, no lo volvemos a crear
+  if (document.getElementById('datepicker-custom-styles')) return;
+  
+  const styleEl = document.createElement('style');
+  styleEl.id = 'datepicker-custom-styles';
+  styleEl.innerHTML = `
+    .react-datepicker-popper {
+      z-index: 1050 !important; /* Mayor z-index para asegurar que aparezca encima */
+    }
+    .react-datepicker-wrapper {
+      display: block;
+      width: 100%;
+    }
+    .react-datepicker__input-container {
+      width: 100%;
+    }
+  `;
+  document.head.appendChild(styleEl);
+};
+
 export default function Pag101() {
+  // Inyectar estilos globales al montar el componente
+  useEffect(() => {
+    injectGlobalStyles();
+  }, []);
+
   // Datos originales (sin filtrar)
   const [nominaData, setNominaData] = useState({ data: [], columns: [] });
   const [plantillasData, setPlantillasData] = useState({
@@ -450,30 +488,44 @@ export default function Pag101() {
           </div>
 
           <div className="col-sm-6 d-flex align-items-center justify-content-end">
-            <div className="mx-2">
+            <div className="mx-2" style={{ position: 'relative', width: '300px' }}>
               <label className="block text-sm font-medium mb-1">Periodo</label>
               <div className="d-flex align-items-center">
-                <DatePicker
-                  selectsRange={true}
-                  startDate={dateRange[0]}
-                  endDate={dateRange[1]}
-                  onChange={(update) => {
-                    setDateRange(update);
-                    if (update[0] === null && update[1] === null) {
-                      clearFilters();
-                    }
-                  }}
-                  locale={es}
-                  isClearable={true}
-                  placeholderText="Filtrar por rango de fechas"
-                  className="form-control rounded p-2"
-                  disabled={isLoading}
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
-                  dateFormat="dd/MM/yyyy"
-                  popperPlacement="bottom-end"
-                />
+                <div style={customDatePickerStyles.datepickerWrapper}>
+                  <DatePicker
+                    selectsRange={true}
+                    startDate={dateRange[0]}
+                    endDate={dateRange[1]}
+                    onChange={(update) => {
+                      setDateRange(update);
+                      if (update[0] === null && update[1] === null) {
+                        clearFilters();
+                      }
+                    }}
+                    locale={es}
+                    isClearable={true}
+                    placeholderText="Filtrar por rango de fechas"
+                    className="form-control rounded"
+                    style={customDatePickerStyles.datepickerInput}
+                    disabled={isLoading}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                    dateFormat="dd/MM/yyyy"
+                    popperPlacement="auto"
+                    popperModifiers={{
+                      preventOverflow: {
+                        enabled: true,
+                        escapeWithReference: false,
+                        boundariesElement: 'viewport'
+                      },
+                      offset: {
+                        enabled: true,
+                        offset: '0, 10'  // desplaza hacia abajo para evitar superposición
+                      }
+                    }}
+                  />
+                </div>
                 <button
                   onClick={applyFilters}
                   disabled={
