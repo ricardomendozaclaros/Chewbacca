@@ -123,7 +123,7 @@ export default function Pag201() {
       },
       {
         name: "Todos los datos",
-        data: filteredData,
+        data: filteredData.map(({ plan, role, documentType, source, ...rest }) => rest),
       },
     ],
     [filteredData]

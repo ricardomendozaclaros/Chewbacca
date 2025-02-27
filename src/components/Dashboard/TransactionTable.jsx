@@ -79,34 +79,11 @@ export default function TransactionTable({
   const processedData = useMemo(() => {
     if (!data || data.length === 0) return [];
 
-    // Group by signatureType
-    const grouped = data.reduce((acc, item) => {
-      const key = item.signatureType;
-      if (!acc[key]) {
-        acc[key] = {
-          signatureType: key,
-          rows: []
-        };
-      }
-      acc[key].rows.push(item);
-      return acc;
-    }, {});
-
-    // Flatten groups into rows with proper styling
-    let groupLevel = 0;
-    return Object.values(grouped).flatMap(group => {
-      const rows = group.rows.sort((a, b) => b.unitValue - a.unitValue);
-      groupLevel++;
-      
-      return rows.map((row, index) => ({
-        ...row,
-        uniqueId: uuidv4(),
-        isGrouped: true,
-        isMainGroup: index === 0,
-        groupLevel,
-        signatureType: index === 0 ? row.signatureType : ''
-      }));
-    });
+    // Just add uniqueId to each row and preserve duplicates
+    return data.map(item => ({
+      ...item,
+      uniqueId: uuidv4()
+    }));
   }, [data]);
 
   // Filter data based on search term, considering translated values
