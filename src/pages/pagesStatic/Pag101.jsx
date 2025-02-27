@@ -1,35 +1,63 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { v4 as uuidv4 } from 'uuid'; // Add this import
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
 import Select from "react-select";
-import {GetUser} from "../../api/user.js";
-
+import { GetSignatureProcessesCertifirma } from "../../api/signatureProcessCertifirma.js";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
-
-import { Search } from "lucide-react";
+import { ImageOff, Search } from "lucide-react";
+import ExportButton from "../../components/BtnExportar.jsx";
+import { googleSheetsService } from '../../utils/googleSheetsService';
+import sheetsConfig from '../../resources/TOCs/sheetsConfig.json';
 
 export default function Pag101() {
-  const [allData, setAllData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
+  // Separate states for each data type
+  const [nominaData, setNominaData] = useState({ data: [], columns: [] });
+  const [plantillasData, setPlantillasData] = useState({ data: [], columns: [] });
+  const [activeTab, setActiveTab] = useState('Nomina');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Estados para filtros
   const [dateRange, setDateRange] = useState([null, null]);
-  const [selectedPlans, setSelectedPlans] = useState([]);
 
   // Cargar datos iniciales
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        const result = await GetUser();
-        setAllData(result);
-        setFilteredData(result);
+        const sheetConfig = sheetsConfig.sheets.find(sheet => sheet.name === "recursosHumanos");
+        
+        if (!sheetConfig) {
+          throw new Error(`Configuración no encontrada`);
+        }
+        
+        const { url, tabs } = sheetConfig;
+        const result = await googleSheetsService.getAllTabsData(url, tabs, {
+          autoTypeConversion: true,
+          skipEmptyRows: true
+        });
+
+        // Process Nomina data
+        if (result.results?.Nomina?.data?.length) {
+          const nomina = result.results.Nomina.data;
+          setNominaData({
+            data: nomina.map(row => ({ ...row, uniqueId: uuidv4() })),
+            columns: Object.keys(nomina[0] || {})
+          });
+        }
+
+        // Process Plantillas data
+        if (result.results?.Plantilla?.data?.length) {
+          const plantillas = result.results.Plantilla.data;
+          setPlantillasData({
+            data: plantillas.map(row => ({ ...row, uniqueId: uuidv4() })),
+            columns: Object.keys(plantillas[0] || {})
+          });
+        }
+
       } catch (error) {
-        console.error("Error cargando datos:", error);
+        console.error("Error loading data:", error);
         setError(error.message);
       } finally {
         setIsLoading(false);
@@ -39,56 +67,34 @@ export default function Pag101() {
     loadData();
   }, []);
 
-  // Opciones de planes
-  const planOptions = useMemo(() => {
-    const uniquePlans = [...new Set(allData.map((item) => item.plan))];
-    return [
-      { value: "all", label: "Todos los planes" },
-      ...uniquePlans.map((plan) => ({
-        value: plan,
-        label: plan.charAt(0).toUpperCase() + plan.slice(1),
-      })),
-    ];
-  }, [allData]);
+  // Get active data based on current tab
+  const activeData = useMemo(() => 
+    activeTab === 'Nomina' ? nominaData.data : plantillasData.data, 
+    [activeTab, nominaData, plantillasData]
+  );
 
-  // Función memoizada para filtrar datos
-  const filterData = useCallback(() => {
-    let result = [...allData];
-    const [startDate, endDate] = dateRange;
+  // Get columns for active tab
+  const tableColumns = useMemo(() => {
+    const currentData = activeTab === 'Nomina' ? nominaData : plantillasData;
+    if (!currentData?.columns?.length) return [];
+    
+    const monetaryFields = ['sueldo', 'bruto', 'neto', 'descuentos', 'bonos', 'total', 'precio'];
+    
+    return currentData.columns.map(column => [
+      column.charAt(0).toUpperCase() + column.slice(1),
+      column,
+      {
+        align: monetaryFields.some(term => 
+          column.toLowerCase().includes(term)) ? 'right' : 'left'
+      }
+    ]);
+  }, [activeTab, nominaData, plantillasData]);
 
-    if (startDate) {
-      result = result.filter((item) => new Date(item.date) >= startDate);
-    }
-
-    if (endDate) {
-      result = result.filter((item) => new Date(item.date) <= endDate);
-    }
-
-    if (
-      selectedPlans.length > 0 &&
-      !selectedPlans.find((p) => p.value === "all")
-    ) {
-      result = result.filter((item) =>
-        selectedPlans.some((plan) => plan.value === item.plan)
-      );
-    }
-
-    setFilteredData(result);
-  }, [allData, dateRange, selectedPlans]);
-
-  const handlePlanChange = useCallback((selected) => {
-    if (!selected) {
-      setSelectedPlans([]);
-      return;
-    }
-
-    if (selected.find((option) => option.value === "all")) {
-      setSelectedPlans([{ value: "all", label: "Todos los planes" }]);
-    } else {
-      setSelectedPlans(selected.filter((option) => option.value !== "all"));
-    }
-  }, []);
-
+  // Add some CSS for tab styling
+  const tabStyles = {
+    active: "nav-link active text-primary",
+    inactive: "nav-link text-secondary"
+  };
 
   return (
     <div className="">
@@ -96,50 +102,39 @@ export default function Pag101() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h4 className="font-weight-bold mx-2">Prepago</h4>
+            <h4 className="font-weight-bold mx-2">
+              Resumen de consumos Certicamara
+            </h4>
           </div>
 
-          <div className="col-sm-3">
-            <label className="block text-sm font-medium mb-1">Periodo</label>
-            <div className="d-flex align-items-center">
-              <DatePicker
-                selectsRange={true}
-                startDate={dateRange[0]}
-                endDate={dateRange[1]}
-                onChange={setDateRange}
-                locale={es}
-                isClearable={true}
-                placeholderText="Filtrar por rango de fechas"
-                className="form-control rounded p-2"
-                disabled={isLoading}
-                showMonthDropdown
-                showYearDropdown
-                dropdownMode="select"
-              />
-              <button
-                onClick={filterData}
-                disabled={isLoading}
-                className="btn bg-secondary p-2 border-0 mx-1"
-              >
-                <Search className="w-75" />
-              </button>
-            </div>
-          </div>
+          {/* Filtro de tipos de firmas */}
 
-          <div className="col-sm-3">
-            <label className="block text-sm font-medium mb-1">Planes</label>
-            <div className="d-flex align-items-center">
-              <Select
-                isMulti
-                options={planOptions}
-                value={selectedPlans}
-                onChange={handlePlanChange}
-                placeholder="Filtrar por planes"
-                className="rounded"
-                classNamePrefix="select"
-                isClearable={true}
-                isDisabled={isLoading}
-              />
+          <div className="col-sm-6 d-flex align-items-center justify-content-end">
+            <div className="mx-2">
+              <label className="block text-sm font-medium mb-1">Periodo</label>
+              <div className="d-flex align-items-center">
+                <DatePicker
+                  selectsRange={true}
+                  startDate={dateRange[0]}
+                  endDate={dateRange[1]}
+                  onChange={setDateRange}
+                  locale={es}
+                  isClearable={true}
+                  placeholderText="Filtrar por rango de fechas"
+                  className="form-control rounded p-2"
+                  disabled={isLoading}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+                <button
+                  onClick={() => console.log("dateRange")}
+                  disabled={isLoading}
+                  className="btn btn-primary p-2 border-0 mx-1"
+                >
+                  <Search className="w-75" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -159,99 +154,45 @@ export default function Pag101() {
         </div>
       )}
 
-      {/* Gráficos */}
-
-      {!isLoading && !error && filteredData.length > 0 && (
+      {/* Tabs y Tablas */}
+      {!isLoading && !error && (
         <div className="card">
           <div className="p-1">
-            {/* Fila 1 */}
             <div className="row g-1">
-              {/* Primera columna */}
-              <div className="col-sm-2"></div>
+              <div className="col-sm-12">
+                <ul className="nav nav-tabs" role="tablist">
+                  <li className="nav-item" role="presentation">
+                  <button
+                      className={activeTab === "Plantillas" ? tabStyles.active : tabStyles.inactive}
+                      onClick={() => setActiveTab("Plantillas")}
+                    >
+                      Plantillas ({plantillasData?.data?.length || 0})
+                    </button>
+                  </li>
+                  <li className="nav-item" role="presentation">
+                  <button
+                      className={activeTab === "Nomina" ? tabStyles.active : tabStyles.inactive}
+                      onClick={() => setActiveTab("Nomina")}
+                    >
+                      Nómina ({nominaData?.data?.length || 0})
+                    </button>
+                    
+                  </li>
+                </ul>
 
-              {/* Segunda columna */}
-              <div className="col-sm-2"></div>
-
-              {/* Tercera columna */}
-              <div className="col-sm-8">
-                <div className="row g-1 align-items-center">
-                  <div className="col-sm-4">
-                    <TotalsCardComponent
-                      data={646}
-                      title="Total usuarios nuevos registrados"
+                <div className="tab-content mt-3">
+                  <div className="tab-pane fade show active">
+                    <TransactionTable
+                      data={activeData}
+                      title=""
                       subTitle=""
                       description=""
-                      icon="bi bi-currency-dollar"
-                    />
-                  </div>
-                  <div className="col-sm-4">
-                    <TotalsCardComponent
-                      data={166}
-                      title="Total usuarios nuevos con primera recarga"
-                      subTitle=""
-                      description=""
-                    />
-                  </div>
-                  <div className="col-sm-4">
-                    <TotalsCardComponent
-                      data={812}
-                      title="% Conversion de usuarios nuevos con primera recarga"
-                      subTitle=""
-                      description=""
-                      icon="bi bi-credit-card"
+                      columns={tableColumns}
+                      height={450}
+                      groupByOptions={[]}
                     />
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Fila 2 */}
-            <div className="row g-1">
-              <div className="col-sm-12">
-                <TransactionTable
-                  data={filteredData}
-                  title=""
-                  subTitle=""
-                  description=""
-                  showTotal={true}
-                  columns={[
-                    ["Email", "email"],
-                    ["Teléfono", "unitValue"],
-                    ["Fecha Creación", "datetime"],
-                    ["Saldo Actual", "totalValue"],
-                  ]}
-                  height={300}
-                  groupByOptions={[
-                    // { field: "description", operation: "group" },
-                    // { field: "unitValue", operation: "count" },
-                    // { field: "totalValue", operation: "sum" },
-                  ]}
-                />
-              </div>
-            </div>
-
-            {/* Fila 3 */}
-            <div className="row g-1">
-              <div className="col-sm-12">
-                <TransactionTable
-                  data={filteredData}
-                  title=""
-                  subTitle=""
-                  description=""
-                  showTotal={true}
-                  columns={[
-                    ["", "description"],
-                    ["Crearon", "unitValue"],
-                    ["Recargado", "totalValue"],
-                    ["Conv", "totalValue"],
-                  ]}
-                  height={300}
-                  groupByOptions={[
-                    { field: "description", operation: "group" },
-                    { field: "unitValue", operation: "count" },
-                    { field: "totalValue", operation: "sum" },
-                  ]}
-                />
               </div>
             </div>
           </div>
