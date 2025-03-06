@@ -72,62 +72,7 @@ export default function Pag201() {
     loadEnterprises();
   }, []);
 
-  const exportData = useMemo(
-    () => [
-      {
-        name: "Resumen de Consumos",
-        data: Object.entries(
-          filteredData.reduce((acc, item) => {
-            const key = `${item.description}-${item.unitValue}`;
-            if (!acc[key]) {
-              acc[key] = {
-                Firma: item.description,
-                Precio: item.unitValue || 0,
-                Cantidad: 0,
-              };
-            }
-            acc[key].Cantidad++;
-            return acc;
-          }, {})
-        )
-          .sort(([keyA, a], [keyB, b]) => {
-            const [descA] = keyA.split("-");
-            const [descB] = keyB.split("-");
-            if (descA === descB) {
-              return b.Precio - a.Precio; // Sort prices in descending order
-            }
-            return descA.localeCompare(descB);
-          })
-          .map(([_, value]) => value),
-      },
-      {
-        name: "Por cuentas",
-        data: Object.values(
-          filteredData.reduce((acc, item) => {
-            const key = `${item.enterpriseId}-${item.enterpriseName}`;
-            if (!acc[key]) {
-              acc[key] = {
-                NIT: item.enterpriseId,
-                Nombre: item.enterpriseName,
-                ...Object.fromEntries(
-                  [...new Set(filteredData.map((i) => i.description))].map(
-                    (type) => [type, 0]
-                  )
-                ),
-              };
-            }
-            acc[key][item.description]++;
-            return acc;
-          }, {})
-        ),
-      },
-      {
-        name: "Todos los datos",
-        data: filteredData.map(({ plan, role, documentType, source, ...rest }) => rest),
-      },
-    ],
-    [filteredData]
-  );
+  
 
   // Simplified filterData function
   const filterData = useCallback(async () => {
@@ -161,29 +106,48 @@ export default function Pag201() {
   }, [dateRange]);
 
   // Memoize the summarized data for the first table and total records
+  // For the first table - only grouped by signature type
   const summarizedData = useMemo(() => {
-    // Group by description and unitValue
+    const grouped = filteredData.reduce((acc, item) => {
+      const key = item.description;
+      if (!acc[key]) {
+        acc[key] = {
+          signatureType: item.description,
+          total: 0,
+        };
+      }
+      acc[key].total += item.quantity || 0;
+      return acc;
+    }, {});
+
+    return Object.values(grouped).sort((a, b) =>
+      a.signatureType.localeCompare(b.signatureType)
+    );
+  }, [filteredData]);
+
+  // For the second table - grouped by both signature type and price
+  const detailedSummarizedData = useMemo(() => {
     const grouped = filteredData.reduce((acc, item) => {
       const key = `${item.description}-${item.unitValue}`;
       if (!acc[key]) {
         acc[key] = {
           signatureType: item.description,
-          unitValue: item.unitValue || 0, // Handle null/undefined unit values
+          unitValue: item.unitValue || 0,
           total: 0,
         };
       }
-      acc[key].total++;
+      acc[key].total += item.quantity || 0;
       return acc;
     }, {});
 
-    // Convert to array and sort
     return Object.values(grouped).sort((a, b) => {
       if (a.signatureType === b.signatureType) {
-        return b.unitValue - a.unitValue; // Sort prices in descending order
+        return b.unitValue - a.unitValue;
       }
       return a.signatureType.localeCompare(b.signatureType);
     });
   }, [filteredData]);
+
 
   // Memoize the grouped data for the resumen table
   const groupedData = useMemo(() => {
@@ -201,12 +165,52 @@ export default function Pag201() {
           ),
         };
       }
-      acc[key][item.description]++;
+      // Sum quantity instead of incrementing
+      acc[key][item.description] += item.quantity || 0;
       return acc;
     }, {});
-
+  
     return Object.values(grouped);
   }, [filteredData]);
+
+  const exportData = useMemo(
+    () => [
+      {
+        name: "Resumen Simple",
+        data: summarizedData.map(item => ({
+          Firma: item.signatureType,
+          Cantidad: item.total
+        }))
+      },
+      {
+        name: "Resumen Detallado",
+        data: detailedSummarizedData.map(item => ({
+          Firma: item.signatureType,
+          "Valor unitario": item.unitValue,
+          Cantidad: item.total
+        }))
+      },
+      {
+        name: "Por cuentas",
+        data: groupedData.map(item => ({
+          NIT: item.nit,
+          Nombre: item.enterpriseName,
+          ...Object.fromEntries(
+            Object.entries(item).filter(([key]) => 
+              !["nit", "enterpriseName"].includes(key)
+            )
+          )
+        }))
+      },
+      {
+        name: "Todos los datos",
+        data: filteredData.map(
+          ({ plan, role, documentType, source, ...rest }) => rest
+        ),
+      },
+    ],
+    [filteredData]
+  );
 
   // Memoize table components
   const ResumenTable = useMemo(
@@ -218,8 +222,8 @@ export default function Pag201() {
         description=""
         showTotal={false}
         height={450}
-        pagination={true}    // Enable pagination
-        rowsPerPage={15}    // Set rows per page
+        pagination={true} // Enable pagination
+        rowsPerPage={15} // Set rows per page
         columns={[
           ["NIT", "nit"],
           ["Nombre", "enterpriseName"],
@@ -243,8 +247,8 @@ export default function Pag201() {
         description=""
         showTotal={false}
         height={450}
-        pagination={true}    // Enable pagination
-        rowsPerPage={15}    // Set rows per page
+        pagination={true} // Enable pagination
+        rowsPerPage={15} // Set rows per page
         columns={[
           ["ID", "id"],
           ["Fecha", "date"],
@@ -265,6 +269,10 @@ export default function Pag201() {
   // Simplify totalRecords to just show filteredData length
   const totalRecords = useMemo(() => {
     return filteredData.length;
+  }, [filteredData]);
+
+  const totalSumQuantity = useMemo(() => {
+    return filteredData.reduce((sum, item) => sum + (item.quantity || 0), 0);
   }, [filteredData]);
 
   // Función para transformar y establecer datos
@@ -420,6 +428,21 @@ export default function Pag201() {
                   height={250}
                   columns={[
                     ["Firma", "signatureType", { width: "60%" }],
+                    ["Cantidad", "total", { align: "right", width: "20%" }],
+                  ]}
+                  groupByOptions={[]}
+                />
+              </div>
+              <div className="col-sm-4">
+                <TransactionTable
+                  data={detailedSummarizedData}
+                  title="Resumen de Consumos"
+                  subTitle={formatDateRange(dateRange)}
+                  description=""
+                  showTotal={false}
+                  height={250}
+                  columns={[
+                    ["Firma", "signatureType", { width: "60%" }],
                     ["Precio", "unitValue", { align: "right", width: "20%" }],
                     ["Cantidad", "total", { align: "right", width: "20%" }],
                   ]}
@@ -428,7 +451,8 @@ export default function Pag201() {
               </div>
               <div className="col-sm-4">
                 <TotalsCardComponent
-                  data={totalRecords}
+                  data={totalSumQuantity}
+                  trend={{ value: totalRecords, text: "registros" }}
                   title="Total Firmas"
                   subTitle="Registros Encontrados"
                   description="Total de registros en el período seleccionado"

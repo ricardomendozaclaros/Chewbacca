@@ -6,7 +6,8 @@ const TotalsCardComponent = ({
   icon = "", 
   iconBgColor = "#f8f9fa", 
   unknown = false,
-  format = 'number' // Possible values: 'number', 'string', 'percentage', 'ratio'
+  format = 'number',
+  trend = { value: '8%', text: 'increase' } // New default parameter
 }) => {
   const formatValue = (value) => {
     if (unknown) return "?";
@@ -45,11 +46,11 @@ const TotalsCardComponent = ({
           )}
           <div className="ps-3">
             <h6>{formatValue(data)}</h6>
-            {/* Optional trend indicator */}
-            {!unknown && format !== 'ratio' && (
+            {/* Modified trend indicator */}
+            {!unknown && format !== 'ratio' && trend && (
               <>
-                <span className="text-success small pt-1 fw-bold">8%</span>
-                <span className="text-muted small pt-2 ps-1">increase</span>
+                <span className="text-success small pt-1 fw-bold">{trend.value}</span>
+                <span className="text-muted small pt-2 ps-1">{trend.text}</span>
               </>
             )}
           </div>
