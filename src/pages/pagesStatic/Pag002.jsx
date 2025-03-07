@@ -11,7 +11,7 @@ import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.
 
 import { Search } from "lucide-react";
 
-export default function Pag002() {
+export default function Pag100() {
   const [allData, setAllData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,7 +96,7 @@ export default function Pag002() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h4 className="font-weight-bold mx-2">Comerciales y Financieros</h4>
+            <h4 className="font-weight-bold mx-2">General</h4>
           </div>
 
           <div className="col-sm-3">
@@ -172,10 +172,10 @@ export default function Pag002() {
                   <div className="col-sm-3">
                     <TotalsCardComponent
                       data={0}
-                      title="Total Documentos Cargados"
-                      subTitle=""
-                      description="."
-                      icon="bi bi-arrow-left-right"
+                      title="Total Procesos Cargados"
+                      subTitle="Documento"
+                      description="ddd."
+                      icon="ri-file-paper-2-line"
                       unknown={true}
                     />
                   </div>
@@ -183,9 +183,10 @@ export default function Pag002() {
                     <TotalsCardComponent
                       data={646}
                       title="Total Paginas"
-                      subTitle=""
-                      description="."
-                      icon="bi bi-arrow-left-right"
+                      subTitle="Pagina"
+                      description="Cantidad de paginas incluyendo los documentos adjuntos"
+                      icon="ri-file-paper-line"
+                      iconBgColor = "#ffefef"
                       unknown={true}
                     />
                   </div>
@@ -193,9 +194,10 @@ export default function Pag002() {
                     <TotalsCardComponent
                       data={166}
                       title="Total Agua Ahorrada"
-                      subTitle=" ."
-                      description="10 litros de agua por hoja"
-                      icon="bi bi-arrow-left-right"
+                      subTitle="Litro"
+                      description="Para producir una sola hoja de papel A4 (aprox. 5 gr), entre 5 y 10 litros de agua"
+                      icon="bi bi-droplet"
+                      iconBgColor = "#e1fdff"
                       unknown={true}
                     />
                   </div>
@@ -203,9 +205,10 @@ export default function Pag002() {
                     <TotalsCardComponent
                       data={812}
                       title="Total árboles salvados"
-                      subTitle=""
-                      description="Aprox 8.000 hojas por árbol"
-                      icon="bi bi-arrow-left-right"
+                      subTitle="(Arbol)"
+                      description="un árbol puede producir alrededor de 10,000 a 20,000 hojas de papel A4"
+                      icon="bi bi-tree"
+                      iconBgColor = "#e6fbef"
                       unknown={true}
                     />
                   </div>
@@ -237,7 +240,7 @@ export default function Pag002() {
                 />
               </div>
               <div className="col-sm-4">
-                <PieChart
+              {/*  <PieChart
                   data={filteredData}
                   valueField="quantity"
                   nameField="role"
@@ -245,7 +248,8 @@ export default function Pag002() {
                   subTitle=""
                   description="Cantidad de firmas Prepago vs Postpago"
                   height={330}
-                />
+                  
+                />*/}
               </div>
             </div>
 

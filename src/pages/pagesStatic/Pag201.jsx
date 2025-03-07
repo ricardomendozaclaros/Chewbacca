@@ -7,7 +7,7 @@ import { GetSignatureProcessesCertifirma } from "../../api/signatureProcessCerti
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
 import { useParseValue } from "../../hooks/useParseValue.js";
-import { ImageOff, Search } from "lucide-react";
+import { Bold, ImageOff, Search } from "lucide-react";
 import ExportButton from "../../components/BtnExportar.jsx";
 import { GetEnterprises } from "../../api/enterprise.js";
 
@@ -424,11 +424,11 @@ export default function Pag201() {
                   title="Resumen de Consumos"
                   subTitle={formatDateRange(dateRange)}
                   description=""
-                  showTotal={false}
+                  showTotal={true}
                   height={250}
                   columns={[
                     ["Firma", "signatureType", { width: "60%" }],
-                    ["Cantidad", "total", { align: "right", width: "20%" }],
+                    ["Cantidad", "total", { align: "right", width: "30%", cellStyle: { fontWeight: "bold" }}],
                   ]}
                   groupByOptions={[]}
                 />
@@ -436,15 +436,15 @@ export default function Pag201() {
               <div className="col-sm-4">
                 <TransactionTable
                   data={detailedSummarizedData}
-                  title="Resumen de Consumos"
+                  title="Desglosose Consumos por precio"
                   subTitle={formatDateRange(dateRange)}
-                  description=""
-                  showTotal={false}
+                  description="."
+                  showTotal={true}
                   height={250}
                   columns={[
-                    ["Firma", "signatureType", { width: "60%" }],
-                    ["Precio", "unitValue", { align: "right", width: "20%" }],
-                    ["Cantidad", "total", { align: "right", width: "20%" }],
+                    ["Firma", "signatureType", { width: "50%" }],
+                    ["Precio", "unitValue", { align: "right", width: "25%" }],
+                    ["Cantidad", "total", { align: "right", width: "25%" }],
                   ]}
                   groupByOptions={["signatureType"]}
                 />
@@ -452,12 +452,22 @@ export default function Pag201() {
               <div className="col-sm-4">
                 <TotalsCardComponent
                   data={totalSumQuantity}
-                  trend={{ value: totalRecords, text: "registros" }}
-                  title="Total Firmas"
-                  subTitle="Registros Encontrados"
+                  trend={{ value: totalRecords, text: "registros"}}
+                  title="Autorizaciones"
+                  subTitle="Total"
                   description="Total de registros en el período seleccionado"
-                  icon="ri-file-paper-line"
+                  icon="bi bi-key"
                   unknown={false}
+                />
+                <TotalsCardComponent
+                  data={totalSumQuantity}
+                  trend={{ value: totalRecords, text: "registros" }}
+                  title="API"
+                  subTitle="Total"
+                  description="Consumo por el servicio de API"
+                  icon="bi bi-cloudy"
+                  iconBgColor = "#e1fdff"
+                  unknown={true}
                 />
               </div>
             </div>
