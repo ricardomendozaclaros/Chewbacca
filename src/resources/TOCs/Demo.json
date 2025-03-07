@@ -4,6 +4,12 @@
     "isSeperador" : true
   },
   {
+    "name": "000",
+    "isSublist": false,
+    "to": "/Pag000",
+    "logo": "bx bxs-factory"
+},
+  {
       "name": "Operaciones y Uso del Servicio",
       "isSublist": false,
       "to": "/Pag001",
@@ -22,6 +28,18 @@
     "logo": "bi bi-shield-lock"
   },
   {
+    "name": "004",
+    "isSublist": false,
+    "to": "/Pag004",
+    "logo": "bi bi-shield-lock"
+  },
+  {
+    "name": "005",
+    "isSublist": false,
+    "to": "/Pag005",
+    "logo": "bi bi-shield-lock"
+  },
+  {
       "Separado": "Areas Operativas",
       "isSeperador" : true
   },
@@ -31,26 +49,29 @@
     "logo": "bi bi-cart-check",
     "sublist": [
       {
-        "name": "General",
+        "name": "100 - General",
         "to": "/Pag100"
       },
       {
-        "name": "Prepago",
+        "name": "101 - Prepago",
         "to": "/Pag101"
       },
       {
-        "name": "Postpago",
+        "name": "102 - Postpago",
         "to": "/Pag102"
       },
       {
-        "name": "Consumos",
-        "to": "/Pag200"
+        "name": "103 - Consumos",
+        "to": "/Pag103"
       },
       {
-        "name": "Consumos Certicamara",
-        "to": "/Pag201"
+        "name": "104 - Consumos Certicamara",
+        "to": "/Pag104"
+      },
+      {
+        "name": "105",
+        "to": "/Pag105"
       }
-      
     ]
   },
   {
@@ -59,24 +80,28 @@
     "logo": "bi bi bi-wrench",
     "sublist": [
       {
-        "name": "Pag100",
-        "to": "/Pag100"
-      },
-      {
-        "name": "Pag101",
-        "to": "/Pag101"
-      },
-      {
-        "name": "Pag102",
-        "to": "/Pag102"
-      },
-      {
-        "name": "Pag200",
+        "name": "200",
         "to": "/Pag200"
       },
       {
-        "name": "Pag201",
+        "name": "201",
         "to": "/Pag201"
+      },
+      {
+        "name": "202",
+        "to": "/Pag202"
+      },
+      {
+        "name": "203",
+        "to": "/Pag203"
+      },
+      {
+        "name": "204",
+        "to": "/Pag204"
+      },
+      {
+        "name": "205",
+        "to": "/Pag205"
       }
     ]
   },
@@ -86,16 +111,28 @@
     "logo": "bi bi bi-headset",
     "sublist": [
       {
-        "name": "Gestión de Infraestructura IT",
-        "to": "/Pag100"
+        "name": "300 - Gestión de Infraestructura IT",
+        "to": "/Pag300"
       },
       {
-        "name": "Soporte Técnico",
-        "to": "/Pag101"
+        "name": "301 - Soporte Técnico",
+        "to": "/Pag301"
       },
       {
-        "name": "Gestión de Proyectos",
-        "to": "/Pag102"
+        "name": "302 - Gestión de Proyectos",
+        "to": "/Pag302"
+      },
+      {
+        "name": "303",
+        "to": "/Pag303"
+      },
+      {
+        "name": "304",
+        "to": "/Pag304"
+      },
+      {
+        "name": "305",
+        "to": "/Pag305"
       }
     ]
   },
@@ -105,12 +142,28 @@
     "logo": "bi bi-bar-chart-line",
     "sublist": [
       {
-        "name": "Contabilidad y Facturación",
-        "to": "/Pag100"
+        "name": "400 - Contabilidad y Facturación",
+        "to": "/Pag400"
       },
       {
-        "name": "Recursos Humanos",
-        "to": "/Pag101"
+        "name": "401 - Recursos Humanos",
+        "to": "/Pag401"
+      },
+      {
+        "name": "402",
+        "to": "/Pag402"
+      },
+      {
+        "name": "403",
+        "to": "/Pag403"
+      },
+      {
+        "name": "404",
+        "to": "/Pag404"
+      },
+      {
+        "name": "405",
+        "to": "/Pag405"
       }
     ]
   },
@@ -120,12 +173,59 @@
     "logo": "bi bi bi-book",
     "sublist": [
       {
-        "name": "Asesoría Legal",
-        "to": "/Pag100"
+        "name": "500 - Asesoría Legal",
+        "to": "/Pag500"
       },
       {
-        "name": "Regulación y Certificación",
-        "to": "/Pag101"
+        "name": "501 - Regulación y Certificación",
+        "to": "/Pag501"
+      },
+      {
+        "name": "502",
+        "to": "/Pag502"
+      },
+      {
+        "name": "503",
+        "to": "/Pag503"
+      },
+      {
+        "name": "504",
+        "to": "/Pag504"
+      },
+      {
+        "name": "505",
+        "to": "/Pag505"
+      }
+    ]
+  },
+  {
+    "name": "600",
+    "isSublist": true,
+    "logo": "bi bi bi-book",
+    "sublist": [
+      {
+        "name": "600",
+        "to": "/Pag600"
+      },
+      {
+        "name": "601",
+        "to": "/Pag601"
+      },
+      {
+        "name": "602",
+        "to": "/Pag602"
+      },
+      {
+        "name": "603",
+        "to": "/Pag603"
+      },
+      {
+        "name": "604",
+        "to": "/Pag604"
+      },
+      {
+        "name": "605",
+        "to": "/Pag605"
       }
     ]
   }
