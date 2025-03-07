@@ -6,7 +6,7 @@ import { es } from "date-fns/locale";
 import { Search } from "lucide-react";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
-import AreaChart from "../../components/Filtros/AreaChart.jsx";
+import BarChart from "../../components/Filtros/BarChar.jsx";
 import { googleSheetsService } from "../../utils/googleSheetsService";
 import sheetsConfig from "../../resources/TOCs/sheetsConfig.json";
 import PieChart from "../../components/Filtros/PirChart";
@@ -606,7 +606,7 @@ export default function Pag101() {
           <div className="p-3">
             <div className="row">
               <div className="col-12">
-                <AreaChart
+                <BarChart
                   data={nominaChartData}
                   xAxis="date"
                   yAxis="Planilla"
