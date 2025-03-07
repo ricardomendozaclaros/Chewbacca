@@ -25,6 +25,17 @@
         }
       ],
       "publicUrl": true
+    },
+    {
+      "name": "recargasDirectas",
+      "url": "https://docs.google.com/spreadsheets/d/1__e3id1MDhNKO9Q10xSPxf5V2QKXICydzITk-FkFMEQ/edit?usp=sharing",
+      "tabs": [
+        {
+          "name": "DirectRecharges",
+          "gid": "0"
+        }
+      ],
+      "publicUrl": true
     }
   ]
 }

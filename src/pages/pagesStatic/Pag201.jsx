@@ -10,6 +10,8 @@ import { useParseValue } from "../../hooks/useParseValue.js";
 import { Bold, ImageOff, Search } from "lucide-react";
 import ExportButton from "../../components/BtnExportar.jsx";
 import { GetEnterprises } from "../../api/enterprise.js";
+import { googleSheetsService } from "../../utils/googleSheetsService";
+import sheetsConfig from "../../resources/TOCs/sheetsConfig.json";
 
 export default function Pag201() {
   const { parseValue } = useParseValue();
@@ -19,11 +21,55 @@ export default function Pag201() {
   const [activeTab, setActiveTab] = useState("resumen");
   const [enterprises, setEnterprises] = useState([]);
   const [selectedEnterprises, setSelectedEnterprises] = useState([]);
+  const [rechargesData, setRechargesData] = useState([]);
 
   // Estados para filtros
   const [dateRange, setDateRange] = useState([null, null]);
 
   const daysAgo = 20; // Número de días para el rango de fechas
+  const parseSpanishDate = (dateStr) => {
+    const months = {
+      ene: "01",
+      feb: "02",
+      mar: "03",
+      abr: "04",
+      may: "05",
+      jun: "06",
+      jul: "07",
+      ago: "08",
+      sep: "09",
+      oct: "10",
+      nov: "11",
+      dic: "12",
+      enero: "01",
+      febrero: "02",
+      marzo: "03",
+      abril: "04",
+      mayo: "05",
+      junio: "06",
+      julio: "07",
+      agosto: "08",
+      septiembre: "09",
+      octubre: "10",
+      noviembre: "11",
+      diciembre: "12",
+    };
+
+    try {
+      const parts = dateStr.toLowerCase().split(/[-\s]+/);
+      const day = parts[0].padStart(2, "0");
+      const month = months[parts[1]] || "01";
+      const year =
+        parts[2]?.length === 2
+          ? `20${parts[2]}`
+          : new Date().getFullYear().toString();
+
+      return new Date(`${year}-${month}-${day}`);
+    } catch (error) {
+      console.error("Error parsing date:", dateStr);
+      return null;
+    }
+  };
 
   // Cargar datos iniciales (solo una vez al montar el componente)
   useEffect(() => {
@@ -38,6 +84,34 @@ export default function Pag201() {
           startDate: startDate.toISOString().split("T")[0],
           endDate: today.toISOString().split("T")[0],
         });
+
+        //trayendo de googlesheet
+        const sheetConfig = sheetsConfig.sheets.find(
+          (sheet) => sheet.name === "recargasDirectas"
+        );
+
+        if (!sheetConfig) {
+          throw new Error(`Configuración no encontrada`);
+        }
+
+        const { url, tabs } = sheetConfig;
+        const sheetResult = await googleSheetsService.getAllTabsData(
+          url,
+          tabs,
+          {
+            autoTypeConversion: true,
+            skipEmptyRows: true,
+          }
+        );
+
+        if (sheetResult?.results?.DirectRecharges?.data) {
+          setRechargesData(
+            sheetResult.results.DirectRecharges.data.map((item) => ({
+              ...item,
+              id: crypto.randomUUID(),
+            }))
+          );
+        }
 
         transformAndSetData(result);
       } catch (error) {
@@ -55,7 +129,6 @@ export default function Pag201() {
     const loadEnterprises = async () => {
       try {
         const result = await GetEnterprises();
-        console.log("Hola", result);
         // Filter only pospago enterprises and format for Select
         const pospagos = result
           .filter((emp) => emp.plan === "pospago")
@@ -72,7 +145,28 @@ export default function Pag201() {
     loadEnterprises();
   }, []);
 
-  
+  const filteredRechargesData = useMemo(() => {
+    if (!rechargesData.length) return [];
+
+    // Get default dates if no dateRange is selected
+    let startDate, endDate;
+    if (!dateRange[0]) {
+      const today = new Date();
+      startDate = new Date(today);
+      startDate.setDate(today.getDate() - daysAgo);
+      endDate = today;
+    } else {
+      startDate = dateRange[0];
+      endDate = dateRange[1] || dateRange[0];
+    }
+
+    return rechargesData.filter((item) => {
+      const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
+      if (!rechargeDate) return false;
+
+      return rechargeDate >= startDate && rechargeDate <= endDate;
+    });
+  }, [rechargesData, dateRange, daysAgo]);
 
   // Simplified filterData function
   const filterData = useCallback(async () => {
@@ -148,6 +242,23 @@ export default function Pag201() {
     });
   }, [filteredData]);
 
+  const totalRechargeValue = useMemo(() => {
+    const total = filteredRechargesData.reduce((sum, item) => {
+      const valueStr = item["VALOR DE LA RECARGA"];
+
+      const cleanStr = valueStr
+        .replace("$", "")
+        .replace(/\./g, "")
+        .replace(/\s/g, "")
+        .replace(",", ".");
+
+      const numericValue = parseFloat(cleanStr) || 0;
+
+      return sum + numericValue;
+    }, 0);
+
+    return total;
+  }, [filteredRechargesData]);
 
   // Memoize the grouped data for the resumen table
   const groupedData = useMemo(() => {
@@ -169,7 +280,7 @@ export default function Pag201() {
       acc[key][item.description] += item.quantity || 0;
       return acc;
     }, {});
-  
+
     return Object.values(grouped);
   }, [filteredData]);
 
@@ -177,30 +288,30 @@ export default function Pag201() {
     () => [
       {
         name: "Resumen Simple",
-        data: summarizedData.map(item => ({
+        data: summarizedData.map((item) => ({
           Firma: item.signatureType,
-          Cantidad: item.total
-        }))
+          Cantidad: item.total,
+        })),
       },
       {
         name: "Resumen Detallado",
-        data: detailedSummarizedData.map(item => ({
+        data: detailedSummarizedData.map((item) => ({
           Firma: item.signatureType,
           "Valor unitario": item.unitValue,
-          Cantidad: item.total
-        }))
+          Cantidad: item.total,
+        })),
       },
       {
         name: "Por cuentas",
-        data: groupedData.map(item => ({
+        data: groupedData.map((item) => ({
           NIT: item.nit,
           Nombre: item.enterpriseName,
           ...Object.fromEntries(
-            Object.entries(item).filter(([key]) => 
-              !["nit", "enterpriseName"].includes(key)
+            Object.entries(item).filter(
+              ([key]) => !["nit", "enterpriseName"].includes(key)
             )
-          )
-        }))
+          ),
+        })),
       },
       {
         name: "Todos los datos",
@@ -264,6 +375,38 @@ export default function Pag201() {
       />
     ),
     [filteredData]
+  );
+
+  const RechargesTable = useMemo(
+    () => (
+      <TransactionTable
+        data={rechargesData}
+        title=""
+        subTitle=""
+        description=""
+        showTotal={false}
+        height={450}
+        pagination={false}
+        rowsPerPage={15}
+        columns={[
+          ["Consecutivo", "CONSECUTIVO", { width: "10%" }],
+          ["Razón Social", "RAZON SOCIAL", { width: "30%" }],
+          ["NIT", "NIT", { width: "15%" }],
+          [
+            "Valor",
+            "VALOR DE LA RECARGA",
+            {
+              align: "right",
+              width: "15%",
+            },
+          ],
+          ["Fecha", "FECHA DE LA RECARGA", { width: "15%" }],
+          ["Plan", "PLAN", { width: "15%" }],
+        ]}
+        groupByOptions={[]}
+      />
+    ),
+    [rechargesData]
   );
 
   // Simplify totalRecords to just show filteredData length
@@ -418,17 +561,25 @@ export default function Pag201() {
           <div className="p-1">
             {/* Fila 1 - Summary Table */}
             <div className="row g-1 mb-3">
-              <div className="col-sm-4">
+              <div className="col-sm-3">
                 <TransactionTable
                   data={summarizedData}
                   title="Resumen de Consumos"
                   subTitle={formatDateRange(dateRange)}
                   description=""
-                  showTotal={true}
+                  showTotal={false}
                   height={250}
                   columns={[
                     ["Firma", "signatureType", { width: "60%" }],
-                    ["Cantidad", "total", { align: "right", width: "30%", cellStyle: { fontWeight: "bold" }}],
+                    [
+                      "Cantidad",
+                      "total",
+                      {
+                        align: "right",
+                        width: "30%",
+                        cellStyle: { fontWeight: "bold" },
+                      },
+                    ],
                   ]}
                   groupByOptions={[]}
                 />
@@ -439,7 +590,7 @@ export default function Pag201() {
                   title="Desglosose Consumos por precio"
                   subTitle={formatDateRange(dateRange)}
                   description="."
-                  showTotal={true}
+                  showTotal={false}
                   height={250}
                   columns={[
                     ["Firma", "signatureType", { width: "50%" }],
@@ -449,26 +600,48 @@ export default function Pag201() {
                   groupByOptions={["signatureType"]}
                 />
               </div>
-              <div className="col-sm-4">
-                <TotalsCardComponent
-                  data={totalSumQuantity}
-                  trend={{ value: totalRecords, text: "registros"}}
-                  title="Autorizaciones"
-                  subTitle="Total"
-                  description="Total de registros en el período seleccionado"
-                  icon="bi bi-key"
-                  unknown={false}
-                />
-                <TotalsCardComponent
-                  data={totalSumQuantity}
-                  trend={{ value: totalRecords, text: "registros" }}
-                  title="API"
-                  subTitle="Total"
-                  description="Consumo por el servicio de API"
-                  icon="bi bi-cloudy"
-                  iconBgColor = "#e1fdff"
-                  unknown={true}
-                />
+              <div className="col-sm-5">
+                <div className="row g-1">
+                  <div className="col-sm-6">
+                    <TotalsCardComponent
+                      data={totalSumQuantity}
+                      trend={{ value: totalRecords, text: "registros" }}
+                      title="Autorizaciones"
+                      subTitle="Total"
+                      description="Total de registros en el período seleccionado"
+                      icon="bi bi-key"
+                      unknown={false}
+                    />
+                  </div>
+                  <div className="col-sm-6">
+                    <TotalsCardComponent
+                      data={totalSumQuantity}
+                      trend={{ value: totalRecords, text: "registros" }}
+                      title="API"
+                      subTitle="Total"
+                      description="Consumo por el servicio de API"
+                      icon="bi bi-cloudy"
+                      iconBgColor="#e1fdff"
+                      unknown={true}
+                    />
+                  </div>
+                </div>
+                <div className="row g-1">
+                  <div className="col-sm-6">
+                    <TotalsCardComponent
+                      data={totalRechargeValue}
+                      title="Total Recargas"
+                      subTitle={formatDateRange(dateRange)}
+                      description="Suma total de recargas en el período"
+                      icon="bi bi-currency-dollar"
+                      format="number"
+                      trend={{
+                        value: filteredRechargesData.length,
+                        text: "recargas",
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -496,6 +669,16 @@ export default function Pag201() {
                       Procesos de firma
                     </button>
                   </li>
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link ${
+                        activeTab === "recargas" ? "active" : ""
+                      }`}
+                      onClick={() => setActiveTab("recargas")}
+                    >
+                      Recargas directas
+                    </button>
+                  </li>
                 </ul>
 
                 <div className="tab-content mt-3">
@@ -504,10 +687,14 @@ export default function Pag201() {
                       {ResumenTable}
                     </div>
                   )}
-
                   {activeTab === "detalle" && (
                     <div className="tab-pane fade show active">
                       {DetalleTable}
+                    </div>
+                  )}
+                  {activeTab === "recargas" && (
+                    <div className="tab-pane fade show active">
+                      {RechargesTable}
                     </div>
                   )}
                 </div>
