@@ -487,7 +487,7 @@ export default function Pag201() {
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
             <h4 className="font-weight-bold mx-2">
-              Resumen de consumos Certicamara
+              Consumos Certicamara
             </h4>
           </div>
 
@@ -564,7 +564,7 @@ export default function Pag201() {
               <div className="col-sm-3">
                 <TransactionTable
                   data={summarizedData}
-                  title="Resumen de Consumos"
+                  title="Autenticaciones:"
                   subTitle={formatDateRange(dateRange)}
                   description=""
                   showTotal={false}
@@ -587,7 +587,7 @@ export default function Pag201() {
               <div className="col-sm-4">
                 <TransactionTable
                   data={detailedSummarizedData}
-                  title="Desglosose Consumos por precio"
+                  title="Autenticaciones por precio"
                   subTitle={formatDateRange(dateRange)}
                   description="."
                   showTotal={false}
@@ -605,10 +605,10 @@ export default function Pag201() {
                   <div className="col-sm-6">
                     <TotalsCardComponent
                       data={totalSumQuantity}
-                      trend={{ value: totalRecords, text: "registros" }}
-                      title="Autorizaciones"
-                      subTitle="Total"
-                      description="Total de registros en el período seleccionado"
+                      trend={{ value: totalRecords, text: " Registros" }}
+                      title="Total"
+                      subTitle="Autenticación "
+                      description="Autenticación registradas"
                       icon="bi bi-key"
                       unknown={false}
                     />
@@ -630,14 +630,14 @@ export default function Pag201() {
                   <div className="col-sm-6">
                     <TotalsCardComponent
                       data={totalRechargeValue}
-                      title="Total Recargas"
+                      title="Recargas directas"
                       subTitle={formatDateRange(dateRange)}
                       description="Suma total de recargas en el período"
                       icon="bi bi-currency-dollar"
                       format="number"
                       trend={{
                         value: filteredRechargesData.length,
-                        text: "recargas",
+                        text: "Recargas",
                       }}
                     />
                   </div>

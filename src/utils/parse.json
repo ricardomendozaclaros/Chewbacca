@@ -1,13 +1,14 @@
 {
   "description": {
     "SIGNATURE": "Firma",
-    "AUTH_OTP": "Autorizaciones OTP",
-    "AUTH_QUESTIONS": "Autorizacion Pregunta Reto",
+    "AUTH_OTP": "Autenticación OTP",
+    "AUTH_QUESTIONS": "Autenticación Pregunta Reto",
     "SIGNATURE_SIMPLE": "Firma Simple",
-    "AUTH_OTP_VERIFIED": "Firma OTP Verificada",
-    "SIGNATURE_SIMPLE_MANY": "Firma Simple Múltiple",
-    "AUTH_DIGITAL_SIGN": "Firma Digital",
-    "AUTH_FACIAL_RECOGNITION": "Firma Reconocimiento Facial"
+    "AUTH_OTP_VERIFIED": "Autenticación OTP Verificada",
+    "SIGNATURE_SIMPLE_MANY": "Firma Simple con cobro",
+    "AUTH_DIGITAL_SIGN": "Autenticación Firma Digital",
+    "AUTH_FACIAL_RECOGNITION": "Autenticación de Reconocimiento Facial",
+    "API_SERV": "Api de Firma"
   },
   "role": {
     "Administrator": "Administrador",

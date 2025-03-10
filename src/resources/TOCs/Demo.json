@@ -75,16 +75,16 @@
     ]
   },
   {
-    "name": "Desarrollo y Tecnología",
+    "name": "Operaciones y Soporte",
     "isSublist": true,
-    "logo": "bi bi bi-wrench",
+    "logo": "bi bi bi-headset",
     "sublist": [
       {
         "name": "200",
         "to": "/Pag200"
       },
       {
-        "name": "201",
+        "name": "201 Consumos de Certicamara",
         "to": "/Pag201"
       },
       {
@@ -106,9 +106,9 @@
     ]
   },
   {
-    "name": "Operaciones y Soporte",
+    "name": "Desarrollo y Tecnología",
     "isSublist": true,
-    "logo": "bi bi bi-headset",
+    "logo": "bi bi bi-wrench",
     "sublist": [
       {
         "name": "300 - Gestión de Infraestructura IT",
