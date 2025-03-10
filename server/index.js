@@ -62,10 +62,10 @@ app.use(bodyParser.urlencoded({
 }));
 
 // Configurar compresión para reducir el tamaño de las respuestas
-app.use(compression({
-  level: 6, // Nivel de compresión (1-9)
-  threshold: 100 * 1024 // Comprimir respuestas mayores a 100KB
-}));
+// app.use(compression({
+//   level: 6, // Nivel de compresión (1-9)
+//   threshold: 100 * 1024 // Comprimir respuestas mayores a 100KB
+// }));
 
 // Configurar timeouts extendidos para las peticiones
 app.use((req, res, next) => {
@@ -88,11 +88,11 @@ app.use(express.json({
 }));
 
 // Configurar streaming para grandes conjuntos de datos
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Transfer-Encoding', 'chunked');
-  next();
-});
+// app.use((req, res, next) => {
+//   res.setHeader('X-Content-Type-Options', 'nosniff');
+//   res.setHeader('Transfer-Encoding', 'chunked');
+//   next();
+// });
 
 // Crear directorio de configs si no existe
 if (!fs.existsSync(CONFIGS_DIR)) {
