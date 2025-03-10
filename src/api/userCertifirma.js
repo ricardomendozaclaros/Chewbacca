@@ -14,7 +14,7 @@ const getDefaultDateRange = () => {
   };
 };
 
-const GetSignatureProcessesCertifirma = async (dates = null) => {
+const GetUsersCertifirma = async (dates = null) => {
   try {
     let startDate, endDate;
 
@@ -25,11 +25,12 @@ const GetSignatureProcessesCertifirma = async (dates = null) => {
       ({ startDate, endDate } = getDefaultDateRange());
     }
 
-    console.log(`Consultando firmas desde ${startDate} hasta ${endDate}`);
+    console.log(`Consultando usuarios desde ${startDate} hasta ${endDate}`);
     const startTime = performance.now();
+
     // Primero intenta obtener los datos de Redis
     const redisResponse = await fetch(
-      `/api/SignatureProcessesCertifirma/DateRange?startDate=${dates.startDate}&endDate=${dates.endDate}`
+      `/api/UserCertifirma/DataRange?startDate=${startDate}&endDate=${endDate}`
     );
 
     if (!redisResponse.ok) {
@@ -47,4 +48,4 @@ const GetSignatureProcessesCertifirma = async (dates = null) => {
   }
 };
 
-export { GetSignatureProcessesCertifirma };
+export { GetUsersCertifirma };

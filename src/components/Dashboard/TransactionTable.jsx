@@ -9,6 +9,18 @@ import { useParseValue } from '../../hooks/useParseValue';
  * @property {string} field - Field name in data object to display
  */
 
+/**
+ * @typedef {Object} TotalColumnConfig
+ * @property {string} field - Field name to total
+ * @property {boolean} [fixedDecimals=false] - Whether to fix to 2 decimals
+ */
+
+/**
+ * @typedef {Object} ShowTotalConfig
+ * @property {boolean} show - Whether to show totals
+ * @property {Array<TotalColumnConfig>} columns - Array of columns to total
+ */
+
 export default function TransactionTable({ 
   data, 
   title, 
@@ -16,7 +28,7 @@ export default function TransactionTable({
   description, 
   columns,
   groupByOptions,
-  showTotal = false, 
+  showTotal = { show: false, columns: [] },
   height,
   pagination = false, // New prop for pagination
   rowsPerPage = 15    // Default rows per page
@@ -100,17 +112,23 @@ export default function TransactionTable({
     });
   }, [processedData, searchTerm, parseValue]);
 
-  // Calculate total of last column with fixed logic
-  const total = useMemo(() => {
-    if (!showTotal || !columns || columns.length === 0) return 0;
+  // Update total calculation for multiple columns
+  const totals = useMemo(() => {
+    if (!showTotal.show || !showTotal.columns?.length) return null;
     
-    const lastColumn = columns[columns.length - 1][1]; // Get field name of last column
-    // Calculate from filteredData instead of raw data
-    return filteredData.reduce((sum, row) => {
-      const value = Number(row[lastColumn]) || 0;
-      return sum + value;
-    }, 0).toFixed(2);
-  }, [filteredData, columns, showTotal]);
+    return showTotal.columns.reduce((acc, columnConfig) => {
+      const total = filteredData.reduce((sum, row) => {
+        const value = Number(row[columnConfig.field]) || 0;
+        return sum + value;
+      }, 0);
+
+      acc[columnConfig.field] = columnConfig.fixedDecimals 
+        ? total.toFixed(2)
+        : total.toString();
+
+      return acc;
+    }, {});
+  }, [filteredData, showTotal]);
 
   // Clear search term
   const clearSearch = () => {
@@ -205,6 +223,27 @@ export default function TransactionTable({
     }
   }, [filteredData, currentPage, rowsPerPageState, pagination]);
 
+  // Update totalRow calculation for multiple columns
+  const finalData = useMemo(() => {
+    if (!showTotal.show || !showTotal.columns?.length || !totals) {
+      return pagination ? paginatedData : filteredData;
+    }
+
+    const totalRow = {
+      uniqueId: 'total-row',
+      // Set empty values for all columns initially
+      ...Object.fromEntries(
+        columns.map(([, field]) => [field, ''])
+      ),
+      // Set 'Total' text in first column
+      [columns[0][1]]: 'Total',
+      // Set totals for specified columns
+      ...totals
+    };
+
+    return [...(pagination ? paginatedData : filteredData), totalRow];
+  }, [pagination, paginatedData, filteredData, showTotal, totals, columns]);
+
   return (
     <div className="card">
       <div className="px-1">
@@ -257,7 +296,7 @@ export default function TransactionTable({
         }}>
           <DataTable
             columns={tableColumns}
-            data={pagination ? paginatedData : filteredData}
+            data={finalData}
             keyField="uniqueId"
             fixedHeader={!!height}
             fixedHeaderScrollHeight={`${height}px`}
@@ -269,8 +308,10 @@ export default function TransactionTable({
             customStyles={{
               rows: {
                 style: {
-                  '&:last-of-type': showTotal ? {
+                  '&:last-of-type': showTotal.show ? {
                     fontWeight: 'bold',
+                    backgroundColor: '#f8f9fa',
+                    borderTop: '2px solid #dee2e6'
                   } : {}
                 }
               },
