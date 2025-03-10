@@ -12,6 +12,7 @@ import ExportButton from "../../components/BtnExportar.jsx";
 import { GetEnterprises } from "../../api/enterprise.js";
 import { googleSheetsService } from "../../utils/googleSheetsService";
 import sheetsConfig from "../../resources/TOCs/sheetsConfig.json";
+import { formatDateRange } from "../../utils/dateUtils.js";
 
 export default function Pag201() {
   const { parseValue } = useParseValue();
@@ -458,27 +459,8 @@ export default function Pag201() {
     }),
   };
 
-  // Add this helper function for date formatting
-  const formatDateRange = (dateRange) => {
-    const formatDate = (date) => {
-      const d = new Date(date);
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
-    };
-
-    if (!dateRange[0]) {
-      const today = new Date();
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - daysAgo);
-      return `Del ${formatDate(startDate)} - ${formatDate(today)}`;
-    }
-
-    const start = new Date(dateRange[0]);
-    const end = dateRange[1] ? new Date(dateRange[1]) : start;
-    return `Del ${formatDate(start)} - ${formatDate(end)}`;
-  };
+  //set format date for subtitle charts
+  let formatDate = formatDateRange(dateRange, daysAgo);
 
   return (
     <div className="">
@@ -486,9 +468,7 @@ export default function Pag201() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h4 className="font-weight-bold mx-2">
-              Consumos Certicamara
-            </h4>
+            <h4 className="font-weight-bold mx-2">Consumos Certicamara</h4>
           </div>
 
           {/* Filtro de tipos de firmas */}
@@ -565,7 +545,7 @@ export default function Pag201() {
                 <TransactionTable
                   data={summarizedData}
                   title="Autenticaciones:"
-                  subTitle={formatDateRange(dateRange)}
+                  subTitle={formatDate}
                   description=""
                   showTotal={false}
                   height={250}
@@ -588,7 +568,7 @@ export default function Pag201() {
                 <TransactionTable
                   data={detailedSummarizedData}
                   title="Autenticaciones por precio"
-                  subTitle={formatDateRange(dateRange)}
+                  subTitle={formatDate}
                   description="."
                   showTotal={false}
                   height={250}
@@ -631,7 +611,7 @@ export default function Pag201() {
                     <TotalsCardComponent
                       data={totalRechargeValue}
                       title="Recargas directas"
-                      subTitle={formatDateRange(dateRange)}
+                      subTitle={formatDate}
                       description="Suma total de recargas en el período"
                       icon="bi bi-currency-dollar"
                       format="number"

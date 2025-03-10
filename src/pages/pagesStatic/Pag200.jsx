@@ -10,6 +10,7 @@ import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.
 import { useParseValue } from "../../hooks/useParseValue.js";
 import { ImageOff, Search } from "lucide-react";
 import ExportButton from "../../components/BtnExportar.jsx";
+import { formatDateRange } from "../../utils/dateUtils.js";
 
 export default function Pag200() {
   const { parseValue } = useParseValue();
@@ -239,6 +240,8 @@ export default function Pag200() {
     [filteredData]
   );
 
+  //set format date for subtitle charts
+  let formatDate = formatDateRange(dateRange, daysAgo)
 
   // Memoize table components
   const ResumenTable = useMemo(
@@ -320,28 +323,6 @@ export default function Pag200() {
       display: "flex", // Mostrar elementos en una sola línea
       alignItems: "center", // Centrar verticalmente los elementos
     }),
-  };
-
-  // Add this helper function for date formatting
-  const formatDateRange = (dateRange) => {
-    const formatDate = (date) => {
-      const d = new Date(date);
-      const day = d.getDate().toString().padStart(2, "0");
-      const month = (d.getMonth() + 1).toString().padStart(2, "0");
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
-    };
-
-    if (!dateRange[0]) {
-      const today = new Date();
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - daysAgo);
-      return `Del ${formatDate(startDate)} - ${formatDate(today)}`;
-    }
-
-    const start = new Date(dateRange[0]);
-    const end = dateRange[1] ? new Date(dateRange[1]) : start;
-    return `Del ${formatDate(start)} - ${formatDate(end)}`;
   };
 
   return (
@@ -440,7 +421,7 @@ export default function Pag200() {
                 <TransactionTable
                   data={summarizedData}
                   title="Resumen de Consumos"
-                  subTitle={formatDateRange(dateRange)}
+                  subTitle={formatDate}
                   description=""
                   showTotal={false}
                   height={250}
@@ -455,7 +436,7 @@ export default function Pag200() {
                 <TransactionTable
                   data={detailedSummarizedData}
                   title="Resumen de Consumos"
-                  subTitle={formatDateRange(dateRange)}
+                  subTitle={formatDate}
                   description=""
                   showTotal={false}
                   height={250}

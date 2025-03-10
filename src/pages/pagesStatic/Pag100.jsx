@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
@@ -7,6 +7,7 @@ import { Search } from "lucide-react";
 import ExportButton from "../../components/BtnExportar.jsx";
 import TransactionTable from "../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../components/Dashboard/TotalsCardComponent.jsx";
+import { formatDateRange } from "../../utils/dateUtils.js";
 
 export default function Pag100() {
   const [filteredData, setFilteredData] = useState([]);
@@ -14,7 +15,7 @@ export default function Pag100() {
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState([null, null]);
 
-  const daysAgo = 14;
+  const daysAgo = 20;
 
   // Transform and set data function
   const transformAndSetData = useCallback((data) => {
@@ -113,6 +114,74 @@ export default function Pag100() {
     return stats;
   };
 
+  // Primero, agregamos los memoized values para los datos calculados
+  const processedData = useMemo(() => {
+    if (!filteredData.length) return [];
+
+    // Procesar los datos una sola vez con los tiempos calculados
+    return filteredData.map((item) => ({
+      ...item,
+      tiempoDias: calculateDaysDifference(item.dateTime),
+    }));
+  }, [filteredData]);
+
+  // Memoizar el resumen por tema
+  const themeSummary = useMemo(() => {
+    if (!processedData.length) return [];
+
+    return Object.entries(
+      processedData.reduce((acc, item) => {
+        acc[item.theme] = (acc[item.theme] || 0) + 1;
+        return acc;
+      }, {})
+    ).map(([theme, count]) => ({
+      theme,
+      count,
+    }));
+  }, [processedData]);
+
+  // Memoizar el resumen por tiempo
+  const timeRangeSummary = useMemo(() => {
+    if (!processedData.length) return [];
+    return getTimeRangeStats(processedData);
+  }, [processedData]);
+
+  // Memoizar los datos de exportación
+  const exportData = useMemo(
+    () => [
+      {
+        name: "Resumen por Tema",
+        data: themeSummary.map(({ theme, count }) => ({
+          Tema: theme,
+          Cantidad: count,
+        })),
+      },
+      {
+        name: "Tiempo sin Servicio",
+        data: timeRangeSummary.map(({ timeRange, count }) => ({
+          "Rango de Tiempo": timeRange,
+          Cantidad: count,
+        })),
+      },
+      {
+        name: "Detalle de Usuarios",
+        data: processedData.map((item) => ({
+          Email: item.email,
+          Nombre: item.firstName,
+          Apellido: item.lastName,
+          Empresa: item.enterpriseName,
+          Fecha: item.dateTime,
+          Plan: item.plan,
+          "Tiempo (días)": item.tiempoDias,
+        })),
+      },
+    ],
+    [processedData, themeSummary, timeRangeSummary]
+  );
+
+  //set format date for subtitle charts
+  let formatDate = formatDateRange(dateRange, daysAgo)
+
   return (
     <div className="">
       <div className="card p-2">
@@ -150,9 +219,9 @@ export default function Pag100() {
             </div>
             <div className="mx-2">
               <ExportButton
-                data={filteredData}
-                fileName="reporte_pag200.xlsx"
-                sheets={filteredData}
+                data={exportData}
+                fileName="reporte_usuarios.xlsx"
+                sheets={exportData}
                 startDate={
                   dateRange[0] ||
                   (() => {
@@ -188,23 +257,13 @@ export default function Pag100() {
             <div className="row g-1">
               <div className="col-sm-3">
                 <TransactionTable
-                  data={Object.entries(
-                    filteredData.reduce((acc, item) => {
-                      acc[item.theme] = (acc[item.theme] || 0) + 1;
-                      return acc;
-                    }, {})
-                  ).map(([theme, count]) => ({
-                    theme,
-                    count,
-                  }))}
+                  data={themeSummary}
                   title="Resumen por Tema"
-                  subTitle=""
+                  subTitle={formatDate}
                   description=""
                   showTotal={{
                     show: true,
-                    columns: [
-                      { field: "count", fixedDecimals: false },
-                    ],
+                    columns: [{ field: "count", fixedDecimals: false }],
                   }}
                   height={160}
                   pagination={false}
@@ -217,9 +276,9 @@ export default function Pag100() {
               </div>
               <div className="col-sm-3">
                 <TransactionTable
-                  data={getTimeRangeStats(filteredData)}
+                  data={timeRangeSummary}
                   title="Tiempo sin Servicio"
-                  subTitle=""
+                  subTitle={formatDate}
                   description=""
                   height={160}
                   pagination={false}
@@ -237,7 +296,7 @@ export default function Pag100() {
                       data={20}
                       trend={{ value: filteredData.length, text: "Registros" }}
                       title="Usuarios nuevos"
-                      subTitle=""
+                      subTitle={formatDate}
                       description=""
                       icon="bi bi-person"
                       unknown={false}
@@ -248,7 +307,7 @@ export default function Pag100() {
                       data={20}
                       trend={{ value: filteredData.length, text: "Registros" }}
                       title="Usuarios con primera recarga"
-                      subTitle=""
+                      subTitle={formatDate}
                       description=""
                       icon="bi bi-person"
                       unknown={false}
@@ -257,7 +316,7 @@ export default function Pag100() {
                       data={`${20} %`}
                       trend={{ value: filteredData.length, text: "Registros" }}
                       title="Usuarios con primera recarga"
-                      subTitle=""
+                      subTitle={formatDate}
                       description=""
                       icon="bi bi-person"
                       unknown={false}
@@ -269,10 +328,7 @@ export default function Pag100() {
             <div className="row g-1 mb-3">
               <div className="col-sm-12">
                 <TransactionTable
-                  data={filteredData.map((item) => ({
-                    ...item,
-                    tiempoDias: calculateDaysDifference(item.dateTime),
-                  }))}
+                  data={processedData}
                   title=""
                   subTitle=""
                   description=""
