@@ -33,6 +33,18 @@ class ApiServiceCertifirma {
     return await response.json();
   }
 
+  async fetchUsersByDateRange(startDate, endDate) {
+    const headers = this.getHeaders();
+    console.log('🔄 Request URL:', `${this.baseUrl}/User/DataRange?startDate=${startDate}&endDate=${endDate}&pageSize=10000000&pageNumber=1`);
+    
+    const response = await this.fetchWithRetries(
+      `${this.baseUrl}/User/DataRange?startDate=${startDate}&endDate=${endDate}&pageSize=10000000&pageNumber=1`,
+      { headers }
+    );
+    
+    return await response.json();
+  }
+
   async fetchWithRetries(url, options = {}) {
     let lastError;
     
