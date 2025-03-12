@@ -205,24 +205,24 @@
     "logo": "bi bi bi-book",
     "sublist": [
       {
-        "name": "600",
-        "to": "/Pag600"
+        "name": "700",
+        "to": "/Pag700"
       },
       {
-        "name": "601",
-        "to": "/Pag601"
+        "name": "701",
+        "to": "/Pag701"
       },
       {
-        "name": "602",
-        "to": "/Pag602"
+        "name": "702",
+        "to": "/Pag702"
       },
       {
-        "name": "603",
-        "to": "/Pag603"
+        "name": "703",
+        "to": "/Pag703"
       },
       {
-        "name": "604",
-        "to": "/Pag604"
+        "name": "704",
+        "to": "/Pag704"
       }
     ]
   }

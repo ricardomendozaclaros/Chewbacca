@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import PropTypes from "prop-types";
 
 export default function NavLink({
   name,
@@ -12,6 +11,9 @@ export default function NavLink({
   activeSubNav,
   setActiveSubNav,
 }) {
+  // Generar un ID seguro basado en el nombre
+  const safeId = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+
   const handleClick = () => {
     setActiveNav(name);
   };
@@ -22,7 +24,6 @@ export default function NavLink({
 
   return (
     <>
-      
       {!isSublist ? (
         <li className="nav-item">
           <Link
@@ -38,7 +39,7 @@ export default function NavLink({
         <li className="nav-item">
           <a
             className={`nav-link ${isActive ? "" : "collapsed"}`}
-            data-bs-target={`#${name}-nav`}
+            data-bs-target={`#nav-${safeId}`}
             data-bs-toggle="collapse"
             href="#"
             onClick={handleClick}
@@ -48,7 +49,7 @@ export default function NavLink({
             <i className="bi bi-chevron-down ms-auto"></i>
           </a>
           <ul
-            id={`${name}-nav`}
+            id={`nav-${safeId}`}
             className={`nav-content collapse ${isActive ? "show" : ""}`}
             data-bs-parent="#sidebar-nav"
           >
@@ -70,20 +71,3 @@ export default function NavLink({
     </>
   );
 }
-
-NavLink.propTypes = {
-  name: PropTypes.string.isRequired,
-  isSublist: PropTypes.bool,
-  to: PropTypes.string,
-  sublist: PropTypes.arrayOf(
-    PropTypes.shape({
-      to: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-    })
-  ),
-  logo: PropTypes.string,
-  isActive: PropTypes.bool.isRequired,
-  setActiveNav: PropTypes.func.isRequired,
-  activeSubNav: PropTypes.string.isRequired,
-  setActiveSubNav: PropTypes.func.isRequired,
-};
