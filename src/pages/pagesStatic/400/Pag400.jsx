@@ -1,10 +1,13 @@
-import { useState} from "react";
+import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
 import Select from "react-select";
 import ExportButton from "../../../components/BtnExportar.jsx";
 import { ImageOff, Search } from "lucide-react";
+
+import TransactionTable from "../../../components/Dashboard/TransactionTable.jsx";
+import TotalsCardComponent from "../../../components/Dashboard/TotalsCardComponent.jsx";
 
 export default function Pag400() {
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +83,219 @@ export default function Pag400() {
         </div>
       </div>
 
+      <div className="">
+        <div className="p-1">
+          {/* Fila 1 */}
+          <div className="row g-1 mb-3">
+            <div className="col-sm-3">
+              <TotalsCardComponent
+                data={200}
+                trend={{ value: 200, text: "Registros" }}
+                title="Facturas de recargas prepago"
+                subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
+                description=""
+                icon="bi bi-graph-up"
+                unknown={false}
+              />
+            </div>
+          </div>
+
+          {/* Fila 2 */}
+          <div className="row g-1 mb-3">
+            <div className="col-sm-4">
+              <TransactionTable
+                data={[
+                  {
+                    id: 1,
+                    nombre: "Ejemplo 1",
+                    valor: 100,
+                  },
+                  {
+                    id: 2,
+                    nombre: "Ejemplo 2",
+                    valor: 200,
+                  },
+                  {
+                    id: 3,
+                    nombre: "Ejemplo 3",
+                    valor: 300,
+                  },
+                ]}
+                title="Relacion de gastos por tipo de cuenta"
+                subTitle=""
+                description=""
+                columns={[
+                  ["Nombre", "nombre"],
+                  ["Valor", "valor"],
+                ]}
+                showTotal={{
+                  show: true,
+                  columns: [{ field: "valor", fixedDecimals: true }],
+                }}
+                height={200}
+                pagination={false}
+                rowsPerPage={10}
+                groupByOptions={[
+                  { label: "Nombre", value: "nombre" },
+                  { label: "Fecha", value: "fecha" },
+                ]}
+              />
+              <TransactionTable
+                data={[
+                  {
+                    id: 1,
+                    nombre: "Ejemplo 1",
+                    valor: 100,
+                  },
+                  {
+                    id: 2,
+                    nombre: "Ejemplo 2",
+                    valor: 200,
+                  },
+                  {
+                    id: 3,
+                    nombre: "Ejemplo 3",
+                    valor: 300,
+                  },
+                ]}
+                title="Ventas post pago"
+                subTitle=""
+                description=""
+                columns={[
+                  ["Nombre", "nombre"],
+                  ["Valor", "valor"],
+                ]}
+                showTotal={{
+                  show: true,
+                  columns: [{ field: "valor", fixedDecimals: true }],
+                }}
+                height={200}
+                pagination={false}
+                rowsPerPage={10}
+                groupByOptions={[
+                  { label: "Nombre", value: "nombre" },
+                  { label: "Fecha", value: "fecha" },
+                ]}
+              />
+            </div>
+            <div className="col-sm-4">
+              <TransactionTable
+                data={[
+                  {
+                    id: 1,
+                    nombre: "Ejemplo 1",
+                    valor: 100,
+                  },
+                  {
+                    id: 2,
+                    nombre: "Ejemplo 2",
+                    valor: 200,
+                  },
+                  {
+                    id: 3,
+                    nombre: "Ejemplo 3",
+                    valor: 300,
+                  },
+                ]}
+                title="Consumo de clientes post pago SASS"
+                subTitle=""
+                description=""
+                columns={[
+                  ["Nombre", "nombre"],
+                  ["Valor", "valor"],
+                ]}
+                showTotal={{
+                  show: true,
+                  columns: [{ field: "valor", fixedDecimals: true }],
+                }}
+                height={200}
+                pagination={false}
+                rowsPerPage={10}
+                groupByOptions={[
+                  { label: "Nombre", value: "nombre" },
+                  { label: "Fecha", value: "fecha" },
+                ]}
+              />
+              <TransactionTable
+                data={[
+                  {
+                    id: 1,
+                    nombre: "Ejemplo 1",
+                    valor: 100,
+                  },
+                  {
+                    id: 2,
+                    nombre: "Ejemplo 2",
+                    valor: 200,
+                  },
+                  {
+                    id: 3,
+                    nombre: "Ejemplo 3",
+                    valor: 300,
+                  },
+                ]}
+                title="Cobros"
+                subTitle=""
+                description=""
+                columns={[
+                  ["Nombre", "nombre"],
+                  ["Valor", "valor"],
+                ]}
+                showTotal={{
+                  show: true,
+                  columns: [{ field: "valor", fixedDecimals: true }],
+                }}
+                height={200}
+                pagination={false}
+                rowsPerPage={10}
+                groupByOptions={[
+                  { label: "Nombre", value: "nombre" },
+                  { label: "Fecha", value: "fecha" },
+                ]}
+              />
+            </div>
+            <div className="col-sm-4">
+              <TransactionTable
+                data={[
+                  {
+                    id: 1,
+                    nombre: "Ejemplo 1",
+                    valor: 100,
+                  },
+                  {
+                    id: 2,
+                    nombre: "Ejemplo 2",
+                    valor: 200,
+                  },
+                  {
+                    id: 3,
+                    nombre: "Ejemplo 3",
+                    valor: 300,
+                  },
+                ]}
+                title="Consumo clientes post pago de API firma"
+                subTitle=""
+                description=""
+                columns={[
+                  ["Nombre", "nombre"],
+                  ["Valor", "valor"],
+                ]}
+                showTotal={{
+                  show: true,
+                  columns: [{ field: "valor", fixedDecimals: true }],
+                }}
+                height={200}
+                pagination={false}
+                rowsPerPage={10}
+                groupByOptions={[
+                  { label: "Nombre", value: "nombre" },
+                  { label: "Fecha", value: "fecha" },
+                ]}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

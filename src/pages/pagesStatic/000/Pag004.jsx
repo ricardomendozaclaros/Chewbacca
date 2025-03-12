@@ -1,10 +1,12 @@
-import { useState} from "react";
+import { useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
 import Select from "react-select";
 import ExportButton from "../../../components/BtnExportar.jsx";
 import { ImageOff, Search } from "lucide-react";
+
+import TotalsCardComponent from "../../../components/Dashboard/TotalsCardComponent.jsx";
 
 export default function Pag004() {
   const [isLoading, setIsLoading] = useState(true);
@@ -80,6 +82,80 @@ export default function Pag004() {
         </div>
       </div>
 
+      <div className="">
+        <div className="p-1">
+          {/* Fila 1 */}
+          <div className="row g-1 mb-3">
+            <div className="col-sm-3">
+              <TotalsCardComponent
+                data={"200%"}
+                trend={{ value: 200, text: "Registros" }}
+                title="Tasa retención de clientes"
+                subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
+                description=""
+                icon="bi bi-person"
+                unknown={false}
+              />
+            </div>
+            <div className="col-sm-3">
+              <TotalsCardComponent
+                data={"500%"}
+                trend={{ value: 200, text: "Registros" }}
+                title="Tasa retención de usuarios del producto"
+                subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
+                description=""
+                icon="bi bi-graph-up"
+                unknown={false}
+              />
+            </div>
+            <div className="col-sm-3">
+              <TotalsCardComponent
+                data={"1000"}
+                trend={{ value: 200, text: "Registros" }}
+                title="Cantidad de procesos de firma"
+                subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
+                description=""
+                icon="bi bi-graph-up"
+                unknown={false}
+              />
+              <TotalsCardComponent
+                data={'5000'}
+                trend={{ value: 200, text: "Registros" }}
+                title="Cantidad de documentos firmados"
+                subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
+                description=""
+                icon="bi bi-graph-up"
+                unknown={false}
+              />
+            </div>
+            <div className="col-sm-3">
+              <TotalsCardComponent
+                data={"300"}
+                trend={{ value: 200, text: "Registros" }}
+                title="Cantidad de firmantes"
+                subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
+                description=""
+                icon="bi bi-person"
+                unknown={false}
+              />
+              <TotalsCardComponent
+                data={'500'}
+                trend={{ value: 200, text: "Registros" }}
+                title="Cantidad documentos no estampados"
+                subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
+                description=""
+                icon="bi bi-graph-up"
+                unknown={false}
+              />
+            </div>
+          </div>
+
+          {/* Fila 2 */}
+          <div className="row g-1 mb-3">
+            <div className="col-sm-12"></div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
