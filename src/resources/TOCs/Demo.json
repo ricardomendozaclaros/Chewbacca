@@ -24,7 +24,7 @@
   {
     "name": "Seguridad y Cumplimiento",
     "isSublist": false,
-    "to": "/Pag003",
+    "to": "/Pag003 Satisfaccion al Cliente",
     "logo": "bi bi-shield-lock"
   },
   {
@@ -34,17 +34,11 @@
     "logo": "bi bi-shield-lock"
   },
   {
-    "name": "005",
-    "isSublist": false,
-    "to": "/Pag005",
-    "logo": "bi bi-shield-lock"
-  },
-  {
       "Separado": "Areas Operativas",
       "isSeperador" : true
   },
   {
-    "name": "Marketing y Ventas",
+    "name": "Marketing",
     "isSublist": true,
     "logo": "bi bi-cart-check",
     "sublist": [
@@ -67,15 +61,11 @@
       {
         "name": "104 - Consumos Certicamara",
         "to": "/Pag104"
-      },
-      {
-        "name": "105",
-        "to": "/Pag105"
       }
     ]
   },
   {
-    "name": "Operaciones y Soporte",
+    "name": "Ventas",
     "isSublist": true,
     "logo": "bi bi bi-headset",
     "sublist": [
@@ -98,15 +88,11 @@
       {
         "name": "204",
         "to": "/Pag204"
-      },
-      {
-        "name": "205",
-        "to": "/Pag205"
       }
     ]
   },
   {
-    "name": "Desarrollo y Tecnología",
+    "name": "Operaciones y Soporte",
     "isSublist": true,
     "logo": "bi bi bi-wrench",
     "sublist": [
@@ -129,15 +115,11 @@
       {
         "name": "304",
         "to": "/Pag304"
-      },
-      {
-        "name": "305",
-        "to": "/Pag305"
       }
     ]
   },
   {
-    "name": "Administración y Finanzas",
+    "name": "Desarrollo y Tecnología",
     "isSublist": true,
     "logo": "bi bi-bar-chart-line",
     "sublist": [
@@ -160,28 +142,24 @@
       {
         "name": "404",
         "to": "/Pag404"
-      },
-      {
-        "name": "405",
-        "to": "/Pag405"
       }
     ]
   },
   {
-    "name": "Legal y Compliance",
+    "name": "Administracion y Finanzas",
     "isSublist": true,
     "logo": "bi bi bi-book",
     "sublist": [
       {
-        "name": "500 - Asesoría Legal",
+        "name": "500 - Consumos",
         "to": "/Pag500"
       },
       {
-        "name": "501 - Regulación y Certificación",
+        "name": "501 - Contabilidad",
         "to": "/Pag501"
       },
       {
-        "name": "502",
+        "name": "502 - Recursos Humanos",
         "to": "/Pag502"
       },
       {
@@ -191,15 +169,11 @@
       {
         "name": "504",
         "to": "/Pag504"
-      },
-      {
-        "name": "505",
-        "to": "/Pag505"
       }
     ]
   },
   {
-    "name": "600",
+    "name": "Seguridad",
     "isSublist": true,
     "logo": "bi bi bi-book",
     "sublist": [
@@ -222,10 +196,33 @@
       {
         "name": "604",
         "to": "/Pag604"
+      }
+    ]
+  },
+  {
+    "name": "Legal y Cumplimiento",
+    "isSublist": true,
+    "logo": "bi bi bi-book",
+    "sublist": [
+      {
+        "name": "600",
+        "to": "/Pag600"
       },
       {
-        "name": "605",
-        "to": "/Pag605"
+        "name": "601",
+        "to": "/Pag601"
+      },
+      {
+        "name": "602",
+        "to": "/Pag602"
+      },
+      {
+        "name": "603",
+        "to": "/Pag603"
+      },
+      {
+        "name": "604",
+        "to": "/Pag604"
       }
     ]
   }
