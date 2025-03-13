@@ -11,6 +11,7 @@ import { useParseValue } from "../../../hooks/useParseValue.js";
 import { ImageOff, Search } from "lucide-react";
 import ExportButton from "../../../components/BtnExportar.jsx";
 import { formatDateRange } from "../../../utils/dateUtils.js";
+import ProcessModal from '../../../components/ProcessModal';
 
 export default function Pag200() {
   const { parseValue } = useParseValue();
@@ -27,6 +28,10 @@ export default function Pag200() {
   const [selectedEnterprises, setSelectedEnterprises] = useState([]);
 
   const daysAgo = 14; // Número de días para el rango de fechas
+
+  // Añadir estos estados después de los otros estados
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProcess, setSelectedProcess] = useState(null);
 
   // Cargar datos iniciales (solo una vez al montar el componente)
   useEffect(() => {
@@ -133,6 +138,17 @@ export default function Pag200() {
     },
     [transformAndSetData, filteredData]
   );
+
+  // Añadir esta función después de los otros handlers
+  const handleProcessClick = (process) => {
+    setSelectedProcess(process);
+    setIsModalOpen(true);
+  };
+
+  const handleRowClick = (row) => {
+    setSelectedProcess(row);
+    setIsModalOpen(true);
+  };
 
   // Memoize the summarized data for the first table and total records
   // For the first table - only grouped by signature type
@@ -268,7 +284,7 @@ export default function Pag200() {
     [groupedData]
   );
 
-  // Update DetalleTable to use raw filtered data
+  // Modificar el DetalleTable para incluir el link en el ID
   const DetalleTable = useMemo(
     () => (
       <TransactionTable
@@ -280,8 +296,9 @@ export default function Pag200() {
         height={450}
         pagination={true} // Enable pagination
         rowsPerPage={15} // Set rows per page
+        onRowClick={handleRowClick} // Añadir esta prop
         columns={[
-          ["ID", "id"],
+          ["ID", "id", { width: "10%" }],
           ["Fecha", "date"],
           ["Firma", "description"],
           ["Cantidad", "quantity"],
@@ -505,6 +522,13 @@ export default function Pag200() {
           </div>
         </div>
       )}
+
+      {/* Añadir el modal aquí */}
+      <ProcessModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        processData={selectedProcess}
+      />
     </div>
   );
 }

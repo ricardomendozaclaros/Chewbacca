@@ -31,7 +31,8 @@ export default function TransactionTable({
   showTotal = { show: false, columns: [] },
   height,
   pagination = false, // New prop for pagination
-  rowsPerPage = 15    // Default rows per page
+  rowsPerPage = 15,    // Default rows per page
+  onRowClick // nueva prop
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,6 +56,24 @@ export default function TransactionTable({
         right: config.align === 'right',
         cell: row => {
           const displayValue = parseValue(field, row[field], config.format);
+          
+          // Si es la columna ID y tenemos onRowClick, renderizar como enlace
+          if (field === 'id' && onRowClick) {
+            return (
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onRowClick(row);
+                }}
+                className="text-primary text-decoration-underline"
+                style={{ cursor: 'pointer' }}
+              >
+                {displayValue}
+              </a>
+            );
+          }
+
           return (
             <div 
               title={displayValue} 
@@ -86,7 +105,7 @@ export default function TransactionTable({
         }]
       };
     });
-  }, [columns, parseValue]);
+  }, [columns, parseValue, onRowClick]);
 
   const processedData = useMemo(() => {
     if (!data || data.length === 0) return [];
