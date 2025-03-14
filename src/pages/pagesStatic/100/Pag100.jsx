@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { es } from "date-fns/locale";
-import { GetUsersCertifirma } from "../../../api/userCertifirma.js";
+import { GetUsers } from '../../../api/user.js'
 import { Search } from "lucide-react";
 import ExportButton from "../../../components/BtnExportar.jsx";
 import TransactionTable from "../../../components/Dashboard/TransactionTable.jsx";
@@ -32,7 +32,7 @@ export default function Pag100() {
         const startDate = new Date(today);
         startDate.setDate(today.getDate() - daysAgo);
 
-        const result = await GetUsersCertifirma({
+        const result = await GetUsers({
           startDate: startDate.toISOString().split("T")[0],
           endDate: today.toISOString().split("T")[0],
         });
@@ -64,7 +64,7 @@ export default function Pag100() {
         endDate = endDate || startDate;
       }
 
-      const result = await GetUsersCertifirma({
+      const result = await GetUsers({
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
       });

@@ -1,68 +1,51 @@
+// api/signatureProcess.js
 const formatDateToISOString = (date) => {
-  return date.toISOString().split('T')[0];
+  return new Date(date).toISOString().split('T')[0];
 };
 
-
-const GetUser = async (dateRange = null) => {
-  if (!dateRange) {
-    const endDate = new Date().toISOString().split('T')[0];
-    const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    dateRange = { startDate, endDate };
-  }
-
-  const { startDate, endDate } = dateRange;
+const getDefaultDateRange = () => {
+  const today = new Date();
+  const defaultStart = new Date(today);
+  defaultStart.setDate(today.getDate() - 20);
   
+  return {
+    startDate: formatDateToISOString(defaultStart),
+    endDate: formatDateToISOString(today)
+  };
+};
+
+const GetUsers = async (dates = null) => {
   try {
-    console.log(`📊 Consultando usuarios para el rango:`, { startDate, endDate });
-    
-    const response = await fetch(
-      `/api/User/DataRange?startDate=${startDate}&endDate=${endDate}`,
-      {
-        headers: {
-          'Accept': 'application/json',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      }
+    let startDate, endDate;
+
+    if (dates?.startDate || dates?.endDate) {
+      startDate = formatDateToISOString(dates.startDate || dates.endDate);
+      endDate = formatDateToISOString(dates.endDate || dates.startDate);
+    } else {
+      ({ startDate, endDate } = getDefaultDateRange());
+    }
+
+    console.log(`Consultando usuarios desde ${startDate} hasta ${endDate}`);
+    const startTime = performance.now();
+
+    // Primero intenta obtener los datos de Redis
+    const redisResponse = await fetch(
+      `/api/User/DataRange?startDate=${startDate}&endDate=${endDate}`
     );
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error en la respuesta:', {
-        status: response.status,
-        statusText: response.statusText,
-        errorText
-      });
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    if (!redisResponse.ok) {
+      throw new Error(`HTTP error! Status: ${redisResponse.status}`);
     }
 
-    // Intentar leer la respuesta y loguear su contenido
-    const text = await response.text();
-    
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error('Error parseando JSON:', e);
-      console.log('Texto que causó el error:', text);
-      return [];
-    }
+    const redisData = await redisResponse.json();
 
-    return data;
-    
+    const endTime = performance.now();
+    console.log(`Tiempo de respuesta: ${(endTime - startTime).toFixed(2)}ms`);
+    return redisData;
   } catch (error) {
-    console.error("Error obteniendo usuarios:", error);
+    console.error("Error fetching data:", error);
     return [];
   }
 };
 
-const fetchUserQuarterData = async (year, quarter) => {
-  const startDate = new Date(year, quarter * 3, 1);
-  const endDate = new Date(year, (quarter + 1) * 3, 0);
-  return GetUser({
-    startDate: formatDateToISOString(startDate),
-    endDate: formatDateToISOString(endDate)
-  });
-};
-
-export { GetUser, fetchUserQuarterData, formatDateToISOString };
+export { GetUsers };
