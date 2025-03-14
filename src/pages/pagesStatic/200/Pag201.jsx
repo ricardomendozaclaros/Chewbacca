@@ -244,9 +244,12 @@ export default function Pag201() {
   }, [filteredData]);
 
   const totalRechargeValue = useMemo(() => {
-    const total = filteredRechargesData.reduce((sum, item) => {
-      const valueStr = item["VALOR DE LA RECARGA"];
+  const total = filteredRechargesData.reduce((sum, item) => {
+    // Add null check for the value
+    const valueStr = item["VALOR DE LA RECARGA"] || "0";
 
+    // Only process if we have a string value
+    if (typeof valueStr === 'string') {
       const cleanStr = valueStr
         .replace("$", "")
         .replace(/\./g, "")
@@ -254,12 +257,15 @@ export default function Pag201() {
         .replace(",", ".");
 
       const numericValue = parseFloat(cleanStr) || 0;
-
       return sum + numericValue;
-    }, 0);
+    }
+    
+    // Return the current sum if we can't process the value
+    return sum;
+  }, 0);
 
-    return total;
-  }, [filteredRechargesData]);
+  return total;
+}, [filteredRechargesData]);
 
   // Memoize the grouped data for the resumen table
   const groupedData = useMemo(() => {
