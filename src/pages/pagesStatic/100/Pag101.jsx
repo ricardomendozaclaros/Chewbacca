@@ -25,10 +25,10 @@ const customDatePickerStyles = {
 // Estilos para ser inyectados en el head del documento
 const injectGlobalStyles = () => {
   // Si ya existe el estilo, no lo volvemos a crear
-  if (document.getElementById('datepicker-custom-styles')) return;
-  
-  const styleEl = document.createElement('style');
-  styleEl.id = 'datepicker-custom-styles';
+  if (document.getElementById("datepicker-custom-styles")) return;
+
+  const styleEl = document.createElement("style");
+  styleEl.id = "datepicker-custom-styles";
   styleEl.innerHTML = `
     .react-datepicker-popper {
       z-index: 1050 !important; /* Mayor z-index para asegurar que aparezca encima */
@@ -67,6 +67,18 @@ export default function Pag101() {
     columns: [],
   });
 
+  // Agregar nuevo estado para Prestamos después de los estados existentes
+  const [prestamosData, setPrestamosData] = useState({
+    data: [],
+    columns: [],
+  });
+
+  const [filteredPrestamosData, setFilteredPrestamosData] = useState({
+    data: [],
+    columns: [],
+  });
+
+  // Modificar el estado activeTab para incluir Prestamos
   const [activeTab, setActiveTab] = useState("Plantillas");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -77,7 +89,6 @@ export default function Pag101() {
   // Cargar datos iniciales
   useEffect(() => {
     const loadData = async () => {
-      // Evitar cargas múltiples
       if (dataLoadedRef.current) return;
 
       try {
@@ -95,10 +106,38 @@ export default function Pag101() {
         const { url, tabs } = sheetConfig;
         const result = await googleSheetsService.getAllTabsData(url, tabs, {
           autoTypeConversion: true,
-          skipEmptyRows: true,
+          skipEmptyRows: true
         });
 
         console.log("Datos recibidos:", result);
+
+        // Process Prestamos data
+        if (result.results?.Prestamos?.data?.length) {
+          const prestamos = result.results.Prestamos.data;
+          console.log("Datos de préstamos crudos:", prestamos);
+
+          // Filtrar filas vacías o inválidas
+          const prestamosValidos = prestamos.filter(row => 
+            Object.values(row).some(value => value !== null && value !== '')
+          );
+
+          const prestamosWithIds = prestamosValidos.map((row) => ({
+            ...row,
+            uniqueId: uuidv4(),
+          }));
+
+          setPrestamosData({
+            data: prestamosWithIds,
+            columns: Object.keys(prestamosValidos[0] || {}),
+          });
+
+          setFilteredPrestamosData({
+            data: prestamosWithIds,
+            columns: Object.keys(prestamosValidos[0] || {}),
+          });
+
+          console.log("Datos de préstamos procesados:", prestamosWithIds.length);
+        }
 
         // Process Nomina data
         if (result.results?.Nomina?.data?.length) {
@@ -166,6 +205,7 @@ export default function Pag101() {
       // Si no hay fechas seleccionadas, mostrar todos los datos
       setFilteredNominaData(nominaData);
       setFilteredPlantillasData(plantillasData);
+      setFilteredPrestamosData(prestamosData);
       setFilterActive(false);
       return;
     }
@@ -242,26 +282,62 @@ export default function Pag101() {
       );
     }
 
+    // Filtrar datos de prestamos
+    if (prestamosData.data.length > 0) {
+      const dateColumn = findDateColumn(prestamosData.columns);
+      console.log("Columna de fecha en préstamos:", dateColumn);
+
+      let filteredData = [...prestamosData.data];
+
+      if (dateColumn) {
+        filteredData = filteredData.filter((item) => {
+          const itemDate = new Date(item[dateColumn]);
+          if (isNaN(itemDate.getTime())) return true;
+          if (startDate && itemDate < startDate) return false;
+          if (endDate && itemDate > endDate) return false;
+          return true;
+        });
+      }
+
+      setFilteredPrestamosData({
+        ...prestamosData,
+        data: filteredData,
+      });
+
+      console.log(
+        `Prestamos filtrados: ${filteredData.length} de ${prestamosData.data.length}`
+      );
+    }
+
     setFilterActive(true);
-  }, [dateRange, nominaData, plantillasData]);
+  }, [dateRange, nominaData, plantillasData, prestamosData]);
 
   // Limpiar filtros
   const clearFilters = useCallback(() => {
     setDateRange([null, null]);
     setFilteredNominaData(nominaData);
     setFilteredPlantillasData(plantillasData);
+    setFilteredPrestamosData(prestamosData);
     setFilterActive(false);
     console.log("Filtros limpiados");
-  }, [nominaData, plantillasData]);
+  }, [nominaData, plantillasData, prestamosData]);
 
   // Get active data based on current tab
-  const activeData = useMemo(
-    () =>
-      activeTab === "Nomina"
-        ? filteredNominaData.data
-        : filteredPlantillasData.data,
-    [activeTab, filteredNominaData, filteredPlantillasData]
-  );
+  const activeData = useMemo(() => {
+    switch (activeTab) {
+      case "Nomina":
+        return filteredNominaData.data;
+      case "Prestamos":
+        return filteredPrestamosData.data;
+      default:
+        return filteredPlantillasData.data;
+    }
+  }, [
+    activeTab,
+    filteredNominaData,
+    filteredPlantillasData,
+    filteredPrestamosData,
+  ]);
 
   const PLANTILLAS_COLUMNS = [
     "nombre",
@@ -271,10 +347,30 @@ export default function Pag101() {
     "sueldo bruto",
   ];
 
+  // Definir las columnas específicas para Préstamos
+  const PRESTAMOS_COLUMNS = [
+    "fecha",
+    "nombre",
+    "cantidad",
+    "plazo",
+    "cuota mensaul",
+    "saldo"
+  ];
+
   // Get columns for active tab
   const tableColumns = useMemo(() => {
-    const currentData =
-      activeTab === "Nomina" ? filteredNominaData : filteredPlantillasData;
+    let currentData;
+    switch (activeTab) {
+      case "Nomina":
+        currentData = filteredNominaData;
+        break;
+      case "Prestamos":
+        currentData = filteredPrestamosData;
+        break;
+      default:
+        currentData = filteredPlantillasData;
+    }
+
     if (!currentData?.columns?.length) return [];
 
     const monetaryFields = [
@@ -285,17 +381,28 @@ export default function Pag101() {
       "bonos",
       "total",
       "precio",
+      "cantidad",
+      "cuota",
+      "saldo"
     ];
+
     let columnsToShow = currentData.columns;
 
     if (activeTab === "Plantillas") {
       columnsToShow = currentData.columns.filter((column) =>
         PLANTILLAS_COLUMNS.includes(column.toLowerCase())
       );
+    } else if (activeTab === "Prestamos") {
+      columnsToShow = currentData.columns.filter((column) =>
+        PRESTAMOS_COLUMNS.includes(column.toLowerCase())
+      );
     }
 
     return columnsToShow.map((column) => [
-      column.charAt(0).toUpperCase() + column.slice(1),
+      // Capitalizar primera letra y manejar casos especiales
+      column.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' '),
       column,
       {
         align: monetaryFields.some((term) =>
@@ -305,7 +412,7 @@ export default function Pag101() {
           : "left",
       },
     ]);
-  }, [activeTab, filteredNominaData, filteredPlantillasData]);
+  }, [activeTab, filteredNominaData, filteredPlantillasData, filteredPrestamosData]);
 
   // Obtener datos para el gráfico de área de nómina
   const nominaChartData = useMemo(() => {
@@ -313,13 +420,20 @@ export default function Pag101() {
     if (!filteredNominaData?.data?.length) return [];
 
     // Verificar si tenemos las columnas necesarias
-    const hasRequiredColumns = filteredNominaData.columns.some(col => 
-      col.toLowerCase() === 'año' || col.toLowerCase() === 'year'
-    ) && filteredNominaData.columns.some(col => 
-      col.toLowerCase() === 'mens' || col.toLowerCase() === 'mes' || col.toLowerCase() === 'month'
-    ) && filteredNominaData.columns.some(col => 
-      col.toLowerCase() === 'planilla' || col.toLowerCase() === 'payroll'
-    );
+    const hasRequiredColumns =
+      filteredNominaData.columns.some(
+        (col) => col.toLowerCase() === "año" || col.toLowerCase() === "year"
+      ) &&
+      filteredNominaData.columns.some(
+        (col) =>
+          col.toLowerCase() === "mens" ||
+          col.toLowerCase() === "mes" ||
+          col.toLowerCase() === "month"
+      ) &&
+      filteredNominaData.columns.some(
+        (col) =>
+          col.toLowerCase() === "planilla" || col.toLowerCase() === "payroll"
+      );
 
     if (!hasRequiredColumns) {
       console.log("No se encontraron las columnas necesarias para el gráfico");
@@ -327,24 +441,28 @@ export default function Pag101() {
     }
 
     // Encontrar las columnas exactas
-    const yearCol = filteredNominaData.columns.find(col => 
-      col.toLowerCase() === 'año' || col.toLowerCase() === 'year'
+    const yearCol = filteredNominaData.columns.find(
+      (col) => col.toLowerCase() === "año" || col.toLowerCase() === "year"
     );
-    const monthCol = filteredNominaData.columns.find(col => 
-      col.toLowerCase() === 'mens' || col.toLowerCase() === 'mes' || col.toLowerCase() === 'month'
+    const monthCol = filteredNominaData.columns.find(
+      (col) =>
+        col.toLowerCase() === "mens" ||
+        col.toLowerCase() === "mes" ||
+        col.toLowerCase() === "month"
     );
-    const payrollCol = filteredNominaData.columns.find(col => 
-      col.toLowerCase() === 'planilla' || col.toLowerCase() === 'payroll'
+    const payrollCol = filteredNominaData.columns.find(
+      (col) =>
+        col.toLowerCase() === "planilla" || col.toLowerCase() === "payroll"
     );
 
     // Preparar datos para el gráfico
-    const chartData = filteredNominaData.data.map(item => ({
+    const chartData = filteredNominaData.data.map((item) => ({
       // Usar año y mes para el eje X
       date: `${item[yearCol]}-${item[monthCol]}`,
       // Valor de planilla para el eje Y
       Planilla: parseFloat(item[payrollCol]) || 0,
       // Usar año como grupo
-      year: item[yearCol]
+      year: item[yearCol],
     }));
 
     return chartData;
@@ -454,6 +572,36 @@ export default function Pag101() {
     };
   }, [filteredPlantillasData]);
 
+  // Agregar este nuevo useMemo para calcular el total de préstamos
+  const prestamosMetrics = useMemo(() => {
+    if (!filteredPrestamosData?.data?.length) return {
+      totalAmount: 0
+    };
+
+    const cantidadColumn = filteredPrestamosData.columns.find(col => 
+      col.toLowerCase() === 'cantidad'
+    );
+
+    let totalAmount = 0;
+    if (cantidadColumn) {
+      totalAmount = filteredPrestamosData.data.reduce((sum, item) => {
+        const value = item[cantidadColumn];
+        if (!value) return sum;
+
+        // Convertir a número si es string (maneja formatos como "1.000.000,00")
+        const numValue = typeof value === 'string'
+          ? parseFloat(value.replace(/[^\d.,]/g, '').replace(',', '.'))
+          : parseFloat(value);
+
+        return sum + (isNaN(numValue) ? 0 : numValue);
+      }, 0);
+    }
+
+    return {
+      totalAmount
+    };
+  }, [filteredPrestamosData]);
+
   // Formatear valores monetarios
   const formatCurrency = (value) => {
     return new Intl.NumberFormat("es-CO", {
@@ -520,19 +668,97 @@ export default function Pag101() {
     }));
   }, [filteredPlantillasData]);
 
+  // Agregar estos nuevos useMemo para los cálculos de edades y profesiones
+  const ageDistributionData = useMemo(() => {
+    if (!filteredPlantillasData?.data?.length) return [];
+
+    const fechaNacColumn = filteredPlantillasData.columns.find((col) =>
+      col.toLowerCase().includes("fecha nacimiento")
+    );
+
+    if (!fechaNacColumn) return [];
+
+    const ageRanges = {
+      "Menores de 20": 0,
+      "20-30": 0,
+      "30-40": 0,
+      "40-50": 0,
+      "Mayores de 50": 0,
+    };
+
+    filteredPlantillasData.data.forEach((person) => {
+      const birthDate = new Date(person[fechaNacColumn]);
+      if (isNaN(birthDate.getTime())) return;
+
+      const age = new Date().getFullYear() - birthDate.getFullYear();
+
+      if (age < 20) ageRanges["Menores de 20"]++;
+      else if (age < 30) ageRanges["20-30"]++;
+      else if (age < 40) ageRanges["30-40"]++;
+      else if (age < 50) ageRanges["40-50"]++;
+      else ageRanges["Mayores de 50"]++;
+    });
+
+    return Object.entries(ageRanges).map(([range, count]) => ({
+      "Rango de Edad": range,
+      Cantidad: count,
+    }));
+  }, [filteredPlantillasData]);
+
+  const professionDistributionData = useMemo(() => {
+    if (!filteredPlantillasData?.data?.length) return [];
+
+    const professionColumn = filteredPlantillasData.columns.find(
+      (col) => col[6]
+    );
+
+    if (!professionColumn) return [];
+
+    // Crear un objeto para contar las ocurrencias de cada profesión
+    const professionCount = filteredPlantillasData.data.reduce(
+      (acc, person) => {
+        const profession =
+          person[professionColumn]?.trim() || "No especificado";
+        acc[profession] = (acc[profession] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    // Convertir el objeto a un array y ordenar por cantidad descendente
+    return Object.entries(professionCount)
+      .map(([profession, count]) => ({
+        Profesión: profession,
+        Cantidad: count,
+      }))
+      .sort((a, b) => b.Cantidad - a.Cantidad); // Ordenar por cantidad descendente
+  }, [filteredPlantillasData]);
+
+  // Configuración de columnas para las nuevas tablas
+  const ageTableColumns = [
+    ["Rango de Edad", "Rango de Edad", { align: "left" }],
+    ["Cantidad", "Cantidad", { align: "right" }],
+  ];
+
+  const professionTableColumns = [
+    ["Profesión", "Profesión", { align: "left" }],
+    ["Cantidad", "Cantidad", { align: "right" }],
+  ];
+
   return (
     <div className="">
       {/* Filtros */}
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h4 className="font-weight-bold mx-2">
-              Recursos Humanos
-            </h4>
+            <h4 className="font-weight-bold mx-2">Recursos Humanos</h4>
           </div>
 
           <div className="col-sm-6 d-flex align-items-center justify-content-end">
-            <div className="mx-2" style={{ position: 'relative', width: '300px' }}>
+            <div
+              className="mx-2"
+              style={{ position: "relative", width: "300px" }}
+            >
               <label className="block text-sm font-medium mb-1">Periodo</label>
               <div className="d-flex align-items-center">
                 <div style={customDatePickerStyles.datepickerWrapper}>
@@ -561,12 +787,12 @@ export default function Pag101() {
                       preventOverflow: {
                         enabled: true,
                         escapeWithReference: false,
-                        boundariesElement: 'viewport'
+                        boundariesElement: "viewport",
                       },
                       offset: {
                         enabled: true,
-                        offset: '0, 10'  // desplaza hacia abajo para evitar superposición
-                      }
+                        offset: "0, 10", // desplaza hacia abajo para evitar superposición
+                      },
                     }}
                   />
                 </div>
@@ -628,7 +854,7 @@ export default function Pag101() {
           <div className="p-1">
             {/* fila 1 */}
             <div className="row g-1">
-              <div className="col-sm-4">
+              <div className="col-sm-3">
                 <TotalsCardComponent
                   data={plantillaMetrics.lastEmployee.name}
                   title="Último empleado contratado"
@@ -640,7 +866,7 @@ export default function Pag101() {
                   format="string"
                 />
               </div>
-              <div className="col-sm-4">
+              <div className="col-sm-3">
                 <TotalsCardComponent
                   data={plantillaMetrics.totalBonuses}
                   title="Total Bonos"
@@ -651,7 +877,7 @@ export default function Pag101() {
                   unknown={false}
                 />
               </div>
-              <div className="col-sm-4">
+              <div className="col-sm-3">
                 <TotalsCardComponent
                   data={plantillaMetrics.totalPayroll}
                   title="Total Planilla"
@@ -662,11 +888,7 @@ export default function Pag101() {
                   unknown={false}
                 />
               </div>
-            </div>
-
-            {/* fila 2 */}
-            <div className="row g-1">
-              <div className="col-sm-4">
+              <div className="col-sm-3">
                 <TotalsCardComponent
                   data={inactivePlantillasStats.text}
                   title="Plantillas Inactivas"
@@ -678,6 +900,10 @@ export default function Pag101() {
                   format={"string"}
                 />
               </div>
+            </div>
+
+            {/* fila 2 */}
+            <div className="row g-1">
               <div className="col-sm-3">
                 <PieChart
                   data={departmentStats}
@@ -698,6 +924,49 @@ export default function Pag101() {
                   valueField="value"
                   nameField="name"
                   height="250"
+                />
+              </div>
+              <div className="col-sm-3">
+                <TransactionTable
+                  data={ageDistributionData}
+                  title="Distribución por Edad"
+                  subTitle=""
+                  description=""
+                  columns={ageTableColumns}
+                  height={200}
+                  pagination={false}
+                />
+              </div>
+              <div className="col-sm-3">
+                  <TransactionTable
+                    data={professionDistributionData}
+                    title="Distribución por Profesión"
+                    subTitle=""
+                    description=""
+                    columns={professionTableColumns}
+                    height={200}
+                    pagination={false}
+                  />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Agregar el totalizador para préstamos */}
+      {!isLoading && !error && activeTab === "Prestamos" && (
+        <div className="card">
+          <div className="p-1">
+            <div className="row g-1">
+              <div className="col-sm-3">
+                <TotalsCardComponent
+                  data={prestamosMetrics.totalAmount}
+                  title="Total Préstamos"
+                  subTitle="COP"
+                  description="Suma total de préstamos otorgados"
+                  icon="bi bi-cash"
+                  iconBgColor="#e1f5fe"
+                  unknown={false}
                 />
               </div>
             </div>
@@ -740,6 +1009,19 @@ export default function Pag101() {
                               onClick={() => setActiveTab("Nomina")}
                             >
                               Nómina ({filteredNominaData?.data?.length || 0})
+                            </button>
+                          </li>
+                          <li className="nav-item" role="presentation">
+                            <button
+                              className={
+                                activeTab === "Prestamos"
+                                  ? tabStyles.active
+                                  : tabStyles.inactive
+                              }
+                              onClick={() => setActiveTab("Prestamos")}
+                            >
+                              Préstamos (
+                              {filteredPrestamosData?.data?.length || 0})
                             </button>
                           </li>
                         </ul>
