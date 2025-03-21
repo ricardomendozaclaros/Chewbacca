@@ -95,6 +95,7 @@ export default function Pag400() {
                 subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
                 description=""
                 icon="bi bi-graph-up"
+                iconBgColor="red"
                 unknown={false}
               />
             </div>

@@ -299,6 +299,7 @@ export default function Pag100() {
                       subTitle={formatDate}
                       description=""
                       icon="bi bi-person"
+                      iconBgColor="red"
                       unknown={false}
                     />
                   </div>
@@ -310,6 +311,7 @@ export default function Pag100() {
                       subTitle={formatDate}
                       description=""
                       icon="bi bi-person"
+                      iconBgColor="red"
                       unknown={false}
                     />
                     <TotalsCardComponent
@@ -319,6 +321,7 @@ export default function Pag100() {
                       subTitle={formatDate}
                       description=""
                       icon="bi bi-person"
+                      iconBgColor="red"
                       unknown={false}
                     />
                   </div>

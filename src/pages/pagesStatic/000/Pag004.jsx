@@ -94,6 +94,7 @@ export default function Pag004() {
                 subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
                 description=""
                 icon="bi bi-person"
+                iconBgColor="red"
                 unknown={false}
               />
             </div>
@@ -105,6 +106,7 @@ export default function Pag004() {
                 subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
                 description=""
                 icon="bi bi-graph-up"
+                iconBgColor="red"
                 unknown={false}
               />
             </div>
@@ -116,6 +118,7 @@ export default function Pag004() {
                 subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
                 description=""
                 icon="bi bi-graph-up"
+                iconBgColor="red"
                 unknown={false}
               />
               <TotalsCardComponent
@@ -125,6 +128,7 @@ export default function Pag004() {
                 subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
                 description=""
                 icon="bi bi-graph-up"
+                iconBgColor="red"
                 unknown={false}
               />
             </div>
@@ -136,6 +140,7 @@ export default function Pag004() {
                 subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
                 description=""
                 icon="bi bi-person"
+                iconBgColor="red"
                 unknown={false}
               />
               <TotalsCardComponent
@@ -145,6 +150,7 @@ export default function Pag004() {
                 subTitle="Del DD/MM/AAAA al DD/MM/AAAA"
                 description=""
                 icon="bi bi-graph-up"
+                iconBgColor="red"
                 unknown={false}
               />
             </div>
