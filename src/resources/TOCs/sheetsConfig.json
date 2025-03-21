@@ -11,6 +11,10 @@
         {
           "name": "Nomina",
           "gid": "858829566"
+        },
+        {
+          "name": "Prestamos",
+          "gid": "958176006"
         }
       ],
       "publicUrl": true

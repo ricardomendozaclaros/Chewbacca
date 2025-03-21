@@ -116,7 +116,7 @@ class GoogleSheetsService {
   }
 
   /**
-   * Convierte datos CSV a formato JSON dinámico
+   * Convierte datos CSV a formato JSON dinámico con detección automática de inicio de datos
    * @param {string} csv Datos en formato CSV
    * @param {Object} options Opciones de procesamiento
    * @returns {Object} Objeto con datos y encabezados
@@ -131,30 +131,52 @@ class GoogleSheetsService {
     if (lines.length <= 1) {
       return { data: [], headers: [] };
     }
-    
-    // Procesar la primera línea como encabezados
-    const headers = this.parseCSVLine(lines[0]).map(header => header.trim());
+
+    // Encontrar la primera fila con datos
+    let headerRowIndex = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const row = this.parseCSVLine(lines[i]);
+      // Verificar si la fila tiene contenido válido (al menos una celda con datos)
+      if (row.some(cell => cell.trim() !== '')) {
+        headerRowIndex = i;
+        break;
+      }
+    }
+
+    // Procesar la fila de encabezados encontrada
+    const headers = this.parseCSVLine(lines[headerRowIndex]).map(header => header.trim());
     
     const data = [];
     
-    // Procesar cada línea restante como un registro
-    for (let i = 1; i < lines.length; i++) {
+    // Procesar cada línea después de los encabezados como un registro
+    for (let i = headerRowIndex + 1; i < lines.length; i++) {
       if (skipEmptyRows && (!lines[i] || lines[i].trim() === '')) continue;
       
       const values = this.parseCSVLine(lines[i]);
-      const obj = {};
       
-      // Asignar cada valor al campo correspondiente
-      headers.forEach((header, index) => {
-        // Si no hay un valor para este campo, asignar null
-        const rawValue = index < values.length ? values[index] : '';
-        obj[header] = autoTypeConversion ? this.convertValueType(rawValue) : rawValue;
-      });
-      
-      data.push(obj);
+      // Verificar si la fila tiene al menos un valor no vacío
+      if (values.some(value => value.trim() !== '')) {
+        const obj = {};
+        
+        // Asignar cada valor al campo correspondiente
+        headers.forEach((header, index) => {
+          const rawValue = index < values.length ? values[index] : '';
+          obj[header] = autoTypeConversion ? this.convertValueType(rawValue) : rawValue;
+        });
+        
+        data.push(obj);
+      }
     }
-    
-    return { data, headers };
+
+    return { 
+      data, 
+      headers,
+      meta: {
+        headerRowIndex,
+        totalRows: lines.length,
+        processedRows: data.length
+      }
+    };
   }
 
   /**
