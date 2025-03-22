@@ -103,7 +103,36 @@ export default function ProcessModal({ isOpen, onClose, processData }) {
     ["Acción", "needsTo"],
   ];
 
+  const handleDownload = (file) => {
+    const baseUrl = 'https://autentic-sign-signed-docs-test.s3.us-west-2.amazonaws.com';
+    const url = `${baseUrl}/${detailData.signingProcess.idDocOrigin}/${detailData.signingProcess.idProcess}/${file.fileName}.pdf`;
+    console.log('Download URL:', url);
+    window.open(url, '_blank');
+  };
+
   const filesColumns = [
+    [
+      "",
+      "download",
+      { 
+        width: "80px",
+        align: "center",
+        customRender: (row) => (
+          <div className="d-flex justify-content-center">
+            <button 
+              className="btn btn-sm btn-outline-primary" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload(row);
+              }}
+              style={{ padding: '0.25rem 0.5rem' }}
+            >
+              <i className="bi bi-download"></i>
+            </button>
+          </div>
+        )
+      }
+    ],
     ["Nombre", "fileName"],
     ["Extensión", "extension"],
     ["Estado", "state"],

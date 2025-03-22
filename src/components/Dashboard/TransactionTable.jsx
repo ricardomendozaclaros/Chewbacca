@@ -55,6 +55,11 @@ export default function TransactionTable({
         width: config.width,
         right: config.align === 'right',
         cell: row => {
+          // Si hay un customRender, usarlo
+          if (config.customRender) {
+            return config.customRender(row);
+          }
+
           const displayValue = parseValue(field, row[field], config.format);
           
           // Si es la columna ID y tenemos onRowClick, renderizar como enlace
