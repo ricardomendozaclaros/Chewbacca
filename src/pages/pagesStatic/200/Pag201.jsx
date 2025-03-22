@@ -13,6 +13,7 @@ import { GetEnterprises } from "../../../api/enterprise.js";
 import { googleSheetsService } from "../../../utils/googleSheetsService.js";
 import sheetsConfig from "../../../resources/TOCs/sheetsConfig.json";
 import { formatDateRange } from "../../../utils/dateUtils.js";
+import ProcessModal from '../../../components/ProcessModal';
 
 export default function Pag201() {
   const { parseValue } = useParseValue();
@@ -26,6 +27,10 @@ export default function Pag201() {
 
   // Estados para filtros
   const [dateRange, setDateRange] = useState([null, null]);
+
+  // Agregar estos estados después de los otros estados
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProcess, setSelectedProcess] = useState(null);
 
   const daysAgo = 20; // Número de días para el rango de fechas
   const parseSpanishDate = (dateStr) => {
@@ -356,6 +361,11 @@ export default function Pag201() {
   );
 
   // Update DetalleTable to use raw filtered data
+  const handleRowClick = (row) => {
+    setSelectedProcess(row);
+    setIsModalOpen(true);
+  };
+
   const DetalleTable = useMemo(
     () => (
       <TransactionTable
@@ -365,10 +375,11 @@ export default function Pag201() {
         description=""
         showTotal={false}
         height={450}
-        pagination={true} // Enable pagination
-        rowsPerPage={15} // Set rows per page
+        pagination={true}
+        rowsPerPage={15}
+        onRowClick={handleRowClick}
         columns={[
-          ["ID", "id"],
+          ["ID", "id", { width: "10%" }],
           ["Fecha", "date"],
           ["Firma", "description"],
           ["Cantidad", "quantity"],
@@ -689,6 +700,13 @@ export default function Pag201() {
           </div>
         </div>
       )}
+
+      {/* Agregar el modal al final del componente, justo antes del cierre del div principal */}
+      <ProcessModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        processData={selectedProcess}
+      />
     </div>
   );
 }
