@@ -32,6 +32,9 @@ export default function Pag201() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState(null);
 
+  // 1. Agregar nuevo estado para datos filtrados de recargas
+  const [filteredRechargesData, setFilteredRechargesData] = useState([]);
+
   const daysAgo = 20; // Número de días para el rango de fechas
   const parseSpanishDate = (dateStr) => {
     const months = {
@@ -111,12 +114,19 @@ export default function Pag201() {
         );
 
         if (sheetResult?.results?.DirectRecharges?.data) {
-          setRechargesData(
-            sheetResult.results.DirectRecharges.data.map((item) => ({
-              ...item,
-              id: crypto.randomUUID(),
-            }))
-          );
+          const initialRechargesData = sheetResult.results.DirectRecharges.data.map((item) => ({
+            ...item,
+            id: crypto.randomUUID(),
+          }));
+          setRechargesData(initialRechargesData);
+          
+          // Filtrar datos iniciales
+          const filteredRecharges = initialRechargesData.filter((item) => {
+            const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
+            if (!rechargeDate) return false;
+            return rechargeDate >= startDate && rechargeDate <= today;
+          });
+          setFilteredRechargesData(filteredRecharges);
         }
 
         transformAndSetData(result);
@@ -151,51 +161,35 @@ export default function Pag201() {
     loadEnterprises();
   }, []);
 
-  const filteredRechargesData = useMemo(() => {
-    if (!rechargesData.length) return [];
-
-    // Get default dates if no dateRange is selected
-    let startDate, endDate;
-    if (!dateRange[0]) {
-      const today = new Date();
-      startDate = new Date(today);
-      startDate.setDate(today.getDate() - daysAgo);
-      endDate = today;
-    } else {
-      startDate = dateRange[0];
-      endDate = dateRange[1] || dateRange[0];
-    }
-
-    return rechargesData.filter((item) => {
-      const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
-      if (!rechargeDate) return false;
-
-      return rechargeDate >= startDate && rechargeDate <= endDate;
-    });
-  }, [rechargesData, dateRange, daysAgo]);
-
-  // Simplified filterData function
+  // 2. Eliminar el useMemo de filteredRechargesData y mover la lógica al filterData
   const filterData = useCallback(async () => {
     try {
       setIsLoading(true);
       let [startDate, endDate] = dateRange;
 
       if (!startDate) {
-        // If no dates selected, use default range (today - 20 days)
         const today = new Date();
         startDate = new Date(today);
         startDate.setDate(today.getDate() - daysAgo);
         endDate = today;
       } else {
-        // If only startDate is selected, use it as endDate too
         endDate = endDate || startDate;
       }
 
+      // Filtrar datos de firma
       const result = await GetSignatureProcessesCertifirma({
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
       });
 
+      // Filtrar datos de recargas
+      const filteredRecharges = rechargesData.filter((item) => {
+        const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
+        if (!rechargeDate) return false;
+        return rechargeDate >= startDate && rechargeDate <= endDate;
+      });
+
+      setFilteredRechargesData(filteredRecharges);
       transformAndSetData(result);
     } catch (error) {
       console.error("Error fetching filtered data:", error);
@@ -203,7 +197,7 @@ export default function Pag201() {
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange]);
+  }, [dateRange, rechargesData]);
 
   // Memoize the summarized data for the first table and total records
   // For the first table - only grouped by signature type
@@ -249,28 +243,32 @@ export default function Pag201() {
   }, [filteredData]);
 
   const totalRechargeValue = useMemo(() => {
-  const total = filteredRechargesData.reduce((sum, item) => {
-    // Add null check for the value
-    const valueStr = item["VALOR DE LA RECARGA"] || "0";
+    const total = filteredRechargesData.reduce((sum, item) => {
+      const value = item["VALOR DE LA RECARGA"];
+      
+      // Si el valor es null o undefined, retornar la suma actual
+      if (!value) return sum;
+      
+      // Si es un número, sumarlo directamente
+      if (typeof value === 'number') return sum + value;
+      
+      // Si es string, procesarlo
+      if (typeof value === 'string') {
+        // Limpiar el string de caracteres especiales
+        const cleanStr = value
+          .replace(/[$\s]/g, '')        // Remover $ y espacios
+          .replace(/\./g, '')           // Remover puntos de miles
+          .replace(/,/g, '.');          // Reemplazar coma decimal por punto
 
-    // Only process if we have a string value
-    if (typeof valueStr === 'string') {
-      const cleanStr = valueStr
-        .replace("$", "")
-        .replace(/\./g, "")
-        .replace(/\s/g, "")
-        .replace(",", ".");
+        const numericValue = parseFloat(cleanStr);
+        return sum + (isNaN(numericValue) ? 0 : numericValue);
+      }
+      
+      return sum;
+    }, 0);
 
-      const numericValue = parseFloat(cleanStr) || 0;
-      return sum + numericValue;
-    }
-    
-    // Return the current sum if we can't process the value
-    return sum;
-  }, 0);
-
-  return total;
-}, [filteredRechargesData]);
+    return total;
+  }, [filteredRechargesData]);
 
   // Memoize the grouped data for the resumen table
   const groupedData = useMemo(() => {
@@ -395,10 +393,11 @@ export default function Pag201() {
     [filteredData]
   );
 
+  // 4. Actualizar RechargesTable para usar filteredRechargesData en lugar de rechargesData
   const RechargesTable = useMemo(
     () => (
       <TransactionTable
-        data={rechargesData}
+        data={filteredRechargesData}
         title=""
         subTitle=""
         description=""
@@ -424,7 +423,7 @@ export default function Pag201() {
         groupByOptions={[]}
       />
     ),
-    [rechargesData]
+    [filteredRechargesData]
   );
 
   // Simplify totalRecords to just show filteredData length
