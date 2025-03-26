@@ -1,8 +1,8 @@
 import { useState } from "react";
-import PieModal from "./OptionsModal/PieModal";
-import LineModal from "./OptionsModal/LineModal";
-import TableModal from "./OptionsModal/TableModal";
-import TotalsCardModal from "./OptionsModal/TotalsCardModal";
+import PieModal from "../OptionsModal/PieModal";
+import LineModal from "../OptionsModal/LineModal";
+import TableModal from "../OptionsModal/TableModal";
+import TotalsCardModal from "../OptionsModal/TotalsCardModal";
 
 const ChartConfigModal = ({ onClose, onConfirm, data }) => {
   const [selectedChartType, setSelectedChartType] = useState("pieChart");

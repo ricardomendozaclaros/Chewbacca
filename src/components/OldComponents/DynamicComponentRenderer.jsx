@@ -1,7 +1,7 @@
 import LineChart from "../components/Dashboard/LineChart";
-import PieChart from "../components/Dashboard/PieChart";
-import TotalsCardComponent from "../components/Dashboard/TotalsCardComponent";
-import TransactionTable from "../components/Dashboard/TransactionTable";
+import PieChart from "../Dashboard/PieChart";
+import TotalsCardComponent from "../Dashboard/TotalsCardComponent";
+import TransactionTable from "../Dashboard/TransactionTable";
 
 const DynamicComponentRenderer = ({ item }) => {
   if (item.i.includes("transactionTable")) return <TransactionTable data={item.data} title={item.title} subTitle={item.subTitle} description={item.description} />;
