@@ -12,6 +12,8 @@ import { ImageOff, Search } from "lucide-react";
 import ExportButton from "../../../components/BtnExportar.jsx";
 import { formatDateRange } from "../../../utils/dateUtils.js";
 import ProcessModal from '../../../components/ProcessModal';
+import { googleSheetsService } from "../../../utils/googleSheetsService.js";
+import sheetsConfig from "../../../resources/TOCs/sheetsConfig.json";
 
 export default function Pag200() {
   const { parseValue } = useParseValue();
@@ -27,13 +29,39 @@ export default function Pag200() {
   const [enterprises, setEnterprises] = useState([]);
   const [selectedEnterprises, setSelectedEnterprises] = useState([]);
 
-  const daysAgo = 14; // Número de días para el rango de fechas
+  const daysAgo = 20; // Número de días para el rango de fechas
 
   // Añadir estos estados después de los otros estados
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProcess, setSelectedProcess] = useState(null);
 
-  // Cargar datos iniciales (solo una vez al montar el componente)
+  // Agregar estos nuevos estados
+  const [rechargesData, setRechargesData] = useState([]);
+  const [filteredRechargesData, setFilteredRechargesData] = useState([]);
+
+  // Agregar esta función helper
+  const parseSpanishDate = (dateStr) => {
+    const months = {
+      ene: "01", feb: "02", mar: "03", abr: "04", may: "05", jun: "06",
+      jul: "07", ago: "08", sep: "09", oct: "10", nov: "11", dic: "12",
+      enero: "01", febrero: "02", marzo: "03", abril: "04", mayo: "05",
+      junio: "06", julio: "07", agosto: "08", septiembre: "09", octubre: "10",
+      noviembre: "11", diciembre: "12"
+    };
+
+    try {
+      const parts = dateStr.toLowerCase().split(/[-\s]+/);
+      const day = parts[0].padStart(2, "0");
+      const month = months[parts[1]] || "01";
+      const year = parts[2]?.length === 2 ? `20${parts[2]}` : new Date().getFullYear().toString();
+      return new Date(`${year}-${month}-${day}`);
+    } catch (error) {
+      console.error("Error parsing date:", dateStr);
+      return null;
+    }
+  };
+
+  // Modificar el useEffect inicial para incluir la carga de datos de Google Sheets
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -42,10 +70,43 @@ export default function Pag200() {
         const startDate = new Date(today);
         startDate.setDate(today.getDate() - daysAgo);
 
+        // Cargar datos de firmas (mantener el código existente)
         const result = await GetSignatureProcesses({
           startDate: startDate.toISOString().split("T")[0],
           endDate: today.toISOString().split("T")[0],
         });
+
+        // Agregar carga de datos de Google Sheets
+        const sheetConfig = sheetsConfig.sheets.find(
+          (sheet) => sheet.name === "recargasDirectas"
+        );
+
+        if (sheetConfig) {
+          const { url, tabs } = sheetConfig;
+          const sheetResult = await googleSheetsService.getAllTabsData(
+            url,
+            tabs,
+            {
+              autoTypeConversion: true,
+              skipEmptyRows: true,
+            }
+          );
+
+          if (sheetResult?.results?.DirectRecharges?.data) {
+            const initialRechargesData = sheetResult.results.DirectRecharges.data.map((item) => ({
+              ...item,
+              id: crypto.randomUUID(),
+            }));
+            setRechargesData(initialRechargesData);
+            
+            const filteredRecharges = initialRechargesData.filter((item) => {
+              const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
+              if (!rechargeDate) return false;
+              return rechargeDate >= startDate && rechargeDate <= today;
+            });
+            setFilteredRechargesData(filteredRecharges);
+          }
+        }
 
         transformAndSetData(result);
       } catch (error) {
@@ -57,7 +118,7 @@ export default function Pag200() {
     };
 
     loadData();
-  }, []); // Sin dependencias: solo se ejecuta una vez al montar el componente
+  }, []);
 
   useEffect(() => {
     const loadEnterprises = async () => {
@@ -101,7 +162,7 @@ export default function Pag200() {
     [selectedEnterprises]
   );
 
-  // Then define filterData
+  // Modificar filterData para incluir filtrado de recargas
   const filterData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -116,11 +177,20 @@ export default function Pag200() {
         endDate = endDate || startDate;
       }
 
+      // Filtrar datos de firma (mantener código existente)
       const result = await GetSignatureProcesses({
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
       });
 
+      // Agregar filtrado de recargas
+      const filteredRecharges = rechargesData.filter((item) => {
+        const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
+        if (!rechargeDate) return false;
+        return rechargeDate >= startDate && rechargeDate <= endDate;
+      });
+
+      setFilteredRechargesData(filteredRecharges);
       transformAndSetData(result);
     } catch (error) {
       console.error("Error fetching filtered data:", error);
@@ -128,7 +198,7 @@ export default function Pag200() {
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange, transformAndSetData]);
+  }, [dateRange, rechargesData]);
 
   // Then the handleEnterpriseChange
   const handleEnterpriseChange = useCallback(
@@ -323,6 +393,24 @@ export default function Pag200() {
     return filteredData.reduce((sum, item) => sum + (item.quantity || 0), 0);
   }, [filteredData]);
 
+  // Agregar cálculo del total de recargas
+  const totalRechargeValue = useMemo(() => {
+    return filteredRechargesData.reduce((sum, item) => {
+      const value = item["VALOR DE LA RECARGA"];
+      if (!value) return sum;
+      if (typeof value === 'number') return sum + value;
+      if (typeof value === 'string') {
+        const cleanStr = value
+          .replace(/[$\s]/g, '')
+          .replace(/\./g, '')
+          .replace(/,/g, '.');
+        const numericValue = parseFloat(cleanStr);
+        return sum + (isNaN(numericValue) ? 0 : numericValue);
+      }
+      return sum;
+    }, 0);
+  }, [filteredRechargesData]);
+
   // Estilos personalizados para el combobox
   const customStyles = {
     multiValue: (base) => ({
@@ -341,6 +429,32 @@ export default function Pag200() {
       alignItems: "center", // Centrar verticalmente los elementos
     }),
   };
+
+  // Agregar RechargesTable
+  const RechargesTable = useMemo(
+    () => (
+      <TransactionTable
+        data={filteredRechargesData}
+        title=""
+        subTitle=""
+        description=""
+        showTotal={false}
+        height={450}
+        pagination={false}
+        rowsPerPage={15}
+        columns={[
+          ["Consecutivo", "CONSECUTIVO", { width: "10%" }],
+          ["Razón Social", "RAZON SOCIAL", { width: "30%" }],
+          ["NIT", "NIT", { width: "15%" }],
+          ["Valor", "VALOR DE LA RECARGA", { align: "right", width: "15%" }],
+          ["Fecha", "FECHA DE LA RECARGA", { width: "15%" }],
+          ["Plan", "PLAN", { width: "15%" }],
+        ]}
+        groupByOptions={[]}
+      />
+    ),
+    [filteredRechargesData]
+  );
 
   return (
     <div className="">
@@ -434,7 +548,7 @@ export default function Pag200() {
           <div className="p-1">
             {/* Fila 1 - Summary Table */}
             <div className="row g-1 mb-3">
-              <div className="col-sm-4">
+              <div className="col-sm-3">
                 <TransactionTable
                   data={summarizedData}
                   title="Resumen de Consumos"
@@ -444,7 +558,11 @@ export default function Pag200() {
                   height={250}
                   columns={[
                     ["Firma", "signatureType", { width: "60%" }],
-                    ["Cantidad", "total", { align: "right", width: "20%" }],
+                    ["Cantidad", "total", { 
+                      align: "right", 
+                      width: "30%",
+                      cellStyle: { fontWeight: "bold" }
+                    }],
                   ]}
                   groupByOptions={[]}
                 />
@@ -458,23 +576,55 @@ export default function Pag200() {
                   showTotal={false}
                   height={250}
                   columns={[
-                    ["Firma", "signatureType", { width: "60%" }],
-                    ["Precio", "unitValue", { align: "right", width: "20%" }],
-                    ["Cantidad", "total", { align: "right", width: "20%" }],
+                    ["Firma", "signatureType", { width: "50%" }],
+                    ["Precio", "unitValue", { align: "right", width: "25%" }],
+                    ["Cantidad", "total", { align: "right", width: "25%" }],
                   ]}
                   groupByOptions={["signatureType"]}
                 />
               </div>
-              <div className="col-sm-4">
-                <TotalsCardComponent
-                  data={totalSumQuantity}
-                  trend={{ value: totalRecords, text: "registros" }}
-                  title="Total Registros"
-                  subTitle="Registros Encontrados"
-                  description="Total de registros en el período seleccionado"
-                  icon="bi bi-arrow-left-right"
-                  unknown={false}
-                />
+              <div className="col-sm-5">
+                <div className="row g-1">
+                  <div className="col-sm-6">
+                    <TotalsCardComponent
+                      data={totalSumQuantity}
+                      trend={{ value: totalRecords, text: " Registros" }}
+                      title="Total"
+                      subTitle="Firmas"
+                      description="Firmas registradas"
+                      icon="bi bi-key"
+                      unknown={false}
+                    />
+                  </div>
+                  <div className="col-sm-6">
+                    <TotalsCardComponent
+                      data={totalSumQuantity}
+                      trend={{ value: totalRecords, text: "registros" }}
+                      title="API"
+                      subTitle="Total"
+                      description="Consumo por el servicio de API"
+                      icon="bi bi-cloudy"
+                      iconBgColor="#e1fdff"
+                      unknown={true}
+                    />
+                  </div>
+                </div>
+                <div className="row g-1">
+                  <div className="col-sm-6">
+                    <TotalsCardComponent
+                      data={totalRechargeValue}
+                      title="Recargas directas"
+                      subTitle={formatDate}
+                      description="Suma total de recargas en el período"
+                      icon="bi bi-currency-dollar"
+                      format="number"
+                      trend={{
+                        value: filteredRechargesData.length,
+                        text: "Recargas",
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -502,6 +652,14 @@ export default function Pag200() {
                       Procesos de firma
                     </button>
                   </li>
+                  <li className="nav-item" role="presentation">
+                    <button
+                      className={`nav-link ${activeTab === "recargas" ? "active" : ""}`}
+                      onClick={() => setActiveTab("recargas")}
+                    >
+                      Recargas directas
+                    </button>
+                  </li>
                 </ul>
 
                 <div className="tab-content mt-3">
@@ -514,6 +672,12 @@ export default function Pag200() {
                   {activeTab === "detalle" && (
                     <div className="tab-pane fade show active">
                       {DetalleTable}
+                    </div>
+                  )}
+
+                  {activeTab === "recargas" && (
+                    <div className="tab-pane fade show active">
+                      {RechargesTable}
                     </div>
                   )}
                 </div>
