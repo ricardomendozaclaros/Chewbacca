@@ -187,7 +187,7 @@ export default function Pag100() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h4 className="font-weight-bold mx-2">100</h4>
+            <h4 className="font-weight-bold mx-2">General</h4>
           </div>
 
           <div className="col-sm-6 d-flex align-items-center justify-content-end">
@@ -293,7 +293,7 @@ export default function Pag100() {
                 <div className="row g-1 mb-3">
                   <div className="col-sm-6">
                     <TotalsCardComponent
-                      data={20}
+                      data={themeSummary.count}
                       trend={{ value: filteredData.length, text: "Registros" }}
                       title="Usuarios nuevos"
                       subTitle={formatDate}
@@ -305,7 +305,7 @@ export default function Pag100() {
                   </div>
                   <div className="col-sm-6">
                     <TotalsCardComponent
-                      data={20}
+                      data={themeSummary.count}
                       trend={{ value: filteredData.length, text: "Registros" }}
                       title="Usuarios con primera recarga"
                       subTitle={formatDate}
@@ -315,7 +315,7 @@ export default function Pag100() {
                       unknown={false}
                     />
                     <TotalsCardComponent
-                      data={`${20} %`}
+                      data={`${themeSummary.count} %`}
                       trend={{ value: filteredData.length, text: "Registros" }}
                       title="Usuarios con primera recarga"
                       subTitle={formatDate}

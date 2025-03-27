@@ -4,34 +4,22 @@
     "isSeperador" : true
   },
   {
-    "name": "000",
+    "name": "Visión General y Desempeño Comercial",
     "isSublist": false,
     "to": "/Pag000",
     "logo": "bx bxs-factory"
 },
   {
-      "name": "Operaciones y Uso del Servicio",
+      "name": "Finanzas y Gestión Operativa",
       "isSublist": false,
       "to": "/Pag001",
       "logo": "bx bxs-factory"
   },
   {
-    "name": "Comerciales y Financieros",
+    "name": "Talento Humano y Desarrollo Tecnológico",
     "isSublist": false,
     "to": "/Pag002",
     "logo": "bi bi-currency-dollar"
-  },
-  {
-    "name": "Seguridad y Cumplimiento",
-    "isSublist": false,
-    "to": "/Pag003 Satisfaccion al Cliente",
-    "logo": "bi bi-shield-lock"
-  },
-  {
-    "name": "004",
-    "isSublist": false,
-    "to": "/Pag004",
-    "logo": "bi bi-shield-lock"
   },
   {
       "Separado": "Areas Operativas",
@@ -43,24 +31,16 @@
     "logo": "bi bi-cart-check",
     "sublist": [
       {
-        "name": "100 - General",
+        "name": "General",
         "to": "/Pag100"
       },
       {
-        "name": "101 - Prepago",
+        "name": "Prepago",
         "to": "/Pag101"
       },
       {
-        "name": "102 - Postpago",
+        "name": "Postpago",
         "to": "/Pag102"
-      },
-      {
-        "name": "103 - Consumos",
-        "to": "/Pag103"
-      },
-      {
-        "name": "104 - Consumos Certicamara",
-        "to": "/Pag104"
       }
     ]
   },
@@ -70,24 +50,16 @@
     "logo": "bi bi bi-headset",
     "sublist": [
       {
-        "name": "200",
+        "name": "Consumo de cuentas",
         "to": "/Pag200"
       },
       {
-        "name": "201 Consumos de Certicamara",
+        "name": "Consumos de Certicamara",
         "to": "/Pag201"
       },
       {
         "name": "202",
         "to": "/Pag202"
-      },
-      {
-        "name": "203",
-        "to": "/Pag203"
-      },
-      {
-        "name": "204",
-        "to": "/Pag204"
       }
     ]
   },

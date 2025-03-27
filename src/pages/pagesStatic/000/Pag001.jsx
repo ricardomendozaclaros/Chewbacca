@@ -72,7 +72,7 @@ export default function Pag001() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h4 className="font-weight-bold mx-2">Pag001</h4>
+            <h4 className="font-weight-bold mx-2">Finanzas y Gestión Operativa</h4>
           </div>
 
           {/* Filtro de tipos de firmas */}

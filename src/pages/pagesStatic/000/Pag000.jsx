@@ -88,7 +88,7 @@ export default function Pag000() {
       <div className="card p-2">
         <div className="row">
           <div className="col-sm-6 d-flex align-items-center">
-            <h4 className="font-weight-bold mx-2">Pag000</h4>
+            <h4 className="font-weight-bold mx-2">Visión General y Desempeño Comercial</h4>
           </div>
 
           <div className="col-sm-6 d-flex align-items-center justify-content-end">
