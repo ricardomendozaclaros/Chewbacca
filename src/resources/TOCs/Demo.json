@@ -35,8 +35,8 @@
         "to": "/Pag100"
       },
       {
-        "name": "Prepago",
-        "to": "/Pag101"
+        "name": "Consumos",
+         "to": "/Pag200"
       },
       {
         "name": "Postpago",
