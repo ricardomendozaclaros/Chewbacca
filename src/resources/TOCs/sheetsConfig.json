@@ -40,6 +40,17 @@
         }
       ],
       "publicUrl": true
+    },
+    {
+      "name": "authorizationAPIConfigurations",
+      "url": "https://docs.google.com/spreadsheets/d/19n8iLSk_2vqCrUI63sCMDDWQb5FbGnFYL4OdZumQn1A/edit?usp=sharing",
+      "tabs": [
+        {
+          "name": "Hoja 1",
+          "gid": "0"
+        }
+      ],
+      "publicUrl": true
     }
   ]
 }
