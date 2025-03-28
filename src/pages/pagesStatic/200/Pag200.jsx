@@ -14,6 +14,7 @@ import { formatDateRange } from "../../../utils/dateUtils.js";
 import ProcessModal from "../../../components/ProcessModal";
 import { googleSheetsService } from "../../../utils/googleSheetsService.js";
 import sheetsConfig from "../../../resources/TOCs/sheetsConfig.json";
+import Swal from 'sweetalert2';
 
 export default function Pag200() {
   const { parseValue } = useParseValue();
@@ -40,23 +41,25 @@ export default function Pag200() {
   const [filteredRechargesData, setFilteredRechargesData] = useState([]);
   const [apiConfigData, setApiConfigData] = useState([]);
 
-  // Agregar nuevo estado para el cliente seleccionado
-  const [selectedClient, setSelectedClient] = useState(null);
+  // Modificar el estado de cliente seleccionado para ser array
+  const [selectedClient, setSelectedClient] = useState([]);
 
-  // Agregar el memo para obtener las opciones únicas de clientes
+  // Modificar el memo para obtener las opciones únicas de clientes ordenadas alfabéticamente
   const clientOptions = useMemo(() => {
     if (!apiConfigData || !apiConfigData.length) return [];
     
-    // Obtener valores únicos de client_description
-    const uniqueClients = [...new Set(apiConfigData.map(item => item.client_description))];
+    // Obtener valores únicos de client_description usando Set y ordenar alfabéticamente
+    const uniqueClients = Array.from(new Set(
+      apiConfigData
+        .map(item => item.client_description)
+        .filter(client => client && client.toLowerCase().endsWith('prod'))
+    )).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())); // Ordenar ignorando mayúsculas/minúsculas
     
     // Formatear para react-select
-    return uniqueClients
-      .filter(client => client) // Filtrar valores nulos o vacíos
-      .map(client => ({
-        value: client,
-        label: client
-      }));
+    return uniqueClients.map(client => ({
+      value: client,
+      label: client
+    }));
   }, [apiConfigData]);
 
   // Agregar esta función helper
@@ -183,17 +186,28 @@ export default function Pag200() {
     loadData();
   }, []);
 
+  // Asegurar que el loadEnterprises ordene alfabéticamente
   useEffect(() => {
     const loadEnterprises = async () => {
       try {
         const result = await GetEnterprises();
-        // Filter only pospago enterprises and format for Select
-        const pospagos = result
-          .filter((emp) => emp.plan === "pospago")
+        // Usar Map para eliminar duplicados basados en enterpriseId y ordenar por nombre
+        const uniqueEnterprises = Array.from(
+          new Map(
+            result
+              .filter(emp => emp.plan === "pospago")
+              .map(emp => [emp.enterpriseId, emp])
+          ).values()
+        );
+        
+        // Formatear y ordenar alfabéticamente ignorando mayúsculas/minúsculas
+        const pospagos = uniqueEnterprises
           .map((emp) => ({
             value: emp.enterpriseId,
             label: emp.enterpriseName,
-          }));
+          }))
+          .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
+        
         setEnterprises(pospagos);
       } catch (error) {
         console.error("Error loading enterprises:", error);
@@ -203,12 +217,15 @@ export default function Pag200() {
     loadEnterprises();
   }, []);
 
-  // Move transformAndSetData to the top, before it's used
+  // Modificar transformAndSetData
   const transformAndSetData = useCallback(
     (data) => {
       if (!data) return;
+      
+      // Guardar los datos sin filtrar primero
+      setFilteredData(data);
 
-      // If enterprises are selected, filter by enterpriseId
+      // Luego aplicar el filtro de empresas si hay alguna seleccionada
       if (selectedEnterprises.length > 0) {
         const filtered = data.filter((item) =>
           selectedEnterprises.some(
@@ -216,15 +233,20 @@ export default function Pag200() {
           )
         );
         setFilteredData(filtered);
-      } else {
-        // If no enterprises selected, show all data
-        setFilteredData(data);
       }
     },
     [selectedEnterprises]
   );
 
-  // Modificar filterData para incluir filtrado de recargas
+  // Modificar handleEnterpriseChange para que solo guarde la selección
+  const handleEnterpriseChange = useCallback(
+    (selected) => {
+      setSelectedEnterprises(selected || []);
+    },
+    []
+  );
+
+  // Modificar filterData
   const filterData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -239,37 +261,91 @@ export default function Pag200() {
         endDate = endDate || startDate;
       }
 
-      // Filtrar datos de firma (mantener código existente)
+      // Obtener datos por fecha
       const result = await GetSignatureProcesses({
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
       });
 
-      // Agregar filtrado de recargas
+      // Filtrar recargas
       const filteredRecharges = rechargesData.filter((item) => {
         const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
         if (!rechargeDate) return false;
         return rechargeDate >= startDate && rechargeDate <= endDate;
       });
+      
+      let filteredByEnterprise = result;
+      
+      // Aplicar filtros de empresa si existen
+      if (selectedEnterprises.length > 0) {
+        filteredByEnterprise = result.filter((item) =>
+          selectedEnterprises.some(
+            (enterprise) => enterprise.value === item.enterpriseId
+          )
+        );
+      }
 
-      setFilteredRechargesData(filteredRecharges);
-      transformAndSetData(result);
+      // Verificar si hay datos después de aplicar los filtros
+      if (filteredByEnterprise.length === 0) {
+        let title = "No hay datos disponibles";
+        let message = "";
+        
+        if (selectedEnterprises.length > 0 && dateRange[0]) {
+          message = "No se encontraron registros para la empresa y el rango de fechas seleccionados.";
+        } else if (selectedEnterprises.length > 0) {
+          message = "No se encontraron registros para la empresa seleccionada.";
+        } else if (dateRange[0]) {
+          message = "No se encontraron registros para el rango de fechas seleccionado.";
+        }
+
+        await Swal.fire({
+          title,
+          text: message,
+          icon: 'info',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#3085d6'
+        });
+        
+        // Resetear filtros y recargar datos iniciales
+        setSelectedEnterprises([]);
+        setDateRange([null, null]);
+        
+        // Recargar datos iniciales
+        const today = new Date();
+        const initialStartDate = new Date(today);
+        initialStartDate.setDate(today.getDate() - daysAgo);
+        
+        const initialResult = await GetSignatureProcesses({
+          startDate: initialStartDate.toISOString().split("T")[0],
+          endDate: today.toISOString().split("T")[0],
+        });
+        
+        setFilteredData(initialResult);
+        setFilteredRechargesData(rechargesData.filter((item) => {
+          const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
+          if (!rechargeDate) return false;
+          return rechargeDate >= initialStartDate && rechargeDate <= today;
+        }));
+      } else {
+        // Si hay datos, actualizar el estado
+        setFilteredData(filteredByEnterprise);
+        setFilteredRechargesData(filteredRecharges);
+      }
+
     } catch (error) {
       console.error("Error fetching filtered data:", error);
+      await Swal.fire({
+        title: 'Error',
+        text: error.message,
+        icon: 'error',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#3085d6'
+      });
       setError(error.message);
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange, rechargesData]);
-
-  // Then the handleEnterpriseChange
-  const handleEnterpriseChange = useCallback(
-    (selected) => {
-      setSelectedEnterprises(selected || []);
-      transformAndSetData(filteredData);
-    },
-    [transformAndSetData, filteredData]
-  );
+  }, [dateRange, rechargesData, selectedEnterprises, daysAgo]);
 
   // Añadir esta función después de los otros handlers
   const handleProcessClick = (process) => {
@@ -473,22 +549,34 @@ export default function Pag200() {
     }, 0);
   }, [filteredRechargesData]);
 
-  // Estilos personalizados para el combobox
+  // Modificar los estilos personalizados para el combobox
   const customStyles = {
+    container: (base) => ({
+      ...base,
+      width: '100%', // Asegura que el contenedor ocupe todo el espacio disponible
+      minWidth: '200px', // Ancho mínimo para evitar que se haga demasiado pequeño
+    }),
     multiValue: (base) => ({
       ...base,
       maxWidth: "200px", // Ancho máximo de cada elemento seleccionado
-      whiteSpace: "nowrap", // Evitar que el texto se divida en varias líneas
-      overflow: "hidden", // Ocultar el desbordamiento
-      textOverflow: "ellipsis", // Mostrar puntos suspensivos si el texto es demasiado largo
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
     }),
     valueContainer: (base) => ({
       ...base,
-      maxHeight: "40px", // Altura máxima del contenedor de valores seleccionados
-      overflowX: "auto", // Scroll horizontal
-      flexWrap: "nowrap", // Evitar que los elementos se apilen
-      display: "flex", // Mostrar elementos en una sola línea
-      alignItems: "center", // Centrar verticalmente los elementos
+      maxHeight: "40px",
+      overflowX: "auto",
+      overflowY: "hidden",
+      flexWrap: "nowrap",
+      display: "flex",
+      alignItems: "center",
+      padding: "2px 8px",
+    }),
+    control: (base) => ({
+      ...base,
+      minHeight: "38px",
+      height: "38px",
     }),
   };
 
@@ -534,11 +622,11 @@ export default function Pag200() {
     cargaMasiva: 0
   });
 
-  // Modificar handleClientChange para actualizar los totales
+  // Modificar handleClientChange para manejar selección múltiple
   const handleClientChange = (selected) => {
-    setSelectedClient(selected);
+    setSelectedClient(selected || []);
     
-    if (selected) {
+    if (selected && selected.length > 0) {
       // Obtener fechas para el filtro
       let startDate = dateRange[0];
       let endDate = dateRange[1];
@@ -550,14 +638,15 @@ export default function Pag200() {
         endDate = today;
       }
 
-      // Actualizar totales para cada tipo de API
+      // Actualizar totales usando el último cliente seleccionado
+      const lastSelected = selected[selected.length - 1];
       setApiTotals({
-        firma: GetCountSignatureTransactions('firma', selected.value, startDate, endDate),
-        preguntaReto: GetCountSignatureTransactions('preguntaReto', selected.value, startDate, endDate),
-        opt: GetCountSignatureTransactions('opt', selected.value, startDate, endDate),
-        otpVerificado: GetCountSignatureTransactions('otpVerificado', selected.value, startDate, endDate),
-        biometriaFacial: GetCountSignatureTransactions('biometriaFacial', selected.value, startDate, endDate),
-        cargaMasiva: GetCountSignatureTransactions('cargaMasiva', selected.value, startDate, endDate)
+        firma: GetCountSignatureTransactions('firma', lastSelected.value, startDate, endDate),
+        preguntaReto: GetCountSignatureTransactions('preguntaReto', lastSelected.value, startDate, endDate),
+        opt: GetCountSignatureTransactions('opt', lastSelected.value, startDate, endDate),
+        otpVerificado: GetCountSignatureTransactions('otpVerificado', lastSelected.value, startDate, endDate),
+        biometriaFacial: GetCountSignatureTransactions('biometriaFacial', lastSelected.value, startDate, endDate),
+        cargaMasiva: GetCountSignatureTransactions('cargaMasiva', lastSelected.value, startDate, endDate)
       });
     } else {
       // Resetear totales si no hay cliente seleccionado
@@ -583,8 +672,8 @@ export default function Pag200() {
 
           {/* Filtro de tipos de firmas */}
 
-          <div className="col-sm-8 d-flex align-items-center justify-content-end">
-            <div className="mx-2 w-50" style={{ zIndex: 1000 }}>
+          <div className="col-sm-8 d-flex align-items-center justify-content-end gap-2">
+            <div className="flex-grow-1" style={{ minWidth: '200px', zIndex: 10000 }}>
               <label className="block text-sm font-medium mb-2">Empresas</label>
               <Select
                 isMulti
@@ -597,18 +686,20 @@ export default function Pag200() {
                 styles={customStyles}
               />
             </div>
-            <div className="mx-2 w-50" style={{ zIndex: 1000 }}>
+            <div className="flex-grow-1" style={{ minWidth: '200px', zIndex: 10000 }}>
               <label className="block text-sm font-medium mb-2">Clientes API</label>
               <Select
+                isMulti
                 options={clientOptions}
                 value={selectedClient}
                 onChange={handleClientChange}
-                placeholder="Seleccionar cliente..."
+                placeholder="Seleccionar clientes..."
+                closeMenuOnSelect={false}
                 isDisabled={isLoading}
                 styles={customStyles}
               />
             </div>
-            <div className="mx-2">
+            <div className="flex-grow-1" style={{ minWidth: '200px' }}>
               <label className="block text-sm font-medium mb-1">Periodo</label>
               <div className="d-flex align-items-center">
                 <DatePicker
@@ -619,7 +710,7 @@ export default function Pag200() {
                   locale={es}
                   isClearable={true}
                   placeholderText="Filtrar por rango de fechas"
-                  className="form-control rounded p-2"
+                  className="form-control rounded p-2 w-100"
                   disabled={isLoading}
                   showMonthDropdown
                   showYearDropdown
@@ -628,13 +719,13 @@ export default function Pag200() {
                 <button
                   onClick={filterData}
                   disabled={isLoading}
-                  className="btn btn-primary p-2 border-0 mx-1"
+                  className="btn btn-primary p-2 border-0 ms-2"
                 >
                   <Search className="w-75" />
                 </button>
               </div>
             </div>
-            <div className="mx-2">
+            <div style={{ minWidth: 'auto' }}>
               <ExportButton
                 data={exportData}
                 fileName="reporte_pag200.xlsx"

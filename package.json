@@ -30,6 +30,7 @@
     "react-select": "^5.9.0",
     "redis": "^4.7.0",
     "redis-server": "^1.2.2",
+    "sweetalert2": "^11.17.2",
     "uuid": "^11.0.3",
     "xlsx": "^0.18.5"
   },

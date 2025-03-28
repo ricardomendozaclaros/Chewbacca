@@ -63,10 +63,10 @@ class ApiService {
 
   async fetchSignatureProcesses(startDate, endDate) {
     const headers = this.getHeaders();
-    console.log('🔄 Request URL:', `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}`);
+    console.log('🔄 Request URL:', `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}&pageSize=10000000&pageNumber=1`);
     
     const response = await this.fetchWithRetries(
-      `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}`,
+      `${this.baseUrl}/SignatureProcesses/DateRange?startDate=${startDate}&endDate=${endDate}&pageSize=10000000&pageNumber=1`,
       { headers }
     );
     
