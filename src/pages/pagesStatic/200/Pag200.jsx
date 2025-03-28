@@ -919,10 +919,10 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.firma}
-                    trend={{ value: 100, text: "%" }}
+                    trend={{ text: "Consumo(s)" }}
                     title="API Firma"
-                    subTitle="Total"
-                    description="Consumo por el servicio de API"
+                    subTitle={formatDate}
+                    description={`Cliente ID: ${selectedClient.find(c => c.label.toUpperCase().includes('SIGNINGCORE-PROD'))?.value || '?'}`}
                     icon="bi bi-pen"
                     iconBgColor="#e1fdff"
                     unknown={false}
@@ -931,10 +931,10 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.preguntaReto}
-                    trend={{ value: 100, text: "%" }}
+                    trend={{ text: "Consumo(s)" }}
                     title="API Pregunta Reto"
-                    subTitle="Total"
-                    description="Consumo por el servicio de API"
+                    subTitle={formatDate}
+                    description="Sin implementar"
                     icon="bi bi-question-circle"
                     iconBgColor="#e1fdff"
                     unknown={false}
@@ -943,10 +943,10 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.opt}
-                    trend={{ value: 100, text: "%" }}
+                    trend={{ text: "Consumo(s)" }}
                     title="API OPT"
-                    subTitle="Total"
-                    description="Consumo por el servicio de API"
+                    subTitle={formatDate}
+                    description="Sin implementar"
                     icon="bi bi-shield-lock"
                     iconBgColor="#e1fdff"
                     unknown={false}
@@ -957,10 +957,10 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.otpVerificado}
-                    trend={{ value: 100, text: "%" }}
+                    trend={{ text: "Consumo(s)" }}
                     title="API OTP Verificado"
-                    subTitle="Total"
-                    description="Consumo por el servicio de API"
+                    subTitle={formatDate}
+                    description="Sin implementar"
                     icon="bi bi-check-circle"
                     iconBgColor="#e1fdff"
                     unknown={false}
@@ -969,10 +969,10 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.biometriaFacial}
-                    trend={{ value: 100, text: "%" }}
+                    trend={{ text: "Consumo(s)" }}
                     title="API Biometria Facial"
-                    subTitle="Total"
-                    description="Consumo por el servicio de API"
+                    subTitle={formatDate}
+                    description="Sin implementar"
                     icon="bi bi-person-badge"
                     iconBgColor="#e1fdff"
                     unknown={false}
@@ -981,10 +981,10 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.cargaMasiva}
-                    trend={{ value: 100, text: "%" }}
+                    trend={{ text: "Consumo(s)" }}
                     title="API Carga Masiva"
-                    subTitle="Total"
-                    description="Consumo por el servicio de API"
+                    subTitle={formatDate}
+                    description={`Cliente ID: ${selectedClient.find(c => c.label.toUpperCase().includes('MPL-PROD'))?.value || '?'}`}
                     icon="bi bi-cloud-upload"
                     iconBgColor="#e1fdff"
                     unknown={false}
@@ -995,10 +995,10 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.pagare}
-                    trend={{ value: 100, text: "%" }}
+                    trend={{ text: "Consumo(s)" }}
                     title="API Pagare"
-                    subTitle="Total"
-                    description="Consumo por el servicio de API"
+                    subTitle={formatDate}
+                    description={`Cliente ID: ${selectedClient.find(c => c.label.toUpperCase().includes('PROMISSORYNOTE-PROD'))?.value || '?'}`}
                     icon="bi bi-file-earmark-text"
                     iconBgColor="#e1fdff"
                     unknown={false}
