@@ -15,6 +15,12 @@ import ProcessModal from "../../../components/ProcessModal";
 import { googleSheetsService } from "../../../utils/googleSheetsService.js";
 import sheetsConfig from "../../../resources/TOCs/sheetsConfig.json";
 import Swal from 'sweetalert2';
+import { 
+  GetCountSigningCore, 
+  GetCountMPL, 
+  GetCountPromissoryNote,
+  formatDateForAPI 
+} from "../../../api/GetsAPI.js";
 
 export default function Pag200() {
   const { parseValue } = useParseValue();
@@ -48,17 +54,18 @@ export default function Pag200() {
   const clientOptions = useMemo(() => {
     if (!apiConfigData || !apiConfigData.length) return [];
     
-    // Obtener valores únicos de client_description usando Set y ordenar alfabéticamente
     const uniqueClients = Array.from(new Set(
       apiConfigData
-        .map(item => item.client_description)
-        .filter(client => client && client.toLowerCase().endsWith('prod'))
-    )).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())); // Ordenar ignorando mayúsculas/minúsculas
+        .map(item => ({
+          description: item.client_description,
+          id: item.client_id
+        }))
+        .filter(client => client.description && client.description.toLowerCase().endsWith('prod'))
+    )).sort((a, b) => a.description.toLowerCase().localeCompare(b.description.toLowerCase()));
     
-    // Formatear para react-select
     return uniqueClients.map(client => ({
-      value: client,
-      label: client
+      value: client.id,
+      label: client.description
     }));
   }, [apiConfigData]);
 
@@ -115,27 +122,26 @@ export default function Pag200() {
         const startDate = new Date(today);
         startDate.setDate(today.getDate() - daysAgo);
 
-        // Cargar datos de firmas (mantener el código existente)
+        // Cargar datos de firmas
         const result = await GetSignatureProcesses({
           startDate: startDate.toISOString().split("T")[0],
           endDate: today.toISOString().split("T")[0],
         });
 
-        // Cargar datos de recargas directas
-        const rechargesConfig = sheetsConfig.sheets.find(
-          (sheet) => sheet.name === "recargasDirectas"
+        // Modificar para usar la configuración de wompi
+        const wompiConfig = sheetsConfig.sheets.find(
+          (sheet) => sheet.name === "wompi"
         );
 
-        // Cargar datos de configuración de API
         const apiConfig = sheetsConfig.sheets.find(
           (sheet) => sheet.name === "authorizationAPIConfigurations"
         );
 
-        // Obtener datos de ambas hojas de cálculo
-        const [rechargesResult, apiResult] = await Promise.all([
-          rechargesConfig ? googleSheetsService.getAllTabsData(
-            rechargesConfig.url,
-            rechargesConfig.tabs,
+        // Obtener datos de ambas hojas
+        const [wompiResult, apiResult] = await Promise.all([
+          wompiConfig ? googleSheetsService.getAllTabsData(
+            wompiConfig.url,
+            wompiConfig.tabs,
             {
               autoTypeConversion: true,
               skipEmptyRows: true,
@@ -151,28 +157,26 @@ export default function Pag200() {
           ) : null
         ]);
 
-        // Procesar datos de recargas
-        if (rechargesResult?.results?.DirectRecharges?.data) {
-          const initialRechargesData = rechargesResult.results.DirectRecharges.data.map((item) => ({
+        // Procesar datos de wompi
+        if (wompiResult?.results?.PasarelaPagosWompi?.data) {
+          const initialWompiData = wompiResult.results.PasarelaPagosWompi.data.map((item) => ({
             ...item,
             id: crypto.randomUUID(),
           }));
-          setRechargesData(initialRechargesData);
+          setRechargesData(initialWompiData);
 
-          const filteredRecharges = initialRechargesData.filter((item) => {
+          const filteredWompi = initialWompiData.filter((item) => {
             const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
             if (!rechargeDate) return false;
             return rechargeDate >= startDate && rechargeDate <= today;
           });
-          setFilteredRechargesData(filteredRecharges);
+          setFilteredRechargesData(filteredWompi);
         }
 
         // Guardar datos de API
         if (apiResult?.results?.["Hoja 1"]?.data) {
           setApiConfigData(apiResult.results["Hoja 1"].data);
         }
-
-        
 
         transformAndSetData(result);
       } catch (error) {
@@ -580,7 +584,7 @@ export default function Pag200() {
     }),
   };
 
-  // Agregar RechargesTable
+  // Modificar el RechargesTable para mostrar los datos de Wompi
   const RechargesTable = useMemo(
     () => (
       <TransactionTable
@@ -590,15 +594,18 @@ export default function Pag200() {
         description=""
         showTotal={false}
         height={450}
-        pagination={false}
+        pagination={true}
         rowsPerPage={15}
         columns={[
-          ["Consecutivo", "CONSECUTIVO", { width: "10%" }],
-          ["Razón Social", "RAZON SOCIAL", { width: "30%" }],
+          ["Consecutivo", "CONSECUTIVO", { width: "15%" }],
+          ["Pasarela de pagos", "Pasarela de pagos Wompi", { width: "30%" }],
           ["NIT", "NIT", { width: "15%" }],
-          ["Valor", "VALOR DE LA RECARGA", { align: "right", width: "15%" }],
-          ["Fecha", "FECHA DE LA RECARGA", { width: "15%" }],
-          ["Plan", "PLAN", { width: "15%" }],
+          ["Valor de la recarga", "VALOR DE LA RECARGA", { 
+            align: "right", 
+            width: "20%",
+            format: "currency" 
+          }],
+          ["Fecha de la recarga", "FECHA DE LA RECARGA", { width: "20%" }]
         ]}
         groupByOptions={[]}
       />
@@ -606,59 +613,84 @@ export default function Pag200() {
     [filteredRechargesData]
   );
 
-  // Agregar la función GetCountSignatureTransactions
-  const GetCountSignatureTransactions = (ApiType, clientId, dateOne, dateTwo) => {
-    // Por ahora devuelve un número aleatorio entre 100 y 1000
-    return Math.floor(Math.random() * 900) + 100;
-  };
-
-  // Agregar nuevo estado para almacenar los totales de API
+  // Modificar el estado inicial de apiTotals para incluir pagare
   const [apiTotals, setApiTotals] = useState({
-    firma: 0,
-    preguntaReto: 0,
-    opt: 0,
-    otpVerificado: 0,
-    biometriaFacial: 0,
-    cargaMasiva: 0
+    firma: "?",
+    preguntaReto: "?",
+    opt: "?",
+    otpVerificado: "?",
+    biometriaFacial: "?",
+    cargaMasiva: "?",
+    pagare: "?"
   });
 
-  // Modificar handleClientChange para manejar selección múltiple
-  const handleClientChange = (selected) => {
+  // Modificar handleClientChange para manejar las llamadas a la API según el tipo de cliente
+  const handleClientChange = async (selected) => {
     setSelectedClient(selected || []);
     
-    if (selected && selected.length > 0) {
-      // Obtener fechas para el filtro
-      let startDate = dateRange[0];
-      let endDate = dateRange[1];
-      
-      if (!startDate) {
-        const today = new Date();
-        startDate = new Date(today);
-        startDate.setDate(today.getDate() - daysAgo);
-        endDate = today;
-      }
-
-      // Actualizar totales usando el último cliente seleccionado
-      const lastSelected = selected[selected.length - 1];
-      setApiTotals({
-        firma: GetCountSignatureTransactions('firma', lastSelected.value, startDate, endDate),
-        preguntaReto: GetCountSignatureTransactions('preguntaReto', lastSelected.value, startDate, endDate),
-        opt: GetCountSignatureTransactions('opt', lastSelected.value, startDate, endDate),
-        otpVerificado: GetCountSignatureTransactions('otpVerificado', lastSelected.value, startDate, endDate),
-        biometriaFacial: GetCountSignatureTransactions('biometriaFacial', lastSelected.value, startDate, endDate),
-        cargaMasiva: GetCountSignatureTransactions('cargaMasiva', lastSelected.value, startDate, endDate)
-      });
-    } else {
-      // Resetear totales si no hay cliente seleccionado
-      setApiTotals({
-        firma: 0,
-        preguntaReto: 0,
-        opt: 0,
-        otpVerificado: 0,
-        biometriaFacial: 0,
-        cargaMasiva: 0
-      });
+    // Obtener fechas para el filtro
+    let startDate = dateRange[0];
+    let endDate = dateRange[1];
+    
+    if (!startDate) {
+      const today = new Date();
+      startDate = new Date(today);
+      startDate.setDate(today.getDate() - daysAgo);
+      endDate = today;
     }
+
+    // Convertir fechas a epoch
+    const startEpoch = formatDateForAPI(startDate);
+    const endEpoch = formatDateForAPI(endDate);
+
+    // Inicializar nuevos totales con "?"
+    const newTotals = {
+      firma: "?",
+      preguntaReto: "?",
+      opt: "?",
+      otpVerificado: "?",
+      biometriaFacial: "?",
+      cargaMasiva: "?",
+      pagare: "?"
+    };
+
+    if (selected && selected.length > 0) {
+      try {
+        // Procesar cada cliente seleccionado
+        for (const client of selected) {
+          const clientLabel = client.label.toUpperCase();
+          const clientId = client.value;
+
+          if (clientLabel.includes('MPL-PROD')) {
+            console.log("oyeeee", clientId, startEpoch, endEpoch)
+            const mplCount = await GetCountMPL(clientId, startEpoch, endEpoch);
+            newTotals.cargaMasiva = mplCount;
+          }
+          
+          if (clientLabel.includes('SIGNINGCORE-PROD')) {
+            const signingCount = await GetCountSigningCore(clientId, startEpoch, endEpoch);
+            newTotals.firma = signingCount;
+          }
+          
+          if (clientLabel.includes('PROMISSORYNOTE-PROD')) {
+            const promissoryCount = await GetCountPromissoryNote(clientId, startEpoch, endEpoch);
+            newTotals.pagare = promissoryCount;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching API counts:', error);
+        // Mostrar error al usuario si es necesario
+        await Swal.fire({
+          title: 'Error',
+          text: 'Error al obtener los conteos de API',
+          icon: 'error',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#3085d6'
+        });
+      }
+    }
+
+    setApiTotals(newTotals);
   };
 
   return (
@@ -840,11 +872,11 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.firma}
-                    trend={{ value: apiTotals.firma, text: "registros" }}
+                    trend={{ value: 100, text: "%" }}
                     title="API Firma"
                     subTitle="Total"
                     description="Consumo por el servicio de API"
-                    icon="bi bi-cloudy"
+                    icon="bi bi-pen"
                     iconBgColor="#e1fdff"
                     unknown={false}
                   />
@@ -852,11 +884,11 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.preguntaReto}
-                    trend={{ value: apiTotals.preguntaReto, text: "registros" }}
+                    trend={{ value: 100, text: "%" }}
                     title="API Pregunta Reto"
                     subTitle="Total"
                     description="Consumo por el servicio de API"
-                    icon="bi bi-cloudy"
+                    icon="bi bi-question-circle"
                     iconBgColor="#e1fdff"
                     unknown={false}
                   />
@@ -864,11 +896,11 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.opt}
-                    trend={{ value: apiTotals.opt, text: "registros" }}
+                    trend={{ value: 100, text: "%" }}
                     title="API OPT"
                     subTitle="Total"
                     description="Consumo por el servicio de API"
-                    icon="bi bi-cloudy"
+                    icon="bi bi-shield-lock"
                     iconBgColor="#e1fdff"
                     unknown={false}
                   />
@@ -878,11 +910,11 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.otpVerificado}
-                    trend={{ value: apiTotals.otpVerificado, text: "registros" }}
+                    trend={{ value: 100, text: "%" }}
                     title="API OTP Verificado"
                     subTitle="Total"
                     description="Consumo por el servicio de API"
-                    icon="bi bi-cloudy"
+                    icon="bi bi-check-circle"
                     iconBgColor="#e1fdff"
                     unknown={false}
                   />
@@ -890,11 +922,11 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.biometriaFacial}
-                    trend={{ value: apiTotals.biometriaFacial, text: "registros" }}
+                    trend={{ value: 100, text: "%" }}
                     title="API Biometria Facial"
                     subTitle="Total"
                     description="Consumo por el servicio de API"
-                    icon="bi bi-cloudy"
+                    icon="bi bi-person-badge"
                     iconBgColor="#e1fdff"
                     unknown={false}
                   />
@@ -902,14 +934,34 @@ export default function Pag200() {
                 <div className="col-sm-4">
                   <TotalsCardComponent
                     data={apiTotals.cargaMasiva}
-                    trend={{ value: apiTotals.cargaMasiva, text: "registros" }}
+                    trend={{ value: 100, text: "%" }}
                     title="API Carga Masiva"
                     subTitle="Total"
                     description="Consumo por el servicio de API"
-                    icon="bi bi-cloudy"
+                    icon="bi bi-cloud-upload"
                     iconBgColor="#e1fdff"
                     unknown={false}
                   />
+                </div>
+              </div>
+              <div className="row g-1">
+                <div className="col-sm-4">
+                  <TotalsCardComponent
+                    data={apiTotals.pagare}
+                    trend={{ value: 100, text: "%" }}
+                    title="API Pagare"
+                    subTitle="Total"
+                    description="Consumo por el servicio de API"
+                    icon="bi bi-file-earmark-text"
+                    iconBgColor="#e1fdff"
+                    unknown={false}
+                  />
+                </div>
+                <div className="col-sm-4">
+                  
+                </div>
+                <div className="col-sm-4">
+                  
                 </div>
               </div>
             </div>
@@ -945,7 +997,7 @@ export default function Pag200() {
                       }`}
                       onClick={() => setActiveTab("recargas")}
                     >
-                      Recargas directas
+                      Pasarela Pagos
                     </button>
                   </li>
                 </ul>

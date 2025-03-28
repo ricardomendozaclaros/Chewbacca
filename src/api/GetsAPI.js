@@ -1,0 +1,82 @@
+
+
+// Función para obtener el conteo de SigningCore
+export const GetCountSigningCore = async (clientId, startDate, endDate) => {
+  try {
+    const response = await fetch(
+      `/api/signature/GetCountSigningCore?clientID=${clientId}&startDate=${startDate}&endDate=${endDate}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching SigningCore count:', error);
+    throw error;
+  }
+};
+
+// Función para obtener el conteo de MPL
+export const GetCountMPL = async (clientId, startDate, endDate) => {
+  try {
+    const response = await fetch(
+      `/api/signature/GetCountMPL?clientID=${clientId}&startDate=${startDate}&endDate=${endDate}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching MPL count:', error);
+    throw error;
+  }
+};
+
+// Función para obtener el conteo de PromissoryNote
+export const GetCountPromissoryNote = async (clientId, startDate, endDate) => {
+  try {
+    const response = await fetch(
+      `/api/signature/GetCountPromissoryNote?clientID=${clientId}&startDate=${startDate}&endDate=${endDate}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching PromissoryNote count:', error);
+    throw error;
+  }
+};
+
+// Función helper para formatear fechas
+export const formatDateForAPI = (date) => {
+  if (!date) return '';
+  return Math.floor(date.getTime() / 1000); // Convierte a timestamp Unix
+};

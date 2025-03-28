@@ -42,6 +42,17 @@
       "publicUrl": true
     },
     {
+      "name": "wompi",
+      "url": "https://docs.google.com/spreadsheets/d/1fwVKno_yXRAMSTRDQ_tVDsJqELYtR0kZ5n6Y26tLpL0/edit?usp=sharing",
+      "tabs": [
+        {
+          "name": "PasarelaPagosWompi",
+          "gid": "0"
+        }
+      ],
+      "publicUrl": true
+    },
+    {
       "name": "authorizationAPIConfigurations",
       "url": "https://docs.google.com/spreadsheets/d/19n8iLSk_2vqCrUI63sCMDDWQb5FbGnFYL4OdZumQn1A/edit?usp=sharing",
       "tabs": [

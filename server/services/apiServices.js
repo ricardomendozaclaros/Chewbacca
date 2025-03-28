@@ -122,6 +122,42 @@ class ApiService {
    
     return await response.json();
 }
+
+  async fetchCountSigningCore(clientId, startDate, endDate) {
+    const headers = this.getHeaders();
+    console.log('🔄 Request URL:', `${this.baseUrl}/SignatureProcesses/GetCountSingingCore?clientID=${clientId}&startDate=${startDate}&endDate=${endDate}`);
+    
+    const response = await this.fetchWithRetries(
+      `${this.baseUrl}/SignatureProcesses/GetCountSingingCore?clientID=${clientId}&startDate=${startDate}&endDate=${endDate}`,
+      { headers }
+    );
+    
+    return await response.json();
+  }
+
+  async fetchCountMPL(clientId, startDate, endDate) {
+    const headers = this.getHeaders();
+    console.log('🔄 Request URL:', `${this.baseUrl}/SignatureProcesses/GetCountMPL?clientID=${clientId}&startDate=${startDate}&endDate=${endDate}`);
+    
+    const response = await this.fetchWithRetries(
+      `${this.baseUrl}/SignatureProcesses/GetCountMPL?clientID=${clientId}&startDate=${startDate}&endDate=${endDate}`,
+      { headers }
+    );
+    
+    return await response.json();
+  }
+
+  async fetchCountPromissoryNote(clientId, startDate, endDate) {
+    const headers = this.getHeaders();
+    console.log('🔄 Request URL:', `${this.baseUrl}/SignatureProcesses/GetCountPromissoryNote?clientID=${clientId}&startDate=${startDate}&endDate=${endDate}`);
+    
+    const response = await this.fetchWithRetries(
+      `${this.baseUrl}/SignatureProcesses/GetCountPromissoryNote?clientID=${clientId}&startDate=${startDate}&endDate=${endDate}`,
+      { headers }
+    );
+    
+    return await response.json();
+  }
 }
 
 export const apiService = new ApiService();

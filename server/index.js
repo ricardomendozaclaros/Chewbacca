@@ -12,6 +12,7 @@ import signatureRoutes from "./routes/signatures.js";
 import accountingRoutes from "./routes/accounting.js";
 import customerAccountRoutes from "./routes/customerAccount.js";
 import userRoutes from "./routes/user.js";
+import signatureAPIRoutes from "./routes/signaturesAPI.js";
 import bodyParser from "body-parser";
 import compression from 'compression';
 
@@ -142,6 +143,7 @@ app.use("/api", userRoutes);
 app.use("/api", enterpriseRoutes);
 app.use("/api", accountingRoutes);
 app.use("/api", customerAccountRoutes);
+app.use("/api/signature", signatureAPIRoutes);
 
 // Manejador global de errores mejorado
 app.use((err, req, res, next) => {
