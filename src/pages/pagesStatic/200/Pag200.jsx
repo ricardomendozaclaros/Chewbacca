@@ -936,7 +936,7 @@ export default function Pag200() {
                     subTitle={formatDate}
                     description="Sin implementar"
                     icon="bi bi-question-circle"
-                    iconBgColor="#e1fdff"
+                    iconBgColor="red"
                     unknown={false}
                   />
                 </div>
@@ -948,7 +948,7 @@ export default function Pag200() {
                     subTitle={formatDate}
                     description="Sin implementar"
                     icon="bi bi-shield-lock"
-                    iconBgColor="#e1fdff"
+                    iconBgColor="red"
                     unknown={false}
                   />
                 </div>
@@ -962,7 +962,7 @@ export default function Pag200() {
                     subTitle={formatDate}
                     description="Sin implementar"
                     icon="bi bi-check-circle"
-                    iconBgColor="#e1fdff"
+                    iconBgColor="red"
                     unknown={false}
                   />
                 </div>
@@ -974,7 +974,7 @@ export default function Pag200() {
                     subTitle={formatDate}
                     description="Sin implementar"
                     icon="bi bi-person-badge"
-                    iconBgColor="#e1fdff"
+                    iconBgColor="red"
                     unknown={false}
                   />
                 </div>
@@ -996,7 +996,7 @@ export default function Pag200() {
                   <TotalsCardComponent
                     data={apiTotals.pagare}
                     trend={{ text: "Consumo(s)" }}
-                    title="API Pagare"
+                    title="API Pagaré"
                     subTitle={formatDate}
                     description={`Cliente ID: ${selectedClient.find(c => c.label.toUpperCase().includes('PROMISSORYNOTE-PROD'))?.value || '?'}`}
                     icon="bi bi-file-earmark-text"
