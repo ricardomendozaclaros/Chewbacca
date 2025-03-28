@@ -172,12 +172,12 @@
     ]
   },
   {
-    "name": "Legal y Cumplimiento",
+    "name": "Talento Humano",
     "isSublist": true,
     "logo": "bi bi bi-book",
     "sublist": [
       {
-        "name": "700",
+        "name": "Personal 101",
         "to": "/Pag700"
       },
       {
