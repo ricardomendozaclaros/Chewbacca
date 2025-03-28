@@ -177,12 +177,12 @@
     "logo": "bi bi bi-book",
     "sublist": [
       {
-        "name": "Personal 101",
-        "to": "/Pag700"
+        "name": "Personal",
+        "to": "/Pag701"
       },
       {
-        "name": "701",
-        "to": "/Pag701"
+        "name": "Deudas",
+        "to": "/Pag700"
       },
       {
         "name": "702",
