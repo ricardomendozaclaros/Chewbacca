@@ -250,7 +250,7 @@ export default function Pag200() {
     []
   );
 
-  // Modificar filterData
+  // Modificar filterData para que también actualice los conteos de API
   const filterData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -263,6 +263,53 @@ export default function Pag200() {
         endDate = today;
       } else {
         endDate = endDate || startDate;
+      }
+
+      // Convertir fechas a epoch para las APIs
+      const startEpoch = formatDateForAPI(startDate);
+      const endEpoch = formatDateForAPI(endDate);
+
+      // Actualizar conteos de API si hay clientes seleccionados
+      if (selectedClient && selectedClient.length > 0) {
+        const newTotals = {
+          firma: "?",
+          preguntaReto: "?",
+          opt: "?",
+          otpVerificado: "?",
+          biometriaFacial: "?",
+          cargaMasiva: "?",
+          pagare: "?"
+        };
+
+        // Procesar cada cliente seleccionado con las nuevas fechas
+        for (const client of selectedClient) {
+          const clientLabel = client.label.toUpperCase();
+          const clientId = client.value;
+
+          console.log('Actualizando API counts con nuevas fechas:', {
+            clientId,
+            startEpoch,
+            endEpoch,
+            clientLabel
+          });
+
+          if (clientLabel.includes('MPL-PROD')) {
+            const mplCount = await GetCountMPL(clientId, startEpoch, endEpoch);
+            newTotals.cargaMasiva = mplCount;
+          }
+          
+          if (clientLabel.includes('SIGNINGCORE-PROD')) {
+            const signingCount = await GetCountSigningCore(clientId, startEpoch, endEpoch);
+            newTotals.firma = signingCount;
+          }
+          
+          if (clientLabel.includes('PROMISSORYNOTE-PROD')) {
+            const promissoryCount = await GetCountPromissoryNote(clientId, startEpoch, endEpoch);
+            newTotals.pagare = promissoryCount;
+          }
+        }
+
+        setApiTotals(newTotals);
       }
 
       // Obtener datos por fecha
@@ -349,7 +396,7 @@ export default function Pag200() {
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange, rechargesData, selectedEnterprises, daysAgo]);
+  }, [dateRange, rechargesData, selectedEnterprises, daysAgo, selectedClient]);
 
   // Añadir esta función después de los otros handlers
   const handleProcessClick = (process) => {
