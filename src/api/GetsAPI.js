@@ -1,5 +1,3 @@
-
-
 // Función para obtener el conteo de SigningCore
 export const GetCountSigningCore = async (clientId, startDate, endDate) => {
   try {
@@ -76,7 +74,19 @@ export const GetCountPromissoryNote = async (clientId, startDate, endDate) => {
 };
 
 // Función helper para formatear fechas
-export const formatDateForAPI = (date) => {
-  if (!date) return '';
-  return Math.floor(date.getTime() / 1000); // Convierte a timestamp Unix
+export const formatDateForAPI = (date, isStartDate = true) => {
+  if (!date) return null;
+  
+  const d = new Date(date);
+  
+  if (isStartDate) {
+    // Para fecha inicial: establecer a 00:00:00
+    d.setHours(0, 0, 0, 0);
+  } else {
+    // Para fecha final: establecer a 23:59:59
+    d.setHours(23, 59, 59, 999);
+  }
+  
+  // Retornar timestamp en milisegundos
+  return d.getTime();
 };

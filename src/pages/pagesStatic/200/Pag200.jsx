@@ -15,12 +15,6 @@ import ProcessModal from "../../../components/ProcessModal";
 import { googleSheetsService } from "../../../utils/googleSheetsService.js";
 import sheetsConfig from "../../../resources/TOCs/sheetsConfig.json";
 import Swal from 'sweetalert2';
-import { 
-  GetCountSigningCore, 
-  GetCountMPL, 
-  GetCountPromissoryNote,
-  formatDateForAPI 
-} from "../../../api/GetsAPI.js";
 
 export default function Pag200() {
   const { parseValue } = useParseValue();
@@ -45,73 +39,6 @@ export default function Pag200() {
   // Agregar estos nuevos estados
   const [rechargesData, setRechargesData] = useState([]);
   const [filteredRechargesData, setFilteredRechargesData] = useState([]);
-  const [apiConfigData, setApiConfigData] = useState([]);
-
-  // Modificar el estado de cliente seleccionado para ser array
-  const [selectedClient, setSelectedClient] = useState([]);
-
-  // Modificar el memo para obtener las opciones únicas de clientes ordenadas alfabéticamente
-  const clientOptions = useMemo(() => {
-    if (!apiConfigData || !apiConfigData.length) return [];
-    
-    const uniqueClients = Array.from(new Set(
-      apiConfigData
-        .map(item => ({
-          description: item.client_description,
-          id: item.client_id
-        }))
-        .filter(client => client.description && client.description.toLowerCase().endsWith('prod'))
-    )).sort((a, b) => a.description.toLowerCase().localeCompare(b.description.toLowerCase()));
-    
-    return uniqueClients.map(client => ({
-      value: client.id,
-      label: client.description
-    }));
-  }, [apiConfigData]);
-
-  // Agregar esta función helper
-  const parseSpanishDate = (dateStr) => {
-    const months = {
-      ene: "01",
-      feb: "02",
-      mar: "03",
-      abr: "04",
-      may: "05",
-      jun: "06",
-      jul: "07",
-      ago: "08",
-      sep: "09",
-      oct: "10",
-      nov: "11",
-      dic: "12",
-      enero: "01",
-      febrero: "02",
-      marzo: "03",
-      abril: "04",
-      mayo: "05",
-      junio: "06",
-      julio: "07",
-      agosto: "08",
-      septiembre: "09",
-      octubre: "10",
-      noviembre: "11",
-      diciembre: "12",
-    };
-
-    try {
-      const parts = dateStr.toLowerCase().split(/[-\s]+/);
-      const day = parts[0].padStart(2, "0");
-      const month = months[parts[1]] || "01";
-      const year =
-        parts[2]?.length === 2
-          ? `20${parts[2]}`
-          : new Date().getFullYear().toString();
-      return new Date(`${year}-${month}-${day}`);
-    } catch (error) {
-      console.error("Error parsing date:", dateStr);
-      return null;
-    }
-  };
 
   // Modificar el useEffect inicial para incluir la carga de datos de Google Sheets
   useEffect(() => {
@@ -133,23 +60,11 @@ export default function Pag200() {
           (sheet) => sheet.name === "wompi"
         );
 
-        const apiConfig = sheetsConfig.sheets.find(
-          (sheet) => sheet.name === "authorizationAPIConfigurations"
-        );
-
         // Obtener datos de ambas hojas
-        const [wompiResult, apiResult] = await Promise.all([
+        const [wompiResult] = await Promise.all([
           wompiConfig ? googleSheetsService.getAllTabsData(
             wompiConfig.url,
             wompiConfig.tabs,
-            {
-              autoTypeConversion: true,
-              skipEmptyRows: true,
-            }
-          ) : null,
-          apiConfig ? googleSheetsService.getAllTabsData(
-            apiConfig.url,
-            apiConfig.tabs,
             {
               autoTypeConversion: true,
               skipEmptyRows: true,
@@ -171,11 +86,6 @@ export default function Pag200() {
             return rechargeDate >= startDate && rechargeDate <= today;
           });
           setFilteredRechargesData(filteredWompi);
-        }
-
-        // Guardar datos de API
-        if (apiResult?.results?.["Hoja 1"]?.data) {
-          setApiConfigData(apiResult.results["Hoja 1"].data);
         }
 
         transformAndSetData(result);
@@ -265,53 +175,6 @@ export default function Pag200() {
         endDate = endDate || startDate;
       }
 
-      // Convertir fechas a epoch para las APIs
-      const startEpoch = formatDateForAPI(startDate);
-      const endEpoch = formatDateForAPI(endDate);
-
-      // Actualizar conteos de API si hay clientes seleccionados
-      if (selectedClient && selectedClient.length > 0) {
-        const newTotals = {
-          firma: "?",
-          preguntaReto: "?",
-          opt: "?",
-          otpVerificado: "?",
-          biometriaFacial: "?",
-          cargaMasiva: "?",
-          pagare: "?"
-        };
-
-        // Procesar cada cliente seleccionado con las nuevas fechas
-        for (const client of selectedClient) {
-          const clientLabel = client.label.toUpperCase();
-          const clientId = client.value;
-
-          console.log('Actualizando API counts con nuevas fechas:', {
-            clientId,
-            startEpoch,
-            endEpoch,
-            clientLabel
-          });
-
-          if (clientLabel.includes('MPL-PROD')) {
-            const mplCount = await GetCountMPL(clientId, startEpoch, endEpoch);
-            newTotals.cargaMasiva = mplCount;
-          }
-          
-          if (clientLabel.includes('SIGNINGCORE-PROD')) {
-            const signingCount = await GetCountSigningCore(clientId, startEpoch, endEpoch);
-            newTotals.firma = signingCount;
-          }
-          
-          if (clientLabel.includes('PROMISSORYNOTE-PROD')) {
-            const promissoryCount = await GetCountPromissoryNote(clientId, startEpoch, endEpoch);
-            newTotals.pagare = promissoryCount;
-          }
-        }
-
-        setApiTotals(newTotals);
-      }
-
       // Obtener datos por fecha
       const result = await GetSignatureProcesses({
         startDate: startDate.toISOString().split("T")[0],
@@ -396,7 +259,7 @@ export default function Pag200() {
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange, rechargesData, selectedEnterprises, daysAgo, selectedClient]);
+  }, [dateRange, rechargesData, selectedEnterprises, daysAgo]);
 
   // Añadir esta función después de los otros handlers
   const handleProcessClick = (process) => {
@@ -660,84 +523,48 @@ export default function Pag200() {
     [filteredRechargesData]
   );
 
-  // Modificar el estado inicial de apiTotals para incluir pagare
-  const [apiTotals, setApiTotals] = useState({
-    firma: "?",
-    preguntaReto: "?",
-    opt: "?",
-    otpVerificado: "?",
-    biometriaFacial: "?",
-    cargaMasiva: "?",
-    pagare: "?"
-  });
-
-  // Modificar handleClientChange para manejar las llamadas a la API según el tipo de cliente
-  const handleClientChange = async (selected) => {
-    setSelectedClient(selected || []);
-    
-    // Obtener fechas para el filtro
-    let startDate = dateRange[0];
-    let endDate = dateRange[1];
-    
-    if (!startDate) {
-      const today = new Date();
-      startDate = new Date(today);
-      startDate.setDate(today.getDate() - daysAgo);
-      endDate = today;
-    }
-
-    // Convertir fechas a epoch
-    const startEpoch = formatDateForAPI(startDate);
-    const endEpoch = formatDateForAPI(endDate);
-
-    // Inicializar nuevos totales con "?"
-    const newTotals = {
-      firma: "?",
-      preguntaReto: "?",
-      opt: "?",
-      otpVerificado: "?",
-      biometriaFacial: "?",
-      cargaMasiva: "?",
-      pagare: "?"
+  // Agregar esta función helper
+  const parseSpanishDate = (dateStr) => {
+    const months = {
+      ene: "01",
+      feb: "02",
+      mar: "03",
+      abr: "04",
+      may: "05",
+      jun: "06",
+      jul: "07",
+      ago: "08",
+      sep: "09",
+      oct: "10",
+      nov: "11",
+      dic: "12",
+      enero: "01",
+      febrero: "02",
+      marzo: "03",
+      abril: "04",
+      mayo: "05",
+      junio: "06",
+      julio: "07",
+      agosto: "08",
+      septiembre: "09",
+      octubre: "10",
+      noviembre: "11",
+      diciembre: "12",
     };
 
-    if (selected && selected.length > 0) {
-      try {
-        // Procesar cada cliente seleccionado
-        for (const client of selected) {
-          const clientLabel = client.label.toUpperCase();
-          const clientId = client.value;
-
-          if (clientLabel.includes('MPL-PROD')) {
-            console.log("oyeeee", clientId, startEpoch, endEpoch)
-            const mplCount = await GetCountMPL(clientId, startEpoch, endEpoch);
-            newTotals.cargaMasiva = mplCount;
-          }
-          
-          if (clientLabel.includes('SIGNINGCORE-PROD')) {
-            const signingCount = await GetCountSigningCore(clientId, startEpoch, endEpoch);
-            newTotals.firma = signingCount;
-          }
-          
-          if (clientLabel.includes('PROMISSORYNOTE-PROD')) {
-            const promissoryCount = await GetCountPromissoryNote(clientId, startEpoch, endEpoch);
-            newTotals.pagare = promissoryCount;
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching API counts:', error);
-        // Mostrar error al usuario si es necesario
-        await Swal.fire({
-          title: 'Error',
-          text: 'Error al obtener los conteos de API',
-          icon: 'error',
-          confirmButtonText: 'Aceptar',
-          confirmButtonColor: '#3085d6'
-        });
-      }
+    try {
+      const parts = dateStr.toLowerCase().split(/[-\s]+/);
+      const day = parts[0].padStart(2, "0");
+      const month = months[parts[1]] || "01";
+      const year =
+        parts[2]?.length === 2
+          ? `20${parts[2]}`
+          : new Date().getFullYear().toString();
+      return new Date(`${year}-${month}-${day}`);
+    } catch (error) {
+      console.error("Error parsing date:", dateStr);
+      return null;
     }
-
-    setApiTotals(newTotals);
   };
 
   return (
@@ -745,13 +572,13 @@ export default function Pag200() {
       {/* Filtros */}
       <div className="card p-2">
         <div className="row">
-          <div className="col-sm-4 d-flex align-items-center">
+          <div className="col-sm-6 d-flex align-items-center">
             <h4 className="font-weight-bold mx-2">Consumo de cuentas</h4>
           </div>
 
           {/* Filtro de tipos de firmas */}
 
-          <div className="col-sm-8 d-flex align-items-center justify-content-end gap-2">
+          <div className="col-sm-6 d-flex align-items-center justify-content-end gap-2">
             <div className="flex-grow-1" style={{ minWidth: '200px', zIndex: 10000 }}>
               <label className="block text-sm font-medium mb-2">Empresas</label>
               <Select
@@ -760,19 +587,6 @@ export default function Pag200() {
                 value={selectedEnterprises}
                 onChange={handleEnterpriseChange}
                 placeholder="Empresas..."
-                closeMenuOnSelect={false}
-                isDisabled={isLoading}
-                styles={customStyles}
-              />
-            </div>
-            <div className="flex-grow-1" style={{ minWidth: '200px', zIndex: 10000 }}>
-              <label className="block text-sm font-medium mb-2">Clientes API</label>
-              <Select
-                isMulti
-                options={clientOptions}
-                value={selectedClient}
-                onChange={handleClientChange}
-                placeholder="Seleccionar clientes..."
                 closeMenuOnSelect={false}
                 isDisabled={isLoading}
                 styles={customStyles}
@@ -911,104 +725,6 @@ export default function Pag200() {
                       }}
                     />
                   </div>
-                </div>
-              </div>
-
-              {/* Apis Section */}
-              <div className="row g-1">
-                <div className="col-sm-4">
-                  <TotalsCardComponent
-                    data={apiTotals.firma}
-                    trend={{ text: "Consumo(s)" }}
-                    title="API Firma"
-                    subTitle={formatDate}
-                    description={`Cliente ID: ${selectedClient.find(c => c.label.toUpperCase().includes('SIGNINGCORE-PROD'))?.value || '?'}`}
-                    icon="bi bi-pen"
-                    iconBgColor="#e1fdff"
-                    unknown={false}
-                  />
-                </div>
-                <div className="col-sm-4">
-                  <TotalsCardComponent
-                    data={apiTotals.preguntaReto}
-                    trend={{ text: "Consumo(s)" }}
-                    title="API Pregunta Reto"
-                    subTitle={formatDate}
-                    description="Sin implementar"
-                    icon="bi bi-question-circle"
-                    iconBgColor="red"
-                    unknown={false}
-                  />
-                </div>
-                <div className="col-sm-4">
-                  <TotalsCardComponent
-                    data={apiTotals.opt}
-                    trend={{ text: "Consumo(s)" }}
-                    title="API OPT"
-                    subTitle={formatDate}
-                    description="Sin implementar"
-                    icon="bi bi-shield-lock"
-                    iconBgColor="red"
-                    unknown={false}
-                  />
-                </div>
-              </div>
-              <div className="row g-1">
-                <div className="col-sm-4">
-                  <TotalsCardComponent
-                    data={apiTotals.otpVerificado}
-                    trend={{ text: "Consumo(s)" }}
-                    title="API OTP Verificado"
-                    subTitle={formatDate}
-                    description="Sin implementar"
-                    icon="bi bi-check-circle"
-                    iconBgColor="red"
-                    unknown={false}
-                  />
-                </div>
-                <div className="col-sm-4">
-                  <TotalsCardComponent
-                    data={apiTotals.biometriaFacial}
-                    trend={{ text: "Consumo(s)" }}
-                    title="API Biometria Facial"
-                    subTitle={formatDate}
-                    description="Sin implementar"
-                    icon="bi bi-person-badge"
-                    iconBgColor="red"
-                    unknown={false}
-                  />
-                </div>
-                <div className="col-sm-4">
-                  <TotalsCardComponent
-                    data={apiTotals.cargaMasiva}
-                    trend={{ text: "Consumo(s)" }}
-                    title="API Carga Masiva"
-                    subTitle={formatDate}
-                    description={`Cliente ID: ${selectedClient.find(c => c.label.toUpperCase().includes('MPL-PROD'))?.value || '?'}`}
-                    icon="bi bi-cloud-upload"
-                    iconBgColor="#e1fdff"
-                    unknown={false}
-                  />
-                </div>
-              </div>
-              <div className="row g-1">
-                <div className="col-sm-4">
-                  <TotalsCardComponent
-                    data={apiTotals.pagare}
-                    trend={{ text: "Consumo(s)" }}
-                    title="API Pagaré"
-                    subTitle={formatDate}
-                    description={`Cliente ID: ${selectedClient.find(c => c.label.toUpperCase().includes('PROMISSORYNOTE-PROD'))?.value || '?'}`}
-                    icon="bi bi-file-earmark-text"
-                    iconBgColor="#e1fdff"
-                    unknown={false}
-                  />
-                </div>
-                <div className="col-sm-4">
-                  
-                </div>
-                <div className="col-sm-4">
-                  
                 </div>
               </div>
             </div>
