@@ -105,8 +105,7 @@ export default function Pag200() {
     const loadEnterprises = async () => {
       try {
         const result = await GetEnterprises();
-        // Usar Map para eliminar duplicados basados en enterpriseId y ordenar por nombre
-        console.log( "aqui", result)
+        // Usar Map para eliminar duplicados basados en enterpriseId
         const uniqueEnterprises = Array.from(
           new Map(
             result
@@ -115,13 +114,14 @@ export default function Pag200() {
           ).values()
         );
         
-        // Formatear y ordenar alfabéticamente ignorando mayúsculas/minúsculas
+        // Formatear y ordenar alfabéticamente por enterpriseName
         const pospagos = uniqueEnterprises
           .map((emp) => ({
             value: emp.enterpriseId,
-            label: emp.enterpriseName,
+            label: `${emp.enterpriseId} - ${emp.enterpriseName}`,
+            sortName: emp.enterpriseName // Añadimos esta propiedad para ordenar
           }))
-          .sort((a, b) => a.label.toLowerCase().localeCompare(b.label.toLowerCase()));
+          .sort((a, b) => a.sortName.toLowerCase().localeCompare(b.sortName.toLowerCase()));
         
         setEnterprises(pospagos);
       } catch (error) {
