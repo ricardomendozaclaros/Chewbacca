@@ -16,6 +16,7 @@ import {
   GetCountPromissoryNote,
   formatDateForAPI 
 } from "../../../api/GetsAPI.js";
+import BarChart from "../../../components/Dashboard/BarChart.jsx";
 
 export default function Pag300() {
   const [isLoading, setIsLoading] = useState(true);
@@ -196,7 +197,41 @@ export default function Pag300() {
       }));
   }, [apiConfigData]);
 
-  // Manejar cambio de cliente
+  // Modificar la función prepareChartData
+  const prepareChartData = (signingFiltered = [], mplFiltered = [], promissoryFiltered = []) => {
+    // Obtener todas las fechas únicas
+    const allDates = new Set([
+      ...signingFiltered.map(row => row.Date),
+      ...mplFiltered.map(row => row.Date),
+      ...promissoryFiltered.map(row => row.Date)
+    ]);
+
+    // Convertir a array y ordenar
+    const categories = Array.from(allDates).sort();
+
+    // Preparar los datos de las series sumando los Count por fecha
+    const series = {
+      'API Firma': categories.map(date => 
+        signingFiltered
+          .filter(row => row.Date === date)
+          .reduce((sum, row) => sum + (Number(row.Count) || 0), 0)
+      ),
+      'API Carga Masiva': categories.map(date => 
+        mplFiltered
+          .filter(row => row.Date === date)
+          .reduce((sum, row) => sum + (Number(row.Count) || 0), 0)
+      ),
+      'API Pagaré': categories.map(date => 
+        promissoryFiltered
+          .filter(row => row.Date === date)
+          .reduce((sum, row) => sum + (Number(row.Count) || 0), 0)
+      )
+    };
+
+    return { categories, series };
+  };
+
+  // Modificar el handleClientChange para incluir los datos del gráfico
   const handleClientChange = async (selected) => {
     setSelectedClient(selected);
 
@@ -209,6 +244,8 @@ export default function Pag300() {
       cargaMasiva: "?",
       pagare: "?"
     };
+
+    let chartData = { categories: [], series: {} };
 
     if (selected) {
       try {
@@ -229,54 +266,68 @@ export default function Pag300() {
         startDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0);
         endDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59);
 
+        let signingFiltered = [];
+        let mplFiltered = [];
+        let promissoryFiltered = [];
+
         for (const config of clientConfigs) {
           switch (config.API) {
             case 'SIGNINGCORE':
-              const signingFiltered = signingCoreData.filter(row => {
+              signingFiltered = signingCoreData.filter(row => {
                 const rowDate = parseSpanishDate(row.Date);
                 if (!rowDate) return false;
-                
-                rowDate.setHours(0, 0, 0, 0);
-                return rowDate && 
-                       row.ClientId === config.client_id &&
-                       rowDate >= startDate &&
-                       rowDate <= endDate;
+                const normalizedRowDate = new Date(
+                  rowDate.getFullYear(),
+                  rowDate.getMonth(),
+                  rowDate.getDate(),
+                  0, 0, 0
+                );
+                return row.ClientId === config.client_id &&
+                       normalizedRowDate >= startDate &&
+                       normalizedRowDate <= endDate;
               });
-              
               newTotals.firma = signingFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
               break;
 
             case 'MPL':
-              const mplFiltered = api2Data.filter(row => {
+              mplFiltered = api2Data.filter(row => {
                 const rowDate = parseSpanishDate(row.Date);
                 if (!rowDate) return false;
-                
-                rowDate.setHours(0, 0, 0, 0);
-                return rowDate && 
-                       row.ClientId === config.client_id &&
-                       rowDate >= startDate &&
-                       rowDate <= endDate;
+                const normalizedRowDate = new Date(
+                  rowDate.getFullYear(),
+                  rowDate.getMonth(),
+                  rowDate.getDate(),
+                  0, 0, 0
+                );
+                return row.ClientId === config.client_id &&
+                       normalizedRowDate >= startDate &&
+                       normalizedRowDate <= endDate;
               });
-              
               newTotals.cargaMasiva = mplFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
               break;
 
             case 'PROMISSORYNOTE':
-              const promissoryFiltered = api3Data.filter(row => {
+              promissoryFiltered = api3Data.filter(row => {
                 const rowDate = parseSpanishDate(row.Date);
                 if (!rowDate) return false;
-                
-                rowDate.setHours(0, 0, 0, 0);
-                return rowDate && 
-                       row.ClientId === config.client_id &&
-                       rowDate >= startDate &&
-                       rowDate <= endDate;
+                const normalizedRowDate = new Date(
+                  rowDate.getFullYear(),
+                  rowDate.getMonth(),
+                  rowDate.getDate(),
+                  0, 0, 0
+                );
+                return row.ClientId === config.client_id &&
+                       normalizedRowDate >= startDate &&
+                       normalizedRowDate <= endDate;
               });
-              
               newTotals.pagare = promissoryFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
               break;
           }
         }
+
+        // Preparar datos para el gráfico
+        chartData = prepareChartData(signingFiltered, mplFiltered, promissoryFiltered);
+
       } catch (error) {
         console.error('Error general:', error);
         await Swal.fire({
@@ -290,7 +341,11 @@ export default function Pag300() {
     }
 
     setApiTotals(newTotals);
+    setChartData(chartData);
   };
+
+  // Agregar el estado para los datos del gráfico
+  const [chartData, setChartData] = useState({ categories: [], series: {} });
 
   let formatDate = formatDateRange(dateRange, daysAgo);
 
@@ -439,6 +494,39 @@ export default function Pag300() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Histograma */}
+      <div className="mt-1">
+        <BarChart
+          data={chartData}
+          title="Consumo de APIs por Fecha"
+          subTitle={`Cliente: ${selectedClient?.label || '?'}`}
+          description="Distribución por Fecha"
+          height={400}
+          series={[
+            {
+              name: 'API Firma',
+              type: 'bar',
+              itemStyle: { color: '#5470c6' }
+            },
+            {
+              name: 'API Carga Masiva',
+              type: 'bar',
+              itemStyle: { color: '#91cc75' }
+            },
+            {
+              name: 'API Pagaré',
+              type: 'bar',
+              itemStyle: { color: '#fac858' }
+            }
+          ]}
+          xAxis={{
+            axisLabel: {
+              rotate: 45
+            }
+          }}
+        />
       </div>
     </div>
   );
