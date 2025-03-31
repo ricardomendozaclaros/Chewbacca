@@ -58,8 +58,12 @@
         "to": "/Pag201"
       },
       {
-        "name": "202",
-        "to": "/Pag202"
+        "name": "Consumo por Plataforma",
+        "to": "/Pag200"
+      },
+      {
+        "name": "Consumo por API",
+        "to": "/Pag300"
       }
     ]
   },
