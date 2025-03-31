@@ -44,12 +44,19 @@ export default function Pag300() {
   const parseSpanishDate = (dateStr) => {
     try {
       if (!dateStr) return null;
+
+      // Para formato ISO (2025-03-29)
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        return new Date(year, month - 1, day); // Ajustamos el mes (0-11)
+      }
+
+      // Para formato español (1-ene-2025)
+      const months = {
+        'ene': 0, 'feb': 1, 'mar': 2, 'abr': 3, 'may': 4, 'jun': 5,
+        'jul': 6, 'ago': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dic': 11
+      };
       
-    const months = {
-      'ene': 0, 'feb': 1, 'mar': 2, 'abr': 3, 'may': 4, 'jun': 5,
-      'jul': 6, 'ago': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dic': 11
-    };
-    
       const parts = dateStr.split('-');
       if (parts.length !== 3) return null;
       
@@ -165,28 +172,33 @@ export default function Pag300() {
   const clientOptions = useMemo(() => {
     if (!apiConfigData || !apiConfigData.length) return [];
     
-    // Filtrar items en PROD y crear array de objetos únicos
-    const uniqueClients = Array.from(new Set(
-      apiConfigData
-        .filter(item => item.State === "PROD")
-        .map(item => JSON.stringify({
-          client_id: item.client_id,
-          shortName: item.shortName
-        }))
-    ))
-    .map(str => JSON.parse(str))
-    .sort((a, b) => a.shortName.toLowerCase().localeCompare(b.shortName.toLowerCase()));
-    
-    return uniqueClients.map(client => ({
-      value: client.client_id,    // Usamos client_id como value
-      label: client.shortName     // Mantenemos shortName como label
-    }));
+    // Agrupar configuraciones por shortName
+    const clientGroups = apiConfigData
+      .filter(item => item.State === "PROD")
+      .reduce((acc, item) => {
+        if (!acc[item.shortName]) {
+          acc[item.shortName] = {
+            shortName: item.shortName,
+            configs: []
+          };
+        }
+        acc[item.shortName].configs.push(item);
+        return acc;
+      }, {});
+
+    // Convertir a array y ordenar por shortName
+    return Object.values(clientGroups)
+      .sort((a, b) => a.shortName.toLowerCase().localeCompare(b.shortName.toLowerCase()))
+      .map(group => ({
+        value: group.shortName,    // Usamos shortName como value
+        label: group.shortName,    // Mostramos shortName como label
+        configs: group.configs     // Guardamos todas las configuraciones
+      }));
   }, [apiConfigData]);
 
   // Manejar cambio de cliente
   const handleClientChange = async (selected) => {
-    setSelectedClient(selected || []);
-    console.log('Cliente(s) seleccionado(s):', selected);
+    setSelectedClient(selected);
 
     const newTotals = {
       firma: "?",
@@ -198,111 +210,71 @@ export default function Pag300() {
       pagare: "?"
     };
 
-    if (selected && selected.length > 0) {
+    if (selected) {
       try {
-        for (const client of selected) {
-          // Obtener las configuraciones del cliente seleccionado
-          const clientConfigs = apiConfigData.filter(
-            item => item.shortName === client.value && item.State === "PROD"
-          );
+        const clientConfigs = apiConfigData.filter(
+          item => item.shortName === selected.value && item.State === "PROD"
+        );
 
-          console.log('Configuraciones del cliente:', clientConfigs);
+        let startDate = dateRange[0];
+        let endDate = dateRange[1];
+        
+        if (!startDate) {
+          const today = new Date();
+          startDate = new Date(today);
+          startDate.setDate(today.getDate() - daysAgo);
+          endDate = today;
+        }
 
-          // Obtener rango de fechas
-          let startDate = dateRange[0];
-          let endDate = dateRange[1];
-          
-          if (!startDate) {
-            const today = new Date();
-            startDate = new Date(today);
-            startDate.setDate(today.getDate() - daysAgo);
-            endDate = today;
-          }
+        startDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0);
+        endDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 23, 59, 59);
 
-          // Procesar cada API según las configuraciones del cliente
-          for (const config of clientConfigs) {
-            switch (config.API) {
-              case 'SIGNINGCORE':
-                // Filtrar y sumar registros de SIGNINGCORE
-                const signingFiltered = signingCoreData.filter(row => {
-                  const rowDate = parseSpanishDate(row.Date);
-                  return rowDate && 
-                         row.ClientId === config.client_id &&
-                         rowDate >= startDate &&
-                         rowDate <= endDate;
-                });
+        for (const config of clientConfigs) {
+          switch (config.API) {
+            case 'SIGNINGCORE':
+              const signingFiltered = signingCoreData.filter(row => {
+                const rowDate = parseSpanishDate(row.Date);
+                if (!rowDate) return false;
                 
-                const signingTotal = signingFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
-                console.log('SIGNINGCORE filtrado:', {
-                  clientId: config.client_id,
-                  registrosEncontrados: signingFiltered.length,
-                  total: signingTotal,
-                  registros: signingFiltered
-                });
-                newTotals.firma = signingTotal;
-                break;
+                rowDate.setHours(0, 0, 0, 0);
+                return rowDate && 
+                       row.ClientId === config.client_id &&
+                       rowDate >= startDate &&
+                       rowDate <= endDate;
+              });
+              
+              newTotals.firma = signingFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
+              break;
 
-              case 'MPL':
-                // Filtrar y sumar registros de MPL
-                const mplFiltered = api2Data.filter(row => {
-                  const rowDate = parseSpanishDate(row.Date);
-                  return rowDate && 
-                         row.ClientId === config.client_id &&
-                         rowDate >= startDate &&
-                         rowDate <= endDate;
-                });
+            case 'MPL':
+              const mplFiltered = api2Data.filter(row => {
+                const rowDate = parseSpanishDate(row.Date);
+                if (!rowDate) return false;
                 
-                const mplTotal = mplFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
-                console.log('MPL filtrado:', {
-                  clientId: config.client_id,
-                  registrosEncontrados: mplFiltered.length,
-                  total: mplTotal,
-                  registros: mplFiltered
-                });
-                newTotals.cargaMasiva = mplTotal;
-                break;
+                rowDate.setHours(0, 0, 0, 0);
+                return rowDate && 
+                       row.ClientId === config.client_id &&
+                       rowDate >= startDate &&
+                       rowDate <= endDate;
+              });
+              
+              newTotals.cargaMasiva = mplFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
+              break;
 
-              case 'PROMISSORYNOTE':
-                // Agregar logs para debug
-                console.log('Buscando en API3 (Pagaré):', {
-                  clientId: config.client_id,
-                  fechaInicio: startDate,
-                  fechaFin: endDate,
-                  totalRegistros: api3Data.length,
-                  primerosRegistros: api3Data.slice(0, 5)
-                });
-
-                const promissoryFiltered = api3Data.filter(row => {
-                  const rowDate = parseSpanishDate(row.Date);
-                  const matches = rowDate && 
-                         row.ClientId === config.client_id &&
-                         rowDate >= startDate &&
-                         rowDate <= endDate;
-                  
-                  // Log para cada registro que debería coincidir
-                  if (row.ClientId === config.client_id) {
-                    console.log('Registro encontrado para el ClientId:', {
-                      fecha: row.Date,
-                      fechaParseada: rowDate,
-                      clientId: row.ClientId,
-                      count: row.Count,
-                      cumpleFiltroFecha: rowDate && rowDate >= startDate && rowDate <= endDate
-                    });
-                  }
-                  
-                  return matches;
-                });
+            case 'PROMISSORYNOTE':
+              const promissoryFiltered = api3Data.filter(row => {
+                const rowDate = parseSpanishDate(row.Date);
+                if (!rowDate) return false;
                 
-                const promissoryTotal = promissoryFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
-                console.log('PROMISSORYNOTE resultado:', {
-                  clientId: config.client_id,
-                  registrosEncontrados: promissoryFiltered.length,
-                  registrosFiltrados: promissoryFiltered,
-                  total: promissoryTotal
-                });
-                newTotals.pagare = promissoryTotal;
-                break;
-            }
+                rowDate.setHours(0, 0, 0, 0);
+                return rowDate && 
+                       row.ClientId === config.client_id &&
+                       rowDate >= startDate &&
+                       rowDate <= endDate;
+              });
+              
+              newTotals.pagare = promissoryFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
+              break;
           }
         }
       } catch (error) {
@@ -334,14 +306,13 @@ export default function Pag300() {
             <div className="flex-grow-1" style={{ minWidth: '200px', zIndex: 10000 }}>
               <label className="block text-sm font-medium mb-2">Clientes API</label>
               <Select
-                isMulti
                 options={clientOptions}
                 value={selectedClient}
                 onChange={handleClientChange}
-                placeholder="Seleccionar clientes..."
-                closeMenuOnSelect={false}
+                placeholder="Seleccionar cliente..."
                 isDisabled={isLoading}
                 styles={customStyles}
+                isClearable={true}
               />
             </div>
             <div className="flex-grow-1" style={{ minWidth: '200px' }}>
@@ -384,7 +355,7 @@ export default function Pag300() {
                 trend={{ text: "Consumo(s)" }}
                 title="API Firma"
                 subTitle={formatDate}
-                description={`Cliente ID: ${selectedClient[0]?.value || '?'}`}
+                description={`Cliente: ${selectedClient?.label || '?'}`}
                 icon="bi bi-pen"
                 iconBgColor="#e1fdff"
                 unknown={false}
@@ -446,7 +417,7 @@ export default function Pag300() {
                 trend={{ text: "Consumo(s)" }}
                 title="API Carga Masiva"
                 subTitle={formatDate}
-                description={`Cliente ID: ${selectedClient[0]?.value || '?'}`}
+                description={`Cliente: ${selectedClient?.label || '?'}`}
                 icon="bi bi-cloud-upload"
                 iconBgColor="#e1fdff"
                 unknown={false}
@@ -460,7 +431,7 @@ export default function Pag300() {
                 trend={{ text: "Consumo(s)" }}
                 title="API Pagaré"
                 subTitle={formatDate}
-                description={`Cliente ID: ${selectedClient[0]?.value || '?'}`}
+                description={`Cliente: ${selectedClient?.label || '?'}`}
                 icon="bi bi-file-earmark-text"
                 iconBgColor="#e1fdff"
                 unknown={false}
