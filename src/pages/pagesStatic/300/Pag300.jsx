@@ -245,6 +245,13 @@ export default function Pag300() {
       pagare: "?"
     };
 
+    // Agregar objeto para guardar los client_ids
+    const clientIds = {
+      firma: "",
+      cargaMasiva: "",
+      pagare: ""
+    };
+
     let chartData = { categories: [], series: {} };
 
     if (selected) {
@@ -287,6 +294,7 @@ export default function Pag300() {
                        normalizedRowDate <= endDate;
               });
               newTotals.firma = signingFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
+              clientIds.firma = config.client_id; // Guardar el client_id
               break;
 
             case 'MPL':
@@ -304,6 +312,7 @@ export default function Pag300() {
                        normalizedRowDate <= endDate;
               });
               newTotals.cargaMasiva = mplFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
+              clientIds.cargaMasiva = config.client_id; // Guardar el client_id
               break;
 
             case 'PROMISSORYNOTE':
@@ -321,6 +330,7 @@ export default function Pag300() {
                        normalizedRowDate <= endDate;
               });
               newTotals.pagare = promissoryFiltered.reduce((sum, row) => sum + (Number(row.Count) || 0), 0);
+              clientIds.pagare = config.client_id; // Guardar el client_id
               break;
           }
         }
@@ -342,10 +352,18 @@ export default function Pag300() {
 
     setApiTotals(newTotals);
     setChartData(chartData);
+    setClientIds(clientIds); // Agregar este estado
   };
 
   // Agregar el estado para los datos del gráfico
   const [chartData, setChartData] = useState({ categories: [], series: {} });
+
+  // Agregar el estado para los client_ids
+  const [clientIds, setClientIds] = useState({
+    firma: "",
+    cargaMasiva: "",
+    pagare: ""
+  });
 
   let formatDate = formatDateRange(dateRange, daysAgo);
 
@@ -410,7 +428,7 @@ export default function Pag300() {
                 trend={{ text: "Consumo(s)" }}
                 title="API Firma"
                 subTitle={formatDate}
-                description={`Cliente: ${selectedClient?.label || '?'}`}
+                description={`Client Id: ${clientIds.firma || '?'}`}
                 icon="bi bi-pen"
                 iconBgColor="#e1fdff"
                 unknown={false}
@@ -472,7 +490,7 @@ export default function Pag300() {
                 trend={{ text: "Consumo(s)" }}
                 title="API Carga Masiva"
                 subTitle={formatDate}
-                description={`Cliente: ${selectedClient?.label || '?'}`}
+                description={`Client Id: ${clientIds.cargaMasiva || '?'}`}
                 icon="bi bi-cloud-upload"
                 iconBgColor="#e1fdff"
                 unknown={false}
@@ -486,7 +504,7 @@ export default function Pag300() {
                 trend={{ text: "Consumo(s)" }}
                 title="API Pagaré"
                 subTitle={formatDate}
-                description={`Cliente: ${selectedClient?.label || '?'}`}
+                description={`Client Id: ${clientIds.pagare || '?'}`}
                 icon="bi bi-file-earmark-text"
                 iconBgColor="#e1fdff"
                 unknown={false}
