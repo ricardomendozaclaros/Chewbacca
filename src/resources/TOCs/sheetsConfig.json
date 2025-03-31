@@ -62,6 +62,40 @@
         }
       ],
       "publicUrl": true
+    },
+    {
+      "name": "signingCoreData",
+      "url": "URL_DE_TU_SHEET_SIGNINGCORE",
+      "tabs": ["SigningCore"]
+    },
+    {
+      "name": "mplData",
+      "url": "URL_DE_TU_SHEET_MPL",
+      "tabs": ["MPL"]
+    },
+    {
+      "name": "promissoryNoteData",
+      "url": "URL_DE_TU_SHEET_PROMISSORYNOTE",
+      "tabs": ["PromissoryNote"]
+    },
+    {
+      "name": "apiMetricsData",
+      "url": "https://docs.google.com/spreadsheets/d/1op_PwAcRuaMKw0IqXXhJBYpgQSkgE0jSj83vRayxiMA/edit?usp=sharing",
+      "tabs": [
+        {
+          "name": "SIGNINGCORE",
+          "gid": "0"
+        },
+        {
+          "name": "API2",
+          "gid": "663016294"
+        },
+        {
+          "name": "API3",
+          "gid": "1848461587"
+        }
+      ],
+      "publicUrl": true
     }
   ]
 }
