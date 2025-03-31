@@ -58,7 +58,6 @@ export default function Pag300() {
             setApiConfigData(apiResult.results["Hoja 1"].data);
           }
         }
-        console.log("there", apiConfigData)
       } catch (error) {
         console.error("Error loading API config:", error);
       } finally {

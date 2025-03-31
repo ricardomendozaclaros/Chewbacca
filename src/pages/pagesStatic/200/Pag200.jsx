@@ -106,6 +106,7 @@ export default function Pag200() {
       try {
         const result = await GetEnterprises();
         // Usar Map para eliminar duplicados basados en enterpriseId y ordenar por nombre
+        console.log( "aqui", result)
         const uniqueEnterprises = Array.from(
           new Map(
             result
