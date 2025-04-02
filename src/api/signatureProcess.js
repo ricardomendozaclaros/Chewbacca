@@ -24,7 +24,6 @@ const GetSignatureProcesses = async (dateRange = null) => {
       ({ startDate, endDate } = getLastTwoWeeksDates());
     }
 
-    console.log(`Consultando firmas desde ${startDate} hasta ${endDate}`);
     const startTime = performance.now();
     
     const response = await fetch(
@@ -38,7 +37,6 @@ const GetSignatureProcesses = async (dateRange = null) => {
     }
     
     const result = await response.json();
-    console.log(`Tiempo de respuesta: ${(endTime - startTime).toFixed(2)}ms`);
     return result;
   } catch (error) {
     console.error("Error fetching data:", error);
