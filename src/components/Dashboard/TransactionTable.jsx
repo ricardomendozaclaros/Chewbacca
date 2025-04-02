@@ -53,7 +53,7 @@ export default function TransactionTable({
         sortable: true,
         resizable: true,
         width: config.width,
-        right: config.align === 'right',
+        style: config.align === 'right' ? { justifyContent: 'flex-end' } : undefined,
         cell: row => {
           // Si hay un customRender, usarlo
           if (config.customRender) {
