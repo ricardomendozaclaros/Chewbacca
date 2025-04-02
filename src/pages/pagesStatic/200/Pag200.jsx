@@ -307,9 +307,10 @@ export default function Pag200() {
     const grouped = new Map();
     
     for (const item of filteredData) {
-      const key = `${item.description}-${item.unitValue}`;
+      const key = `${item.description}-${item.unitValue}${selectedEnterprises.length > 1 ? `-${item.enterpriseId}` : ''}`;
       if (!grouped.has(key)) {
         grouped.set(key, {
+          enterpriseName: item.enterpriseName,
           signatureType: item.description,
           unitValue: item.unitValue || 0,
           total: 0
@@ -319,12 +320,19 @@ export default function Pag200() {
     }
     
     return Array.from(grouped.values()).sort((a, b) => {
-      if (a.signatureType === b.signatureType) {
-        return b.unitValue - a.unitValue;
+      if (selectedEnterprises.length > 1) {
+        // Primero ordenar por enterpriseName
+        const nameCompare = a.enterpriseName.localeCompare(b.enterpriseName);
+        if (nameCompare !== 0) return nameCompare;
       }
-      return a.signatureType.localeCompare(b.signatureType);
+      // Luego por signatureType
+      if (a.signatureType !== b.signatureType) {
+        return a.signatureType.localeCompare(b.signatureType);
+      }
+      // Finalmente por unitValue
+      return b.unitValue - a.unitValue;
     });
-  }, [filteredData]);
+  }, [filteredData, selectedEnterprises.length]);
 
   // Optimizar groupedData
   const groupedData = useMemo(() => {
@@ -869,9 +877,12 @@ export default function Pag200() {
                   showTotal={false}
                   height={230}
                   columns={[
-                    ["Firma", "signatureType", { width: "50%" }],
-                    ["Precio", "unitValue", { align: "right", width: "25%" }],
-                    ["Cantidad", "total", { align: "right", width: "25%" }],
+                    ...(selectedEnterprises.length > 1 
+                      ? [["Empresa", "enterpriseName", { width: "30%" }]] 
+                      : []),
+                    ["Firma", "signatureType", { width: selectedEnterprises.length > 1 ? "30%" : "50%" }],
+                    ["Precio", "unitValue", { align: "right", width: "20%" }],
+                    ["Cantidad", "total", { align: "right", width: "20%" }],
                   ]}
                   groupByOptions={["signatureType"]}
                 />
