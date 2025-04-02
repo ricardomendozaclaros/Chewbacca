@@ -14,7 +14,7 @@ import { formatDateRange } from "../../../utils/dateUtils.js";
 import ProcessModal from "../../../components/ProcessModal";
 import { googleSheetsService } from "../../../utils/googleSheetsService.js";
 import sheetsConfig from "../../../resources/TOCs/sheetsConfig.json";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 
 export default function Pag200() {
   const { parseValue } = useParseValue();
@@ -62,22 +62,25 @@ export default function Pag200() {
 
         // Obtener datos de ambas hojas
         const [wompiResult] = await Promise.all([
-          wompiConfig ? googleSheetsService.getAllTabsData(
-            wompiConfig.url,
-            wompiConfig.tabs,
-            {
-              autoTypeConversion: true,
-              skipEmptyRows: true,
-            }
-          ) : null
+          wompiConfig
+            ? googleSheetsService.getAllTabsData(
+                wompiConfig.url,
+                wompiConfig.tabs,
+                {
+                  autoTypeConversion: true,
+                  skipEmptyRows: true,
+                }
+              )
+            : null,
         ]);
 
         // Procesar datos de wompi
         if (wompiResult?.results?.PasarelaPagosWompi?.data) {
-          const initialWompiData = wompiResult.results.PasarelaPagosWompi.data.map((item) => ({
-            ...item,
-            id: crypto.randomUUID(),
-          }));
+          const initialWompiData =
+            wompiResult.results.PasarelaPagosWompi.data.map((item) => ({
+              ...item,
+              id: crypto.randomUUID(),
+            }));
           setRechargesData(initialWompiData);
 
           const filteredWompi = initialWompiData.filter((item) => {
@@ -109,20 +112,22 @@ export default function Pag200() {
         const uniqueEnterprises = Array.from(
           new Map(
             result
-              .filter(emp => emp.plan === "pospago")
-              .map(emp => [emp.enterpriseId, emp])
+              .filter((emp) => emp.plan === "pospago")
+              .map((emp) => [emp.enterpriseId, emp])
           ).values()
         );
-        
+
         // Formatear y ordenar alfabéticamente por enterpriseName
         const pospagos = uniqueEnterprises
           .map((emp) => ({
             value: emp.enterpriseId,
             label: `${emp.enterpriseId} - ${emp.enterpriseName}`,
-            sortName: emp.enterpriseName // Añadimos esta propiedad para ordenar
+            sortName: emp.enterpriseName, // Añadimos esta propiedad para ordenar
           }))
-          .sort((a, b) => a.sortName.toLowerCase().localeCompare(b.sortName.toLowerCase()));
-        
+          .sort((a, b) =>
+            a.sortName.toLowerCase().localeCompare(b.sortName.toLowerCase())
+          );
+
         setEnterprises(pospagos);
       } catch (error) {
         console.error("Error loading enterprises:", error);
@@ -136,7 +141,7 @@ export default function Pag200() {
   const transformAndSetData = useCallback(
     (data) => {
       if (!data) return;
-      
+
       // Guardar los datos sin filtrar primero
       setFilteredData(data);
 
@@ -154,12 +159,9 @@ export default function Pag200() {
   );
 
   // Modificar handleEnterpriseChange para que solo guarde la selección
-  const handleEnterpriseChange = useCallback(
-    (selected) => {
-      setSelectedEnterprises(selected || []);
-    },
-    []
-  );
+  const handleEnterpriseChange = useCallback((selected) => {
+    setSelectedEnterprises(selected || []);
+  }, []);
 
   // Modificar filterData para que también actualice los conteos de API
   const filterData = useCallback(async () => {
@@ -188,9 +190,9 @@ export default function Pag200() {
         if (!rechargeDate) return false;
         return rechargeDate >= startDate && rechargeDate <= endDate;
       });
-      
+
       let filteredByEnterprise = result;
-      
+
       // Aplicar filtros de empresa si existen
       if (selectedEnterprises.length > 0) {
         filteredByEnterprise = result.filter((item) =>
@@ -204,57 +206,60 @@ export default function Pag200() {
       if (filteredByEnterprise.length === 0) {
         let title = "No hay datos disponibles";
         let message = "";
-        
+
         if (selectedEnterprises.length > 0 && dateRange[0]) {
-          message = "No se encontraron registros para la empresa y el rango de fechas seleccionados.";
+          message =
+            "No se encontraron registros para la empresa y el rango de fechas seleccionados.";
         } else if (selectedEnterprises.length > 0) {
           message = "No se encontraron registros para la empresa seleccionada.";
         } else if (dateRange[0]) {
-          message = "No se encontraron registros para el rango de fechas seleccionado.";
+          message =
+            "No se encontraron registros para el rango de fechas seleccionado.";
         }
 
         await Swal.fire({
           title,
           text: message,
-          icon: 'info',
-          confirmButtonText: 'Aceptar',
-          confirmButtonColor: '#3085d6'
+          icon: "info",
+          confirmButtonText: "Aceptar",
+          confirmButtonColor: "#3085d6",
         });
-        
+
         // Resetear filtros y recargar datos iniciales
         setSelectedEnterprises([]);
         setDateRange([null, null]);
-        
+
         // Recargar datos iniciales
         const today = new Date();
         const initialStartDate = new Date(today);
         initialStartDate.setDate(today.getDate() - daysAgo);
-        
+
         const initialResult = await GetSignatureProcesses({
           startDate: initialStartDate.toISOString().split("T")[0],
           endDate: today.toISOString().split("T")[0],
         });
-        
+
         setFilteredData(initialResult);
-        setFilteredRechargesData(rechargesData.filter((item) => {
-          const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
-          if (!rechargeDate) return false;
-          return rechargeDate >= initialStartDate && rechargeDate <= today;
-        }));
+        setFilteredRechargesData(
+          rechargesData.filter((item) => {
+            const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
+            if (!rechargeDate) return false;
+            return rechargeDate >= initialStartDate && rechargeDate <= today;
+          })
+        );
       } else {
         // Si hay datos, actualizar el estado
         setFilteredData(filteredByEnterprise);
         setFilteredRechargesData(filteredRecharges);
       }
-
     } catch (error) {
       console.error("Error fetching filtered data:", error);
       await Swal.fire({
-        title: 'Error',
+        title: "Error",
         text: error.message,
-        icon: 'error',
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: '#3085d6'
+        icon: "error",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#3085d6",
       });
       setError(error.message);
     } finally {
@@ -468,8 +473,8 @@ export default function Pag200() {
   const customStyles = {
     container: (base) => ({
       ...base,
-      width: '100%', // Asegura que el contenedor ocupe todo el espacio disponible
-      minWidth: '200px', // Ancho mínimo para evitar que se haga demasiado pequeño
+      width: "100%", // Asegura que el contenedor ocupe todo el espacio disponible
+      minWidth: "200px", // Ancho mínimo para evitar que se haga demasiado pequeño
     }),
     multiValue: (base) => ({
       ...base,
@@ -511,12 +516,16 @@ export default function Pag200() {
           ["Consecutivo", "CONSECUTIVO", { width: "15%" }],
           ["Pasarela de pagos", "Pasarela de pagos Wompi", { width: "30%" }],
           ["NIT", "NIT", { width: "15%" }],
-          ["Valor de la recarga", "VALOR DE LA RECARGA", { 
-            align: "right", 
-            width: "20%",
-            format: "currency" 
-          }],
-          ["Fecha de la recarga", "FECHA DE LA RECARGA", { width: "20%" }]
+          [
+            "Valor de la recarga",
+            "VALOR DE LA RECARGA",
+            {
+              align: "right",
+              width: "20%",
+              format: "currency",
+            },
+          ],
+          ["Fecha de la recarga", "FECHA DE LA RECARGA", { width: "20%" }],
         ]}
         groupByOptions={[]}
       />
@@ -573,68 +582,80 @@ export default function Pag200() {
       {/* Filtros */}
       <div className="card p-2">
         <div className="row">
-          <div className="col-sm-6 d-flex align-items-center">
-            <h4 className="font-weight-bold mx-2">Consumo de cuentas</h4>
+          <div className="col-sm-5 d-flex align-items-center">
+            <h4 className="font-weight-bold mx-2">Consumos por Plataforma</h4>
           </div>
 
           {/* Filtro de tipos de firmas */}
 
-          <div className="col-sm-6 d-flex align-items-center justify-content-end gap-2">
-            <div className="flex-grow-1" style={{ minWidth: '200px', zIndex: 10000 }}>
-              <label className="block text-sm font-medium mb-2">Empresas</label>
-              <Select
-                isMulti
-                options={enterprises}
-                value={selectedEnterprises}
-                onChange={handleEnterpriseChange}
-                placeholder="Empresas..."
-                closeMenuOnSelect={false}
-                isDisabled={isLoading}
-                styles={customStyles}
-              />
-            </div>
-            <div className="flex-grow-1" style={{ minWidth: '200px' }}>
-              <label className="block text-sm font-medium mb-1">Periodo</label>
-              <div className="d-flex align-items-center">
-                <DatePicker
-                  selectsRange={true}
-                  startDate={dateRange[0]}
-                  endDate={dateRange[1]}
-                  onChange={setDateRange}
-                  locale={es}
-                  isClearable={true}
-                  placeholderText="Filtrar por rango de fechas"
-                  className="form-control rounded p-2 w-100"
-                  disabled={isLoading}
-                  showMonthDropdown
-                  showYearDropdown
-                  dropdownMode="select"
+          <div className="col-sm-7">
+            <div className="row">
+              {/* Empresas */}
+              <div
+                className="col-sm-7"
+                style={{ minWidth: "200px", zIndex: 10000 }}
+              >
+                <label className="block text-sm font-medium mb-2">
+                  Empresas
+                </label>
+                <Select
+                  isMulti
+                  options={enterprises}
+                  value={selectedEnterprises}
+                  onChange={handleEnterpriseChange}
+                  placeholder="Empresas..."
+                  closeMenuOnSelect={false}
+                  isDisabled={isLoading}
+                  styles={customStyles}
                 />
-                <button
-                  onClick={filterData}
-                  disabled={isLoading}
-                  className="btn btn-primary p-2 border-0 ms-2"
-                >
-                  <Search className="w-75" />
-                </button>
               </div>
-            </div>
-            <div style={{ minWidth: 'auto' }}>
-              <ExportButton
-                data={exportData}
-                fileName="reporte_pag200.xlsx"
-                sheets={exportData}
-                startDate={
-                  dateRange[0] ||
-                  (() => {
-                    const today = new Date();
-                    const startDate = new Date(today);
-                    startDate.setDate(today.getDate() - daysAgo);
-                    return startDate;
-                  })()
-                }
-                endDate={dateRange[1] || new Date()}
-              />
+              {/* Periodo */}
+              <div className="flex-grow-1 col-sm-4">
+                <label className="block text-sm font-medium mb-1">
+                  Periodo
+                </label>
+                <div className="d-flex align-items-center">
+                  <DatePicker
+                    selectsRange={true}
+                    startDate={dateRange[0]}
+                    endDate={dateRange[1]}
+                    onChange={setDateRange}
+                    locale={es}
+                    isClearable={true}
+                    placeholderText="Filtrar por rango de fechas"
+                    className="form-control rounded p-2 w-100"
+                    disabled={isLoading}
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                  />
+                  <button
+                    onClick={filterData}
+                    disabled={isLoading}
+                    className="btn btn-primary p-2 border-0 ms-2"
+                  >
+                    <Search className="w-75" />
+                  </button>
+                </div>
+              </div>
+              {/* Exportar */}
+              <div className="col-sm-1">
+                <ExportButton
+                  data={exportData}
+                  fileName="reporte_pag200.xlsx"
+                  sheets={exportData}
+                  startDate={
+                    dateRange[0] ||
+                    (() => {
+                      const today = new Date();
+                      const startDate = new Date(today);
+                      startDate.setDate(today.getDate() - daysAgo);
+                      return startDate;
+                    })()
+                  }
+                  endDate={dateRange[1] || new Date()}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -658,16 +679,44 @@ export default function Pag200() {
       {!isLoading && !error && filteredData.length > 0 && (
         <div className="card">
           <div className="p-1">
-            {/* Fila 1 - Summary Table */}
+            {/* Fila 1 - lista de empresas seleccionadas */}
+            <div className="row px-4 pb-2">
+              {selectedEnterprises.length > 0 ? (
+                <div className="d-flex flex-wrap gap-2 align-items-center">
+                  <span className="fw-bold text-muted">Empresas:</span>
+                  {selectedEnterprises.map((enterprise) => (
+                    <span
+                      key={enterprise.value}
+                      className="badge bg-light text-dark border d-flex align-items-center p-2"
+                      style={{
+                        fontSize: '0.9rem',
+                        fontWeight: 'normal',
+                        borderRadius: '4px'
+                      }}
+                    >
+                      <i className="bi bi-building me-2"></i>
+                      {enterprise.label}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-muted fst-italic">
+                  <i className="bi bi-info-circle me-2"></i>
+                  No hay empresas seleccionadas
+                </div>
+              )}
+            </div>
+
+            {/* Fila 2 - Summary Table */}
             <div className="row g-1 mb-3">
-              <div className="col-sm-3">
+              <div className={`col-sm-${selectedEnterprises.length > 1 ? '3' : '3'}`}>
                 <TransactionTable
                   data={summarizedData}
-                  title="Resumen de Consumos"
+                  title="Total"
                   subTitle={formatDate}
                   description=""
                   showTotal={false}
-                  height={210}
+                  height={230}
                   columns={[
                     ["Firma", "signatureType", { width: "60%" }],
                     [
@@ -683,10 +732,10 @@ export default function Pag200() {
                   groupByOptions={[]}
                 />
               </div>
-              <div className="col-sm-4">
+              <div className={`col-sm-${selectedEnterprises.length > 1 ? '6' : '4'}`}>
                 <TransactionTable
                   data={detailedSummarizedData}
-                  title="Resumen de Consumos"
+                  title="Desglosado de consumos"
                   subTitle={formatDate}
                   description=""
                   showTotal={false}
@@ -699,33 +748,67 @@ export default function Pag200() {
                   groupByOptions={["signatureType"]}
                 />
               </div>
-              <div className="col-sm-5">
+              <div className={`col-sm-${selectedEnterprises.length > 1 ? '3' : '5'}`}>
                 <div className="row g-1">
-                  <div className="col-sm-6">
-                    <TotalsCardComponent
-                      data={totalSumQuantity}
-                      trend={{ value: totalRecords, text: " Registros" }}
-                      title="Total"
-                      subTitle="Firmas"
-                      description="Firmas registradas"
-                      icon="bi bi-key"
-                      unknown={false}
-                    />
-                  </div>
-                  <div className="col-sm-6">
-                    <TotalsCardComponent
-                      data={totalRechargeValue}
-                      title="Recargas directas"
-                      subTitle={formatDate}
-                      description="Suma total de recargas en el período"
-                      icon="bi bi-currency-dollar"
-                      format="number"
-                      trend={{
-                        value: filteredRechargesData.length,
-                        text: "Recargas",
-                      }}
-                    />
-                  </div>
+                  {selectedEnterprises.length > 1 ? (
+                    // Cuando hay más de una empresa seleccionada
+                    <>
+                      <div className="col-12 mb-2">
+                        <TotalsCardComponent
+                          data={totalSumQuantity}
+                          trend={{ value: totalRecords, text: " Registros" }}
+                          title="Total"
+                          subTitle="Firmas"
+                          description="Firmas registradas"
+                          icon="bi bi-key"
+                          unknown={false}
+                        />
+                      </div>
+                      <div className="col-12">
+                        <TotalsCardComponent
+                          data={totalRechargeValue}
+                          title="Recargas directas"
+                          subTitle={formatDate}
+                          description="Suma total de recargas en el período"
+                          icon="bi bi-currency-dollar"
+                          format="number"
+                          trend={{
+                            value: filteredRechargesData.length,
+                            text: "Recargas",
+                          }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    // Layout original cuando hay una o ninguna empresa seleccionada
+                    <>
+                      <div className="col-sm-6">
+                        <TotalsCardComponent
+                          data={totalSumQuantity}
+                          trend={{ value: totalRecords, text: " Registros" }}
+                          title="Total"
+                          subTitle="Firmas"
+                          description="Firmas registradas"
+                          icon="bi bi-key"
+                          unknown={false}
+                        />
+                      </div>
+                      <div className="col-sm-6">
+                        <TotalsCardComponent
+                          data={totalRechargeValue}
+                          title="Recargas directas"
+                          subTitle={formatDate}
+                          description="Suma total de recargas en el período"
+                          icon="bi bi-currency-dollar"
+                          format="number"
+                          trend={{
+                            value: filteredRechargesData.length,
+                            text: "Recargas",
+                          }}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
