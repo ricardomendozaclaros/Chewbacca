@@ -47,22 +47,32 @@ export default function TransactionTable({
 
     return columns.map(column => {
       const [header, field, config = {}] = column;
+      const isRightAligned = config.align === 'right';
+      
       return {
         name: header,
         selector: (row) => row[field],
         sortable: true,
         resizable: true,
         width: config.width,
-        style: config.align === 'right' ? { justifyContent: 'flex-end' } : undefined,
+        right: isRightAligned,
+        style: isRightAligned ? {
+          justifyContent: 'flex-end',
+          textAlign: 'right',
+          paddingRight: '8px'
+        } : undefined,
+        headStyle: isRightAligned ? {
+          justifyContent: 'flex-end',
+          textAlign: 'right',
+          paddingRight: '8px'
+        } : undefined,
         cell: row => {
-          // Si hay un customRender, usarlo
           if (config.customRender) {
             return config.customRender(row);
           }
 
           const displayValue = parseValue(field, row[field], config.format);
           
-          // Si es la columna ID y tenemos onRowClick, renderizar como enlace
           if (field === 'id' && onRowClick) {
             return (
               <a
@@ -91,6 +101,8 @@ export default function TransactionTable({
                 height: config.verticalAlign ? '100%' : 'auto',
                 display: config.verticalAlign ? 'flex' : 'block',
                 alignItems: config.verticalAlign ? 'center' : 'initial',
+                justifyContent: isRightAligned ? 'flex-end' : 'flex-start',
+                paddingRight: isRightAligned ? '8px' : undefined
               }}
             >
               {displayValue}
@@ -354,11 +366,10 @@ export default function TransactionTable({
                   paddingRight: '8px'
                 }
               },
-              pagination: {
+              header: {
                 style: {
-                  marginTop: '10px',
-                  borderTop: '1px solid #ddd',
-                  paddingTop: '10px'
+                  paddingLeft: '8px',
+                  paddingRight: '8px'
                 }
               }
             }}

@@ -54,7 +54,6 @@ export default function Pag200() {
           startDate: startDate.toISOString().split("T")[0],
           endDate: today.toISOString().split("T")[0],
         });
-        console.log(result);
 
         // Modificar para usar la configuración de wompi
         const wompiConfig = sheetsConfig.sheets.find(
@@ -201,8 +200,8 @@ export default function Pag200() {
             (enterprise) => enterprise.value === item.enterpriseId
           )
         );
-      }
-
+      } 
+      console.log(filteredByEnterprise);
       // Verificar si hay datos después de aplicar los filtros
       if (filteredByEnterprise.length === 0) {
         let title = "No hay datos disponibles";
