@@ -54,6 +54,7 @@ export default function Pag200() {
           startDate: startDate.toISOString().split("T")[0],
           endDate: today.toISOString().split("T")[0],
         });
+        console.log(result);
 
         // Modificar para usar la configuración de wompi
         const wompiConfig = sheetsConfig.sheets.find(
@@ -278,42 +279,47 @@ export default function Pag200() {
     setIsModalOpen(true);
   };
 
-  // Memoize the summarized data for the first table and total records
-  // For the first table - only grouped by signature type
+  // Optimizar summarizedData
   const summarizedData = useMemo(() => {
-    const grouped = filteredData.reduce((acc, item) => {
+    if (!filteredData.length) return [];
+    
+    const grouped = new Map();
+    
+    for (const item of filteredData) {
       const key = item.description;
-      if (!acc[key]) {
-        acc[key] = {
-          signatureType: item.description,
-          total: 0,
-        };
+      if (!grouped.has(key)) {
+        grouped.set(key, {
+          signatureType: key,
+          total: 0
+        });
       }
-      acc[key].total += item.quantity || 0;
-      return acc;
-    }, {});
-
-    return Object.values(grouped).sort((a, b) =>
+      grouped.get(key).total += item.quantity || 0;
+    }
+    
+    return Array.from(grouped.values()).sort((a, b) => 
       a.signatureType.localeCompare(b.signatureType)
     );
   }, [filteredData]);
 
-  // For the second table - grouped by both signature type and price
+  // Optimizar detailedSummarizedData
   const detailedSummarizedData = useMemo(() => {
-    const grouped = filteredData.reduce((acc, item) => {
+    if (!filteredData.length) return [];
+    
+    const grouped = new Map();
+    
+    for (const item of filteredData) {
       const key = `${item.description}-${item.unitValue}`;
-      if (!acc[key]) {
-        acc[key] = {
+      if (!grouped.has(key)) {
+        grouped.set(key, {
           signatureType: item.description,
           unitValue: item.unitValue || 0,
-          total: 0,
-        };
+          total: 0
+        });
       }
-      acc[key].total += item.quantity || 0;
-      return acc;
-    }, {});
-
-    return Object.values(grouped).sort((a, b) => {
+      grouped.get(key).total += item.quantity || 0;
+    }
+    
+    return Array.from(grouped.values()).sort((a, b) => {
       if (a.signatureType === b.signatureType) {
         return b.unitValue - a.unitValue;
       }
@@ -321,28 +327,26 @@ export default function Pag200() {
     });
   }, [filteredData]);
 
-  // Memoize the grouped data for the resumen table
+  // Optimizar groupedData
   const groupedData = useMemo(() => {
-    const grouped = filteredData.reduce((acc, item) => {
+    if (!filteredData.length) return [];
+    
+    const uniqueTypes = new Set(filteredData.map(i => i.description));
+    const grouped = new Map();
+    
+    for (const item of filteredData) {
       const key = `${item.enterpriseId}-${item.enterpriseName}`;
-      if (!acc[key]) {
-        acc[key] = {
+      if (!grouped.has(key)) {
+        grouped.set(key, {
           nit: item.enterpriseId,
           enterpriseName: item.enterpriseName,
-          ...Object.fromEntries(
-            [...new Set(filteredData.map((i) => i.description))].map((type) => [
-              type,
-              0,
-            ])
-          ),
-        };
+          ...Object.fromEntries([...uniqueTypes].map(type => [type, 0]))
+        });
       }
-      // Sum quantity instead of incrementing
-      acc[key][item.description] += item.quantity || 0;
-      return acc;
-    }, {});
-
-    return Object.values(grouped);
+      grouped.get(key)[item.description] += item.quantity || 0;
+    }
+    
+    return Array.from(grouped.values());
   }, [filteredData]);
 
   const exportData = useMemo(
@@ -388,8 +392,18 @@ export default function Pag200() {
   let formatDate = formatDateRange(dateRange, daysAgo);
 
   // Memoize table components
-  const ResumenTable = useMemo(
-    () => (
+  const ResumenTable = useMemo(() => {
+    if (!groupedData.length) return null;
+    
+    const tableColumns = [
+      ["NIT", "nit"],
+      ["Nombre", "enterpriseName"],
+      ...Object.keys(groupedData[0] || {})
+        .filter(key => !["nit", "enterpriseName"].includes(key))
+        .map(key => [parseValue("description", key), key])
+    ];
+
+    return (
       <TransactionTable
         data={groupedData}
         title=""
@@ -397,24 +411,19 @@ export default function Pag200() {
         description=""
         showTotal={false}
         height={450}
-        pagination={true} // Enable pagination
-        rowsPerPage={15} // Set rows per page
-        columns={[
-          ["NIT", "nit"],
-          ["Nombre", "enterpriseName"],
-          ...Object.keys(groupedData[0] || {})
-            .filter((key) => !["nit", "enterpriseName"].includes(key))
-            .map((key) => [parseValue("description", key), key]),
-        ]}
+        pagination={true}
+        rowsPerPage={15}
+        columns={tableColumns}
         groupByOptions={[]}
       />
-    ),
-    [groupedData]
-  );
+    );
+  }, [groupedData]);
 
-  // Modificar el DetalleTable para incluir el link en el ID
-  const DetalleTable = useMemo(
-    () => (
+  // Optimizar DetalleTable
+  const DetalleTable = useMemo(() => {
+    if (!filteredData.length) return null;
+
+    return (
       <TransactionTable
         data={filteredData}
         title=""
@@ -422,9 +431,9 @@ export default function Pag200() {
         description=""
         showTotal={false}
         height={450}
-        pagination={true} // Enable pagination
-        rowsPerPage={15} // Set rows per page
-        onRowClick={handleRowClick} // Añadir esta prop
+        pagination={true}
+        rowsPerPage={15}
+        onRowClick={handleRowClick}
         columns={[
           ["ID", "id", { width: "10%" }],
           ["Fecha", "date"],
@@ -434,13 +443,12 @@ export default function Pag200() {
           ["Total", "totalValue"],
           ["NIT", "enterpriseId"],
           ["Nombre", "enterpriseName"],
-          ["Email", "email"],
+          ["Email", "email"]
         ]}
         groupByOptions={[]}
       />
-    ),
-    [filteredData]
-  );
+    );
+  }, [filteredData, handleRowClick]);
 
   // Simplify totalRecords to just show filteredData length
   const totalRecords = useMemo(() => {
@@ -577,6 +585,124 @@ export default function Pag200() {
     }
   };
 
+  const totals = useMemo(() => {
+    if (!filteredData.length) return {
+      records: 0,
+      quantity: 0,
+      rechargeValue: 0,
+      rechargeCount: 0
+    };
+
+    return {
+      records: filteredData.length,
+      quantity: filteredData.reduce((sum, item) => sum + (item.quantity || 0), 0),
+      rechargeValue: filteredRechargesData.reduce((sum, item) => {
+        const value = item["VALOR DE LA RECARGA"];
+        if (!value) return sum;
+        if (typeof value === "number") return sum + value;
+        if (typeof value === "string") {
+          const cleanStr = value
+            .replace(/[$\s]/g, "")
+            .replace(/\./g, "")
+            .replace(/,/g, ".");
+          const numericValue = parseFloat(cleanStr);
+          return sum + (isNaN(numericValue) ? 0 : numericValue);
+        }
+        return sum;
+      }, 0),
+      rechargeCount: filteredRechargesData.length
+    };
+  }, [filteredData, filteredRechargesData]);
+
+  // Componente para la lista de empresas seleccionadas
+  const SelectedEnterprisesList = ({ enterprises }) => (
+    <div className="d-flex flex-wrap gap-2 align-items-center">
+      <span className="fw-bold text-muted">Empresas:</span>
+      {enterprises.map((enterprise) => (
+        <span
+          key={enterprise.value}
+          className="badge bg-light text-dark border d-flex align-items-center p-2"
+          style={{
+            fontSize: '0.9rem',
+            fontWeight: 'normal',
+            borderRadius: '4px'
+          }}
+        >
+          <i className="bi bi-building me-2"></i>
+          {enterprise.label}
+        </span>
+      ))}
+    </div>
+  );
+
+  // Componente para cuando no hay empresas seleccionadas
+  const NoEnterprisesSelected = () => (
+    <div className="text-muted fst-italic">
+      <i className="bi bi-info-circle me-2"></i>
+      No hay empresas seleccionadas
+    </div>
+  );
+
+  // Componente para la sección de tabs
+  const TabsSection = ({ activeTab, setActiveTab, ResumenTable, DetalleTable, RechargesTable }) => (
+    <div className="row g-1">
+      <div className="col-sm-12">
+        <ul className="nav nav-tabs" role="tablist">
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${
+                activeTab === "resumen" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("resumen")}
+            >
+              Por tipo firma
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${
+                activeTab === "detalle" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("detalle")}
+            >
+              Procesos de firma
+            </button>
+          </li>
+          <li className="nav-item" role="presentation">
+            <button
+              className={`nav-link ${
+                activeTab === "recargas" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("recargas")}
+            >
+              Pasarela Pagos
+            </button>
+          </li>
+        </ul>
+
+        <div className="tab-content mt-3">
+          {activeTab === "resumen" && (
+            <div className="tab-pane fade show active">
+              {ResumenTable}
+            </div>
+          )}
+
+          {activeTab === "detalle" && (
+            <div className="tab-pane fade show active">
+              {DetalleTable}
+            </div>
+          )}
+
+          {activeTab === "recargas" && (
+            <div className="tab-pane fade show active">
+              {RechargesTable}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="">
       {/* Filtros */}
@@ -679,35 +805,16 @@ export default function Pag200() {
       {!isLoading && !error && filteredData.length > 0 && (
         <div className="card">
           <div className="p-1">
-            {/* Fila 1 - lista de empresas seleccionadas */}
+            {/* Empresas seleccionadas */}
             <div className="row px-4 pb-2">
               {selectedEnterprises.length > 0 ? (
-                <div className="d-flex flex-wrap gap-2 align-items-center">
-                  <span className="fw-bold text-muted">Empresas:</span>
-                  {selectedEnterprises.map((enterprise) => (
-                    <span
-                      key={enterprise.value}
-                      className="badge bg-light text-dark border d-flex align-items-center p-2"
-                      style={{
-                        fontSize: '0.9rem',
-                        fontWeight: 'normal',
-                        borderRadius: '4px'
-                      }}
-                    >
-                      <i className="bi bi-building me-2"></i>
-                      {enterprise.label}
-                    </span>
-                  ))}
-                </div>
+                <SelectedEnterprisesList enterprises={selectedEnterprises} />
               ) : (
-                <div className="text-muted fst-italic">
-                  <i className="bi bi-info-circle me-2"></i>
-                  No hay empresas seleccionadas
-                </div>
+                <NoEnterprisesSelected />
               )}
             </div>
 
-            {/* Fila 2 - Summary Table */}
+            {/* Tablas y cards */}
             <div className="row g-1 mb-3">
               <div className={`col-sm-${selectedEnterprises.length > 1 ? '3' : '3'}`}>
                 <TransactionTable
@@ -813,63 +920,14 @@ export default function Pag200() {
               </div>
             </div>
 
-            {/* New Tabs Section */}
-            <div className="row g-1">
-              <div className="col-sm-12">
-                <ul className="nav nav-tabs" role="tablist">
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link ${
-                        activeTab === "resumen" ? "active" : ""
-                      }`}
-                      onClick={() => setActiveTab("resumen")}
-                    >
-                      Por tipo firma
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link ${
-                        activeTab === "detalle" ? "active" : ""
-                      }`}
-                      onClick={() => setActiveTab("detalle")}
-                    >
-                      Procesos de firma
-                    </button>
-                  </li>
-                  <li className="nav-item" role="presentation">
-                    <button
-                      className={`nav-link ${
-                        activeTab === "recargas" ? "active" : ""
-                      }`}
-                      onClick={() => setActiveTab("recargas")}
-                    >
-                      Pasarela Pagos
-                    </button>
-                  </li>
-                </ul>
-
-                <div className="tab-content mt-3">
-                  {activeTab === "resumen" && (
-                    <div className="tab-pane fade show active">
-                      {ResumenTable}
-                    </div>
-                  )}
-
-                  {activeTab === "detalle" && (
-                    <div className="tab-pane fade show active">
-                      {DetalleTable}
-                    </div>
-                  )}
-
-                  {activeTab === "recargas" && (
-                    <div className="tab-pane fade show active">
-                      {RechargesTable}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+            {/* Tabs */}
+            <TabsSection
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              ResumenTable={ResumenTable}
+              DetalleTable={DetalleTable}
+              RechargesTable={RechargesTable}
+            />
           </div>
         </div>
       )}
