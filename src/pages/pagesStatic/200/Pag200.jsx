@@ -476,6 +476,25 @@ export default function Pag200() {
     }, 0);
   }, [filteredRechargesData]);
 
+  // Primero, agregar una función de comparación para verificar si las tablas son iguales
+  const areTablesEqual = useMemo(() => {
+    if (!summarizedData.length || !detailedSummarizedData.length) return false;
+
+    // Si tienen diferente número de filas, definitivamente son diferentes
+    if (summarizedData.length !== detailedSummarizedData.length) return false;
+
+    // Crear un mapa de los datos resumidos para comparación fácil
+    const summaryMap = new Map(
+      summarizedData.map(item => [item.signatureType, item.total])
+    );
+
+    // Verificar si cada tipo de firma en detailedSummarizedData tiene el mismo total
+    return detailedSummarizedData.every(detail => {
+      const summaryTotal = summaryMap.get(detail.signatureType);
+      return summaryTotal === detail.total;
+    });
+  }, [summarizedData, detailedSummarizedData]);
+
   // Modificar los estilos personalizados para el combobox
   const customStyles = {
     container: (base) => ({
@@ -815,30 +834,33 @@ export default function Pag200() {
 
             {/* Tablas y cards */}
             <div className="row g-1 mb-3">
-              <div className={`col-sm-${selectedEnterprises.length > 1 ? '3' : '3'}`}>
-                <TransactionTable
-                  data={summarizedData}
-                  title="Total"
-                  subTitle={formatDate}
-                  description=""
-                  showTotal={false}
-                  height={230}
-                  columns={[
-                    ["Firma", "signatureType", { width: "60%" }],
-                    [
-                      "Cantidad",
-                      "total",
-                      {
-                        align: "right",
-                        width: "30%",
-                        cellStyle: { fontWeight: "bold" },
-                      },
-                    ],
-                  ]}
-                  groupByOptions={[]}
-                />
-              </div>
-              <div className={`col-sm-${selectedEnterprises.length > 1 ? '6' : '4'}`}>
+              {/* Solo mostrar la tabla Total si no son iguales */}
+              {!areTablesEqual && (
+                <div className={`col-sm-${selectedEnterprises.length > 1 ? '3' : '3'}`}>
+                  <TransactionTable
+                    data={summarizedData}
+                    title="Total"
+                    subTitle={formatDate}
+                    description=""
+                    showTotal={false}
+                    height={230}
+                    columns={[
+                      ["Firma", "signatureType", { width: "60%" }],
+                      [
+                        "Cantidad",
+                        "total",
+                        {
+                          align: "right",
+                          width: "30%",
+                          cellStyle: { fontWeight: "bold" },
+                        },
+                      ],
+                    ]}
+                    groupByOptions={[]}
+                  />
+                </div>
+              )}
+              <div className={`col-sm-${selectedEnterprises.length > 1 ? (areTablesEqual ? '9' : '6') : (areTablesEqual ? '7' : '4')}`}>
                 <TransactionTable
                   data={detailedSummarizedData}
                   title="Desglosado de consumos"
