@@ -8,7 +8,7 @@ import { GetEnterprises } from "../../../api/enterprise.js";
 import TransactionTable from "../../../components/Dashboard/TransactionTable.jsx";
 import TotalsCardComponent from "../../../components/Dashboard/TotalsCardComponent.jsx";
 import { useParseValue } from "../../../hooks/useParseValue.js";
-import { ImageOff, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import ExportButton from "../../../components/BtnExportar.jsx";
 import { formatDateRange } from "../../../utils/dateUtils.js";
 import ProcessModal from "../../../components/ProcessModal";
@@ -25,10 +25,11 @@ export default function Pag200() {
 
   // Estados para filtros
   const [dateRange, setDateRange] = useState([null, null]);
-  const [selectedPlans, setSelectedPlans] = useState([]);
-  const [signatureTypes, setSignatureTypes] = useState([]); // Tipos de firmas únicos
   const [enterprises, setEnterprises] = useState([]);
   const [selectedEnterprises, setSelectedEnterprises] = useState([]);
+
+  // Agregar nuevo estado para empresas filtradas
+  const [availableEnterprises, setAvailableEnterprises] = useState([]);
 
   const daysAgo = 20; // Número de días para el rango de fechas
 
@@ -54,6 +55,18 @@ export default function Pag200() {
           startDate: startDate.toISOString().split("T")[0],
           endDate: today.toISOString().split("T")[0],
         });
+
+        // Obtener empresas únicas del resultado inicial
+        const uniqueEnterprises = Array.from(
+          new Set(result.map(item => item.enterpriseId))
+        );
+        
+        // Establecer empresas disponibles inicialmente
+        setAvailableEnterprises(
+          enterprises.filter(enterprise => 
+            uniqueEnterprises.includes(enterprise.value)
+          )
+        );
 
         // Modificar para usar la configuración de wompi
         const wompiConfig = sheetsConfig.sheets.find(
@@ -100,8 +113,10 @@ export default function Pag200() {
       }
     };
 
-    loadData();
-  }, []);
+    if (enterprises.length > 0) {
+      loadData();
+    }
+  }, [enterprises, daysAgo]);
 
   // Asegurar que el loadEnterprises ordene alfabéticamente
   useEffect(() => {
@@ -163,7 +178,7 @@ export default function Pag200() {
     setSelectedEnterprises(selected || []);
   }, []);
 
-  // Modificar filterData para que también actualice los conteos de API
+  // Modificar filterData para actualizar las empresas disponibles
   const filterData = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -184,6 +199,25 @@ export default function Pag200() {
         endDate: endDate.toISOString().split("T")[0],
       });
 
+      // Obtener empresas únicas del resultado filtrado
+      const uniqueEnterprises = Array.from(
+        new Set(result.map(item => item.enterpriseId))
+      );
+      
+      // Filtrar la lista completa de empresas para mostrar solo las que tienen datos
+      const filteredEnterprises = enterprises.filter(enterprise => 
+        uniqueEnterprises.includes(enterprise.value)
+      );
+      
+      setAvailableEnterprises(filteredEnterprises);
+
+      // Actualizar selectedEnterprises para mantener solo las empresas que siguen disponibles
+      setSelectedEnterprises(prev => 
+        prev.filter(selected => 
+          filteredEnterprises.some(enterprise => enterprise.value === selected.value)
+        )
+      );
+
       // Filtrar recargas
       const filteredRecharges = rechargesData.filter((item) => {
         const rechargeDate = parseSpanishDate(item["FECHA DE LA RECARGA"]);
@@ -200,8 +234,8 @@ export default function Pag200() {
             (enterprise) => enterprise.value === item.enterpriseId
           )
         );
-      } 
-      console.log(filteredByEnterprise);
+      }
+
       // Verificar si hay datos después de aplicar los filtros
       if (filteredByEnterprise.length === 0) {
         let title = "No hay datos disponibles";
@@ -239,6 +273,17 @@ export default function Pag200() {
           endDate: today.toISOString().split("T")[0],
         });
 
+        // Actualizar empresas disponibles con los datos iniciales
+        const initialUniqueEnterprises = Array.from(
+          new Set(initialResult.map(item => item.enterpriseId))
+        );
+        
+        setAvailableEnterprises(
+          enterprises.filter(enterprise => 
+            initialUniqueEnterprises.includes(enterprise.value)
+          )
+        );
+
         setFilteredData(initialResult);
         setFilteredRechargesData(
           rechargesData.filter((item) => {
@@ -265,14 +310,9 @@ export default function Pag200() {
     } finally {
       setIsLoading(false);
     }
-  }, [dateRange, rechargesData, selectedEnterprises, daysAgo]);
+  }, [dateRange, rechargesData, selectedEnterprises, daysAgo, enterprises]);
 
   // Añadir esta función después de los otros handlers
-  const handleProcessClick = (process) => {
-    setSelectedProcess(process);
-    setIsModalOpen(true);
-  };
-
   const handleRowClick = (row) => {
     setSelectedProcess(row);
     setIsModalOpen(true);
@@ -752,7 +792,7 @@ export default function Pag200() {
                 </label>
                 <Select
                   isMulti
-                  options={enterprises}
+                  options={availableEnterprises}
                   value={selectedEnterprises}
                   onChange={handleEnterpriseChange}
                   placeholder="Empresas..."
