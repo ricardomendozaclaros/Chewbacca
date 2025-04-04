@@ -15,6 +15,7 @@ import ProcessModal from "../../../components/ProcessModal";
 import { googleSheetsService } from "../../../utils/googleSheetsService.js";
 import sheetsConfig from "../../../resources/TOCs/sheetsConfig.json";
 import Swal from "sweetalert2";
+import { components } from 'react-select';
 
 export default function Pag200() {
   const { parseValue } = useParseValue();
@@ -114,36 +115,86 @@ export default function Pag200() {
     };
 
     if (enterprises.length > 0) {
-      loadData();
+    loadData();
     }
   }, [enterprises, daysAgo]);
 
-  // Asegurar que el loadEnterprises ordene alfabéticamente
+  // Modificar la función loadEnterprises para evitar duplicados
   useEffect(() => {
     const loadEnterprises = async () => {
       try {
         const result = await GetEnterprises();
-        // Usar Map para eliminar duplicados basados en enterpriseId
+        
+        // Filtrar solo empresas pospago y eliminar duplicados basados en enterpriseId
         const uniqueEnterprises = Array.from(
           new Map(
             result
-              .filter((emp) => emp.plan === "pospago")
-              .map((emp) => [emp.enterpriseId, emp])
+              .filter(emp => emp.plan === "pospago")
+              .map(emp => [emp.enterpriseId, emp])
           ).values()
         );
+        
+        // Separar padres e hijos
+        const parents = uniqueEnterprises.filter(emp => !emp.parentEnterpriseId);
+        const children = uniqueEnterprises.filter(emp => emp.parentEnterpriseId);
+        
+        // Ordenar padres alfabéticamente
+        parents.sort((a, b) => a.enterpriseName.localeCompare(b.enterpriseName));
+        
+        // Crear lista plana con jerarquía
+        const flatOptions = [];
+        const processedIds = new Set(); // Para rastrear IDs ya procesados
+        
+        parents.forEach(parent => {
+          // Solo agregar si no ha sido procesado
+          if (!processedIds.has(parent.enterpriseId)) {
+            // Agregar padre
+            flatOptions.push({
+              value: parent.enterpriseId,
+              label: `${parent.enterpriseId} - ${parent.enterpriseName}`,
+              isParent: true,
+              sortName: parent.enterpriseName
+            });
+            processedIds.add(parent.enterpriseId);
+            
+            // Encontrar y agregar hijos únicos
+            const childrenOfParent = children
+              .filter(child => 
+                child.parentEnterpriseId === parent.enterpriseId && 
+                !processedIds.has(child.enterpriseId)
+              )
+              .sort((a, b) => a.enterpriseName.localeCompare(b.enterpriseName));
+            
+            childrenOfParent.forEach(child => {
+              if (!processedIds.has(child.enterpriseId)) {
+                flatOptions.push({
+                  value: child.enterpriseId,
+                  label: `${child.enterpriseId} - ${child.enterpriseName}`,
+                  isParent: false,
+                  parentId: child.parentEnterpriseId,
+                  sortName: child.enterpriseName
+                });
+                processedIds.add(child.enterpriseId);
+              }
+            });
+          }
+        });
+        
+        // Verificar si hay hijos huérfanos (con parentEnterpriseId que no existe)
+        children
+          .filter(child => !processedIds.has(child.enterpriseId))
+          .sort((a, b) => a.enterpriseName.localeCompare(b.enterpriseName))
+          .forEach(orphanChild => {
+            flatOptions.push({
+              value: orphanChild.enterpriseId,
+              label: `${orphanChild.enterpriseId} - ${orphanChild.enterpriseName}`,
+              isParent: false,
+              parentId: orphanChild.parentEnterpriseId,
+              sortName: orphanChild.enterpriseName
+            });
+          });
 
-        // Formatear y ordenar alfabéticamente por enterpriseName
-        const pospagos = uniqueEnterprises
-          .map((emp) => ({
-            value: emp.enterpriseId,
-            label: `${emp.enterpriseId} - ${emp.enterpriseName}`,
-            sortName: emp.enterpriseName, // Añadimos esta propiedad para ordenar
-          }))
-          .sort((a, b) =>
-            a.sortName.toLowerCase().localeCompare(b.sortName.toLowerCase())
-          );
-
-        setEnterprises(pospagos);
+        setEnterprises(flatOptions);
       } catch (error) {
         console.error("Error loading enterprises:", error);
       }
@@ -173,10 +224,36 @@ export default function Pag200() {
     [selectedEnterprises]
   );
 
-  // Modificar handleEnterpriseChange para que solo guarde la selección
+  // Modificar handleEnterpriseChange para manejar la selección jerárquica
   const handleEnterpriseChange = useCallback((selected) => {
-    setSelectedEnterprises(selected || []);
-  }, []);
+    const selectedValues = selected || [];
+    const newSelection = new Set();
+    
+    // Función para obtener todos los hijos de un padre
+    const getChildren = (parentId) => {
+      return enterprises.filter(e => !e.isParent && e.parentId === parentId);
+    };
+    
+    // Procesar cada selección
+    selectedValues.forEach(selection => {
+      newSelection.add(selection.value);
+      
+      if (selection.isParent) {
+        // Si es padre, agregar todos sus hijos
+        const children = getChildren(selection.value);
+        children.forEach(child => {
+          newSelection.add(child.value);
+        });
+      }
+    });
+    
+    // Convertir back a array de objetos para react-select
+    const finalSelection = Array.from(newSelection)
+      .map(id => enterprises.find(e => e.value === id))
+      .filter(Boolean);
+    
+    setSelectedEnterprises(finalSelection);
+  }, [enterprises]);
 
   // Modificar filterData para actualizar las empresas disponibles
   const filterData = useCallback(async () => {
@@ -367,7 +444,7 @@ export default function Pag200() {
       }
       // Luego por signatureType
       if (a.signatureType !== b.signatureType) {
-        return a.signatureType.localeCompare(b.signatureType);
+      return a.signatureType.localeCompare(b.signatureType);
       }
       // Finalmente por unitValue
       return b.unitValue - a.unitValue;
@@ -463,7 +540,7 @@ export default function Pag200() {
         columns={tableColumns}
         groupByOptions={[]}
       />
-    );
+  );
   }, [groupedData]);
 
   // Optimizar DetalleTable
@@ -494,7 +571,7 @@ export default function Pag200() {
         ]}
         groupByOptions={[]}
       />
-    );
+  );
   }, [filteredData, handleRowClick]);
 
   // Simplify totalRecords to just show filteredData length
@@ -572,6 +649,20 @@ export default function Pag200() {
       minHeight: "38px",
       height: "38px",
     }),
+    option: (base, state) => ({
+      ...base,
+      padding: '8px 12px',
+      backgroundColor: state.isSelected ? '#e6f3ff' : state.isFocused ? '#f5f5f5' : 'white',
+      color: state.isSelected ? '#000' : '#333',
+      cursor: 'pointer',
+      '&:active': {
+        backgroundColor: '#e6f3ff',
+      }
+    }),
+    menu: (base) => ({
+      ...base,
+      zIndex: 9999
+    })
   };
 
   // Modificar el RechargesTable para mostrar los datos de Wompi
@@ -769,6 +860,40 @@ export default function Pag200() {
     </div>
   );
 
+  // Modificar el componente Option para mostrar la jerarquía visual
+  const Option = props => {
+    const { isSelected, label, data } = props;
+    
+    return (
+      <components.Option {...props}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          paddingLeft: data.isParent ? '0' : '24px' // Indentación para hijos
+        }}>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => {}}
+            className="me-2"
+          />
+          {!data.isParent && (
+            <span style={{ 
+              color: '#666',
+              marginRight: '8px'
+            }}>└─</span>
+          )}
+          <span style={{ 
+            fontWeight: data.isParent ? 'bold' : 'normal',
+            color: data.isParent ? '#000' : '#666'
+          }}>
+            {label}
+          </span>
+        </div>
+      </components.Option>
+    );
+  };
+
   return (
     <div className="">
       {/* Filtros */}
@@ -790,63 +915,65 @@ export default function Pag200() {
                 <label className="block text-sm font-medium mb-2">
                   Empresas
                 </label>
-                <Select
-                  isMulti
-                  options={availableEnterprises}
-                  value={selectedEnterprises}
-                  onChange={handleEnterpriseChange}
-                  placeholder="Empresas..."
-                  closeMenuOnSelect={false}
-                  isDisabled={isLoading}
-                  styles={customStyles}
-                />
-              </div>
+              <Select
+                isMulti
+                options={enterprises}
+                value={selectedEnterprises}
+                onChange={handleEnterpriseChange}
+                placeholder="Empresas..."
+                closeMenuOnSelect={false}
+                  hideSelectedOptions={false}
+                isDisabled={isLoading}
+                styles={customStyles}
+                  components={{ Option }}
+              />
+            </div>
               {/* Periodo */}
               <div className="flex-grow-1 col-sm-4">
                 <label className="block text-sm font-medium mb-1">
                   Periodo
                 </label>
-                <div className="d-flex align-items-center">
-                  <DatePicker
-                    selectsRange={true}
-                    startDate={dateRange[0]}
-                    endDate={dateRange[1]}
-                    onChange={setDateRange}
-                    locale={es}
-                    isClearable={true}
-                    placeholderText="Filtrar por rango de fechas"
+              <div className="d-flex align-items-center">
+                <DatePicker
+                  selectsRange={true}
+                  startDate={dateRange[0]}
+                  endDate={dateRange[1]}
+                  onChange={setDateRange}
+                  locale={es}
+                  isClearable={true}
+                  placeholderText="Filtrar por rango de fechas"
                     className="form-control rounded p-2 w-100"
-                    disabled={isLoading}
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                  />
-                  <button
-                    onClick={filterData}
-                    disabled={isLoading}
+                  disabled={isLoading}
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
+                />
+                <button
+                  onClick={filterData}
+                  disabled={isLoading}
                     className="btn btn-primary p-2 border-0 ms-2"
-                  >
-                    <Search className="w-75" />
-                  </button>
-                </div>
+                >
+                  <Search className="w-75" />
+                </button>
               </div>
+            </div>
               {/* Exportar */}
               <div className="col-sm-1">
-                <ExportButton
-                  data={exportData}
-                  fileName="reporte_pag200.xlsx"
-                  sheets={exportData}
-                  startDate={
-                    dateRange[0] ||
-                    (() => {
-                      const today = new Date();
-                      const startDate = new Date(today);
-                      startDate.setDate(today.getDate() - daysAgo);
-                      return startDate;
-                    })()
-                  }
-                  endDate={dateRange[1] || new Date()}
-                />
+              <ExportButton
+                data={exportData}
+                fileName="reporte_pag200.xlsx"
+                sheets={exportData}
+                startDate={
+                  dateRange[0] ||
+                  (() => {
+                    const today = new Date();
+                    const startDate = new Date(today);
+                    startDate.setDate(today.getDate() - daysAgo);
+                    return startDate;
+                  })()
+                }
+                endDate={dateRange[1] || new Date()}
+              />
               </div>
             </div>
           </div>
@@ -885,15 +1012,15 @@ export default function Pag200() {
               {/* Solo mostrar la tabla Total si no son iguales */}
               {!areTablesEqual && (
                 <div className={`col-sm-${selectedEnterprises.length > 1 ? '3' : '3'}`}>
-                  <TransactionTable
-                    data={summarizedData}
+                <TransactionTable
+                  data={summarizedData}
                     title="Total"
-                    subTitle={formatDate}
-                    description=""
-                    showTotal={false}
+                  subTitle={formatDate}
+                  description=""
+                  showTotal={false}
                     height={230}
-                    columns={[
-                      ["Firma", "signatureType", { width: "60%" }],
+                  columns={[
+                    ["Firma", "signatureType", { width: "60%" }],
                       [
                         "Cantidad",
                         "total",
@@ -903,10 +1030,10 @@ export default function Pag200() {
                           cellStyle: { fontWeight: "bold" },
                         },
                       ],
-                    ]}
-                    groupByOptions={[]}
-                  />
-                </div>
+                  ]}
+                  groupByOptions={[]}
+                />
+              </div>
               )}
               <div className={`col-sm-${selectedEnterprises.length > 1 ? (areTablesEqual ? '9' : '6') : (areTablesEqual ? '7' : '4')}`}>
                 <TransactionTable
@@ -933,16 +1060,16 @@ export default function Pag200() {
                     // Cuando hay más de una empresa seleccionada
                     <>
                       <div className="col-12 mb-2">
-                        <TotalsCardComponent
-                          data={totalSumQuantity}
+                <TotalsCardComponent
+                  data={totalSumQuantity}
                           trend={{ value: totalRecords, text: " Registros" }}
                           title="Total"
                           subTitle="Firmas"
                           description="Firmas registradas"
                           icon="bi bi-key"
-                          unknown={false}
-                        />
-                      </div>
+                  unknown={false}
+                />
+              </div>
                       <div className="col-12">
                         <TotalsCardComponent
                           data={totalRechargeValue}
@@ -956,7 +1083,7 @@ export default function Pag200() {
                             text: "Recargas",
                           }}
                         />
-                      </div>
+            </div>
                     </>
                   ) : (
                     // Layout original cuando hay una o ninguna empresa seleccionada
@@ -971,7 +1098,7 @@ export default function Pag200() {
                           icon="bi bi-key"
                           unknown={false}
                         />
-                      </div>
+                    </div>
                       <div className="col-sm-6">
                         <TotalsCardComponent
                           data={totalRechargeValue}
@@ -985,7 +1112,7 @@ export default function Pag200() {
                             text: "Recargas",
                           }}
                         />
-                      </div>
+                    </div>
                     </>
                   )}
                 </div>
@@ -1005,7 +1132,7 @@ export default function Pag200() {
       )}
 
       {/* Añadir el modal aquí */}
-      <ProcessModal
+      <ProcessModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         processData={selectedProcess}
